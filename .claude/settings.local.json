@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd C:/metabeans-main/esp-admin && npx tsc --noEmit 2>&1 | head -60)",
+      "Bash(cd C:/metabeans-main/esp-admin && ./node_modules/.bin/tsc --noEmit 2>&1 | head -80)",
+      "Bash(find /c/metabeans-main/esp-admin/src -name \"*.tsx\" -type f | xargs wc -l | sort -rn | head -20)",
+      "Bash(grep -n \"import.*formatter\" /c/metabeans-main/esp-admin/src/components/charts/*.tsx /c/metabeans-main/esp-admin/src/pages/system/*.tsx /c/metabeans-main/esp-admin/src/pages/as-service/*.tsx /c/metabeans-main/esp-admin/src/pages/equipment/*.tsx 2>/dev/null)",
+      "Bash(for file:*)",
+      "Bash(do echo:*)",
+      "Read(//c/metabeans-main/esp-admin/**)",
+      "Bash(done)",
+      "Bash(cd C:/metabeans-main/esp-admin && npx tsc --noEmit 2>&1 | head -30)"
+    ]
+  }
+}
