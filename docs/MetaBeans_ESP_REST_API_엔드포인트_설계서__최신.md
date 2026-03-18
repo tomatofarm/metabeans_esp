@@ -1,5 +1,7 @@
 # MetaBeans ESP 관제시스템 — REST API 엔드포인트 설계서
 
+> 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
+
 **문서 버전**: v1.2  
 **작성일**: 2026-02-13  
 **작성일**: 2026-02-27 (v1.2)  
@@ -10,32 +12,6 @@
 4. MetaBeans_ESP_데이터구조_정의서_v3_2.md
 5. MetaBeans_ESP_프로젝트_아키텍처_기술스택_정의서.md
 6. MetaBeans_ESP_관리툴_전체구조_기획서.docx
-
-### 변경 이력 (v1.0 → v1.2)
-
-| 구분 | MQTT 260212 | MQTT 260213 | REST API 반영 |
-|------|-------------|-------------|---------------|
-| 센서 필드 | `fan_speed` | `fan_speed` + `fan_mode` + `damper_mode` 추가 | 5.1 센서 데이터 응답에 `fanMode`, `damperMode` 추가 |
-| 댐퍼 제어 | target=1, action=1만 (수동) | action=2 (모드전환), action=3 (목표풍량) 추가 | 6.1 제어 명령 테이블 확장 |
-| 팬 제어 | target=2, action=0~3만 (수동) | action=4 (모드전환), action=5 (목표풍속) 추가 | 6.1 제어 명령 테이블 확장 |
-| `value` 타입 | `int` | `number` (int 또는 float) | 6.1 Body에서 value 타입 number로 변경 |
-| config 토픽 | "추후 정의" | 전체 필드 정의 (sensor_interval, mqtt_interval 등) | 6.6 게이트웨이 원격 설정 API 신규 |
-| config/ack 토픽 | 없음 | 신규 추가 (needs_reboot 필드 포함) | 6.7 설정 변경 결과 확인 API 신규 |
-| 팬 자동제어 | 없음 | M100 인버터 PID 기반 자동제어 | 6.5 팬 자동제어 설정 API 신규 |
-
-**v1.1 → v1.2 변경 이력** (MQTT 규격 260227_v2):
-
-| 구분 | MQTT 260213 (구) | MQTT 260227_v2 (신) | REST API 반영 |
-|------|-----------------|---------------------|---------------|
-| `oilLevel` 타입 | float (0~100) | **int** (0=정상, 1=만수) | 5.1 sensorData 예시, 13.3 Mock 범위 변경 |
-| `ppSpark` 범위 | 0~99 | **0~9999** (rev2.1 파워팩) | 5.1 sensorData 예시, 13.3 Mock 범위 변경 |
-| `fanRunning` 신규 | 없음 | int (0=정지, 1=운전중) | 5.1 sensorData, 13.3 Mock 추가 |
-| `fanFreq` 신규 | 없음 | float Hz (0~50.00) | 5.1 sensorData, 13.3 Mock 추가 |
-| `fanTargetPct` 신규 | 없음 | float % (0~100) | 5.1 sensorData, 13.3 Mock 추가 |
-| `damperCtrl` 신규 | 없음 | float % (0~100) — 명령값, damper=피드백 | 5.1 sensorData, 13.3 Mock 추가 |
-| status `wifi` 신규 | 없음 | 객체 (ssid/rssi/ip/mac/channel) | 10.1 게이트웨이 상태 응답 반영 |
-| status_flags bit 5 | 인버터 정상 (단순) | RS-485 통신 정상 AND Fault Trip 없음 | 5.1 statusDetails 주석 변경 |
-
 
 ---
 

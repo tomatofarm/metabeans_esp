@@ -1,5 +1,7 @@
 # MetaBeans ESP 관제시스템 - 데이터 구조 정의서
 
+> 📋 [수정 이력](MetaBeans_ESP_데이터구조_정의서__최신_CHANGELOG.md)
+
 **문서 버전**: v3.2  
 **작성일**: 2026-02-27  
 **근거 문서** (우선순위순):
@@ -8,95 +10,6 @@
 3. ESP 관리툴_최종피드백_260212.pdf (2026-02-12)
 4. MetaBeans_ESP_데이터구조_정의서_v3.0.md (기반)
 5. MetaBeans_ESP_관리툴_전체구조_기획서.docx (참조용)
-
----
-
-## 변경 이력
-
-| 버전 | 날짜 | 주요 변경 사항 |
-|------|------|--------------|
-| v1.0 | 2025-02-04 | 초기 작성 |
-| v2.0 | 2025-02-04 | Q&A 기반 20건 수정 반영 |
-| v3.0 | 2026-02-13 | MQTT 규격 260212 + 최종피드백 260212 전면 반영 |
-| v3.1 | 2026-02-13 | MQTT 규격 260213 + 토픽 구조 변경 협의사항 반영 (댐퍼/시로코팬 자동제어, config 토픽 정의) |
-| v3.2 | 2026-02-27 | MQTT 규격 260227_v2 반영 — oil_level float→int, pp_spark 범위 0-9999, fan_running/fan_freq/fan_target_pct/damper_ctrl 신규 필드, status 토픽 wifi 추가, status_flags bit5 복합 판정 |
-
-### v3.0 주요 변경 내역
-
-| # | 변경 대상 | 변경 내용 | 근거 |
-|---|----------|---------|------|
-| 1 | MQTT 토픽 | 게이트웨이 단위 통합 센서 메시지 구조 도입 (controller별 토픽 제거) | MQTT 규격 |
-| 2 | MQTT 토픽 | heartbeat 토픽 제거 → status 토픽으로 대체 (10초 주기) | MQTT 규격 |
-| 3 | MQTT 토픽 | alarm 토픽 제거 → pp_alarm 필드로 대체 | MQTT 규격 |
-| 4 | MQTT 토픽 | config 토픽 추가 (추후 정의) | MQTT 규격 |
-| 5 | MQTT QoS | QoS 2 → QoS 1 (AWS IoT Core QoS 2 미지원) | MQTT 규격 |
-| 6 | MQTT 타임스탬프 | ISO 8601 → Unix epoch (초 단위) | MQTT 규격 |
-| 7 | sensor 메시지 | gateway IAQ + 모든 하위 equipment/controller를 하나의 메시지로 통합 | MQTT 규격 |
-| 8 | controller 필드 | blade_angle 제거 → damper로 통합, pp_temp int 확정 | MQTT 규격 |
-| 9 | controller 필드 | pp_alarm, inlet_temp, velocity, duct_dp 추가 | MQTT 규격 |
-| 10 | controller 필드 | fan_rpm, error_code 제거 | MQTT 규격 |
-| 11 | status_flags | Controller 6비트, Gateway 7비트 비트 정의 확정 | MQTT 규격 |
-| 12 | 제어 명령 | controller_id 대신 equipment_id + controller_id 조합, 일괄 제어 지원 | MQTT 규격 |
-| 13 | 제어 대상 | target 1 = 댐퍼(flo-OAC), target 2 = 시로코팬 (블레이드 제거) | MQTT 규격 |
-| 14 | 계층 구조 | Equipment 최대 5대/층, Controller 최대 4대/Equipment | MQTT 규격 + 피드백 p.50 |
-| 15 | equipment | powerpack_count 최대 16 → 최대 4 | 피드백 p.50 |
-| 16 | cell_types | 드롭다운 참조 테이블 제거 → 수동 입력(VARCHAR) | 피드백 p.36 |
-| 17 | stores | business_type에 '커피로스팅' 추가 | 피드백 p.14, p.19 |
-| 18 | user_business_info | 업태/업종 필드 삭제 | 피드백 p.9, p.15, p.20 |
-| 19 | owner_profiles | store_scale(매장 규모) 삭제 | 피드백 p.21 |
-| 20 | dealer_profiles | service_regions에 서울 동부/서부, 경기 동부/서부 추가 | 피드백 p.11 |
-| 21 | 제어 | 운영 시간 설정 삭제 (전원, 방화셔터, 송풍기 모두) | 피드백 p.43~47 |
-| 22 | 방화셔터 | 8단계(0~7) 개도율 매핑 확정, 자동제어 목표 풍량 추가 | 피드백 p.44~45 |
-| 23 | A/S | 방문 희망 일시 필드 추가, 교체 부품 상세(품명/가격/수량) 필수 | 피드백 p.56, p.59 |
-| 24 | A/S | cost → total_parts_cost (총부품비) 변경 | 피드백 p.59 |
-| 25 | 고객현황 | 고객 상태 활성/비활성 구분 추가 | 피드백 p.62 |
-| 26 | 권한 | 역할별 메뉴 권한 세분화 (실시간 모니터링/제어 하위 항목) | 피드백 p.63 |
-| 27 | 기준수치 | 스파크 기준 시간 튜닝 변수 추가 | 피드백 p.66 |
-| 28 | 대시보드 | 시스템 상태 삭제, 문제 발생 이슈 항목 정의 | 피드백 p.24, p.33~34 |
-| 29 | 대시보드 | 실내공기질 정보는 이슈/알림에 표시 안 함 | 피드백 p.33 |
-| 30 | 장비관리 | 담당 기사 → 담당 대리점으로 수정 | 피드백 p.36 |
-| 31 | 장비관리 | 압력 이력 삭제 | 피드백 p.49 |
-| 32 | 모니터링 | 필터 점검 상태(차압), 먼지제거 성능(PM2.5/PM10) 지표 추가 | 피드백 p.38~39 |
-| 33 | 모니터링 | 통신 연결 상태 30초 기준 오류 판정 | 피드백 p.38 |
-| 34 | gateway | heartbeat 관련 필드 제거, status 기반 연결 판정으로 변경 | MQTT 규격 |
-| 35 | 데이터 갱신 | 센서 데이터 10초 주기 확정 (v2.0의 1분 간격 오류 수정) | MQTT 규격 |
-
-### v3.1 주요 변경 내역 (MQTT 규격 260213 + 토픽 구조 변경 협의)
-
-| # | 변경 대상 | 변경 내용 | 근거 |
-|---|----------|---------|------|
-| 36 | controller 센서 필드 | `fan_mode` (팬 제어 모드, 0=수동/1=자동) 필드 추가 | MQTT 규격 260213 |
-| 37 | controller 센서 필드 | `damper_mode` (댐퍼 제어 모드, 0=수동/1=자동) 필드 추가 | MQTT 규격 260213 |
-| 38 | controller 센서 필드 | `fan_speed` 설명 보완: "수동 모드에서만 유의미" 추가 | MQTT 규격 260213 |
-| 39 | 제어 명령 (target=1 댐퍼) | action=2 (자동/수동 모드 전환), action=3 (목표 풍량 CMH 설정) 추가 | MQTT 규격 260213 |
-| 40 | 제어 명령 (target=2 시로코팬) | action=4 (자동/수동 모드 전환), action=5 (목표 풍속 m/s 설정) 추가 | MQTT 규격 260213 |
-| 41 | 제어 명령 value 타입 | int → **number** (int 또는 float), 목표 풍량/풍속은 float | MQTT 규격 260213 |
-| 42 | config 토픽 | 페이로드 정의 확정 (sensor_interval_ms, mqtt_interval_ms, ID 변경, WiFi 설정 등) | MQTT 규격 260213 |
-| 43 | config/ack 토픽 | config 응답 토픽 추가 (cmd_id, result, reason, needs_reboot) | MQTT 규격 260213 |
-| 44 | 토픽 구조 | config/ack 서브토픽 추가 | MQTT 규격 260213 |
-| 45 | 안전 오버라이드 | ESTOP/스파크/과온도 알람 시 자동→수동 전환 동작 정의 | MQTT 규격 260213 |
-| 46 | 시로코팬 자동 제어 | M100 인버터 내장 PID 활용, 목표 풍속 기반 가/감속 제어 확인 | 토픽 구조 변경 협의 |
-| 47 | 댐퍼 자동 제어 | flo-OAC Internal SV 모드 활용, 목표 풍량 기반 자동 개도 조절 확인 | 토픽 구조 변경 협의 |
-| 48 | damper_auto_settings | target_velocity 컬럼 추가 (시로코팬 목표 풍속) | MQTT 규격 260213 |
-| 49 | 설계 결정 | 제어 모드: 수동 전용 → **자동/수동 전환 지원** | MQTT 규격 260213 |
-
-
-### v3.2 주요 변경 내역 (MQTT 규격 260227_v2)
-
-| # | 변경 대상 | 변경 내용 | 근거 |
-|---|----------|---------|------|
-| 50 | controller 센서 필드 | `oil_level` 타입 변경: FLOAT (0-100%) → **INT** (0=정상, 1=만수) — 디지털 센서 실제 동작 반영 | MQTT 규격 260227_v2 |
-| 51 | controller 센서 필드 | `pp_spark` 범위 확대: 0-99 → **0-9999** (파워팩 rev2.1 대응) | MQTT 규격 260227_v2 |
-| 52 | controller 센서 필드 | `fan_running` 신규 추가: INT (0=정지, 1=운전중) — M100 인버터 RUN_STATUS 레지스터 기반 | MQTT 규격 260227_v2 |
-| 53 | controller 센서 필드 | `fan_freq` 신규 추가: FLOAT Hz (0~50.00) — 인버터 실제 출력 주파수, 자동 모드 PID 출력 확인용 | MQTT 규격 260227_v2 |
-| 54 | controller 센서 필드 | `fan_target_pct` 신규 추가: FLOAT % (0.0~100.0) — PID 목표값, fan_mode=1(자동) 시만 유의미 | MQTT 규격 260227_v2 |
-| 55 | controller 센서 필드 | `damper_ctrl` 신규 추가: FLOAT % (0-100) — 댐퍼 제어 명령값(Damper_CTRL), 기존 damper는 피드백값(Damper_FB)으로 구분 | MQTT 규격 260227_v2 |
-| 56 | status 메시지 | `wifi` 객체 추가: {ssid, rssi, ip, mac, channel} — 게이트웨이 Wi-Fi 연결 정보 | MQTT 규격 260227_v2 |
-| 57 | Controller status_flags | bit 5 판정 변경: 단순 인버터 정상 → **RS-485 통신 정상 AND Fault Trip 없음** (복합 판정) | MQTT 규격 260227_v2 |
-| 58 | cleaning_thresholds | spark_threshold 범위 주석 수정: 0~99 → 0~9999 (pp_spark 스케일 변경 반영) | MQTT 규격 260227_v2 |
-| 59 | monitoring_thresholds | pp_spark 비고 수정: 0-99 → 0-9999 | MQTT 규격 260227_v2 |
-| 60 | MySQL DDL | controller_sensor_data 테이블 — oil_level TINYINT, 신규 필드 4개 추가, wifi 컬럼 추가 | MQTT 규격 260227_v2 |
-
 
 ---
 
