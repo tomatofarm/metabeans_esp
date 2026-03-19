@@ -2,7 +2,7 @@
 
 **원본 문서**: [MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md)
 
-**버전**: v1.10  
+**버전**: v1.11  
 **작성일**: 2026-02-13  
 **최종 수정일**: 2026-03-16  
 **작성자**: 한재혁 (MetaBeans)  
@@ -52,5 +52,8 @@
 
 > **v1.10 변경 이력 (2026-03-16)**:  
 > - §2.2 HQ 가입: `business.corporateRegistrationNumber`(법인등록번호), `business.establishmentDate`(설립일자, YYYY-MM-DD) **선택** 필드 추가 (Owner/Dealer와 구분)
+
+> **v1.11 변경 이력 (2026-03-16)**:  
+> - §2.2 HQ 가입: 매장 정보 UI에서 대표 전화·이메일 미수집 시 `hqInfo.phone`·`hqInfo.email`을 **`contactPhone`·`contactEmail`과 동일 값**으로 전달한다는 비고 추가
 
 ---

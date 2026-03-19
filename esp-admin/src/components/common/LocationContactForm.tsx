@@ -7,6 +7,11 @@ export interface LocationContactFormProps {
   prefix: '본사' | '대리점';
   /** HQ: hq*, Dealer: 빈 문자열(기본 필드명) */
   fieldPrefix: 'hq' | 'dealer';
+  /**
+   * 위치 정보 블록 내 「대표 전화번호」「대표 이메일」 표시 여부.
+   * HQ 회원가입 매장 정보 단계에서는 false (담당자 연락처만 수집).
+   */
+  showOrgRepresentativeContact?: boolean;
 }
 
 interface DaumAddressData {
@@ -51,7 +56,11 @@ const noticeBoxStyle = {
   borderLeft: '4px solid #7c3aed',
 };
 
-export default function LocationContactForm({ prefix, fieldPrefix }: LocationContactFormProps) {
+export default function LocationContactForm({
+  prefix,
+  fieldPrefix,
+  showOrgRepresentativeContact = true,
+}: LocationContactFormProps) {
   const form = Form.useFormInstance();
   const openPostcode = useKakaoPostcodePopup();
 
@@ -139,29 +148,31 @@ export default function LocationContactForm({ prefix, fieldPrefix }: LocationCon
           <Input placeholder="상세 주소를 입력하세요 (층/호수 등)" />
         </Form.Item>
 
-        <Row gutter={16}>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              label="대표 전화번호"
-              name={repPhoneName}
-              rules={[{ required: true, message: '대표 전화번호를 입력하세요' }]}
-            >
-              <Input placeholder="02-0000-0000" />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              label="대표 이메일"
-              name={repEmailName}
-              rules={[
-                { required: true, message: '대표 이메일을 입력하세요' },
-                { type: 'email', message: '유효한 이메일을 입력하세요' },
-              ]}
-            >
-              <Input placeholder="info@company.com" />
-            </Form.Item>
-          </Col>
-        </Row>
+        {showOrgRepresentativeContact ? (
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label="대표 전화번호"
+                name={repPhoneName}
+                rules={[{ required: true, message: '대표 전화번호를 입력하세요' }]}
+              >
+                <Input placeholder="02-0000-0000" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label="대표 이메일"
+                name={repEmailName}
+                rules={[
+                  { required: true, message: '대표 이메일을 입력하세요' },
+                  { type: 'email', message: '유효한 이메일을 입력하세요' },
+                ]}
+              >
+                <Input placeholder="info@company.com" />
+              </Form.Item>
+            </Col>
+          </Row>
+        ) : null}
       </div>
 
       {/* 담당자 정보 섹션 */}

@@ -2,9 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
 
-**문서 버전**: v1.10  
+**문서 버전**: v1.11  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-16 (v1.10)  
+**최종 수정일**: 2026-03-16 (v1.11)  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -373,13 +373,14 @@ POST /registration/hq
 | zipCode | string | | 우편번호 |
 | address | string | ✅ | 기본 주소 |
 | addressDetail | string | | 상세 주소 (층/호수 등) |
-| phone | string | ✅ | 대표 전화번호 |
-| email | string | ✅ | 대표 이메일 |
+| phone | string | ✅ | 대표 전화번호 (가입 UI에서 별도 필드 없을 때 **`contactPhone`과 동일 값** 전달) |
+| email | string | ✅ | 대표 이메일 (가입 UI에서 별도 필드 없을 때 **`contactEmail`과 동일 값** 전달) |
 | contactName | string | ✅ | 담당자명 |
 | contactPhone | string | ✅ | 담당자 연락처 |
 | contactEmail | string | ✅ | 담당자 이메일 |
 
 > **account.phone / account.email**: 프론트 회원가입 UI에서 기본 정보 단계에 수집하지 않을 경우, `hqInfo.contactPhone`·`hqInfo.contactEmail`과 동일 값으로 전달 가능.  
+> **HQ 매장 정보 UI**: 「대표 전화번호」「대표 이메일」 입력란을 두지 않는 경우, `hqInfo.phone`·`hqInfo.email`에도 **담당자 연락처·이메일과 동일 값**을 넣어 전달한다.  
 > **dealerId**: 선택. HQ 회원가입 화면에서 담당 대리점을 선택하지 않는 경우 생략 가능(관리자 배정 등).
 
 ### 2.3 본사 직원(ADMIN) 가입 — 2단계

@@ -92,8 +92,9 @@ export default function HQRegisterPage() {
           zipCode: values.hqZipCode,
           address: values.hqAddress,
           addressDetail: values.hqAddressDetail,
-          phone: values.hqPhone,
-          email: values.hqEmail,
+          // 매장 정보 UI에서 대표 전화·이메일 미수집 시 담당자 연락처와 동일 값 (API·DB 호환)
+          phone: values.hqContactPhone,
+          email: values.hqContactEmail,
           contactName: values.hqContactName,
           contactPhone: values.hqContactPhone,
           contactEmail: values.hqContactEmail,
@@ -229,7 +230,7 @@ export default function HQRegisterPage() {
 
           {/* Step 3: 매장 정보 (본사 위치 + 담당자) */}
           <div style={{ display: current === 3 ? 'block' : 'none' }}>
-            <LocationContactForm prefix="본사" fieldPrefix="hq" />
+            <LocationContactForm prefix="본사" fieldPrefix="hq" showOrgRepresentativeContact={false} />
           </div>
 
           {/* Step 4: 약관 동의 */}
@@ -352,7 +353,7 @@ function getFieldsForStep(step: number): string[] {
     case 2:
       return ['brandName', 'corporationName', 'businessNumber', 'representativeName'];
     case 3:
-      return ['hqAddress', 'hqPhone', 'hqEmail', 'hqContactName', 'hqContactPhone', 'hqContactEmail'];
+      return ['hqAddress', 'hqContactName', 'hqContactPhone', 'hqContactEmail'];
     case 4:
       return ['termsAgreed', 'privacyAgreed'];
     default:
