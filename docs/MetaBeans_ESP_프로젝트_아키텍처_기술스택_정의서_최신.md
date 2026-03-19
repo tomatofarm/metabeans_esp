@@ -314,7 +314,9 @@ esp-admin/
 │   │   │   ├── StatusTag.tsx       # Green/Yellow/Red 상태 태그
 │   │   │   ├── AirQualityCard.tsx  # 실내공기질 카드
 │   │   │   ├── SensorGauge.tsx     # 센서 게이지 컴포넌트
-│   │   │   └── ConfirmModal.tsx    # 확인 모달
+│   │   │   ├── ConfirmModal.tsx    # 확인 모달
+│   │   │   ├── StepIndicator.tsx   # 회원가입 단계 표시
+│   │   │   └── BusinessCertUpload.tsx  # 사업자등록증 업로드 (HQ/Dealer 회원가입)
 │   │   └── charts/
 │   │       ├── BoardTempChart.tsx  # 보드온도 라인차트 (ECharts)
 │   │       ├── SparkChart.tsx      # 스파크 산점도 (ECharts)

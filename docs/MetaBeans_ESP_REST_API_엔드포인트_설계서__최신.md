@@ -2,9 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
 
-**문서 버전**: v1.2  
+**문서 버전**: v1.3  
 **작성일**: 2026-02-13  
-**작성일**: 2026-02-27 (v1.2)  
+**최종 수정일**: 2026-03-19 (v1.3)  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -223,6 +223,20 @@ PUT /auth/password
 
 > **화면**: ESP_매장점주_회원가입.html, ESP_매장본사_회원가입.html, ESP_본사_회원가입.html, ESP_대리점_회원가입.html
 
+### 2.0 사업자등록증 업로드 (HQ, Dealer 전용)
+
+**적용 대상**: `POST /registration/hq`, `POST /registration/dealer`
+
+| 항목 | 규격 |
+|------|------|
+| 필드명 | `businessCertFile` |
+| Content-Type | `multipart/form-data` (파일 포함 시) |
+| 허용 형식 | JPG, PNG, PDF |
+| 최대 크기 | 10MB |
+| 필수 여부 | 선택 (미제출 시 신청 후 7일 이내 제출 또는 support@metabean.net 이메일 제출 가능) |
+
+> **비고**: 프론트엔드에서 드래그앤드롭/클릭으로 업로드 UI 제공. 백엔드는 S3 등에 저장 후 `user_business_info.business_cert_file`에 경로 저장.
+
 ### 2.1 매장 점주(OWNER) 가입 — 7단계
 
 ```
@@ -292,7 +306,7 @@ POST /registration/hq
     "businessNumber": "987-65-43210",
     "address": "서울시 송파구 문정동 50"
   },
-  "businessCertFile": "(multipart file)",
+  "businessCertFile": "(multipart file — 2.0 참조)",
   "hqProfile": {
     "brandName": "BBQ",
     "hqName": "비비큐 본사"
@@ -339,7 +353,7 @@ POST /registration/dealer
     "businessNumber": "456-78-90123",
     "address": "서울시 영등포구 당산동 100"
   },
-  "businessCertFile": "(multipart file)",
+  "businessCertFile": "(multipart file — 2.0 참조)",
   "dealerProfile": {
     "serviceRegions": ["서울 동부", "서울 서부", "경기 동부"],
     "specialties": {

@@ -22,6 +22,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { registerDealer, checkLoginId } from '../../../api/auth.api';
 import { SERVICE_REGIONS } from '../../../utils/constants';
 import StepIndicator from '../../../components/common/StepIndicator';
+import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -174,13 +175,6 @@ export default function DealerRegisterPage() {
           {/* Step 1: 기본 정보 */}
           <div style={{ display: current === 1 ? 'block' : 'none' }}>
             <Form.Item
-              label="대표자명"
-              name="name"
-              rules={[{ required: true, message: '대표자명을 입력하세요' }]}
-            >
-              <Input prefix={<UserOutlined />} placeholder="대표자명 입력" />
-            </Form.Item>
-            <Form.Item
               label="아이디"
               name="loginId"
               rules={[
@@ -224,6 +218,42 @@ export default function DealerRegisterPage() {
             >
               <Input.Password prefix={<LockOutlined />} placeholder="비밀번호 확인" />
             </Form.Item>
+          </div>
+
+          {/* Step 2: 사업자 정보 */}
+          <div style={{ display: current === 2 ? 'block' : 'none' }}>
+            <Form.Item
+              label="대표자명"
+              name="name"
+              rules={[{ required: true, message: '대표자명을 입력하세요' }]}
+            >
+              <Input prefix={<UserOutlined />} placeholder="대표자명 입력" />
+            </Form.Item>
+            <Form.Item
+              label="업체명"
+              name="businessName"
+              rules={[{ required: true, message: '업체명을 입력하세요' }]}
+            >
+              <Input placeholder="업체명 입력" />
+            </Form.Item>
+            <Form.Item
+              label="사업자등록번호"
+              name="businessNumber"
+              rules={[{ required: true, message: '사업자등록번호를 입력하세요' }]}
+            >
+              <Input placeholder="000-00-00000" />
+            </Form.Item>
+            <Form.Item
+              name="businessCertFile"
+              valuePropName="fileList"
+              getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList ?? [])}
+            >
+              <BusinessCertUpload />
+            </Form.Item>
+          </div>
+
+          {/* Step 3: 대리점 위치 */}
+          <div style={{ display: current === 3 ? 'block' : 'none' }}>
             <Form.Item
               label="이메일"
               name="email"
@@ -241,28 +271,6 @@ export default function DealerRegisterPage() {
             >
               <Input prefix={<PhoneOutlined />} placeholder="010-0000-0000" />
             </Form.Item>
-          </div>
-
-          {/* Step 2: 사업자 정보 */}
-          <div style={{ display: current === 2 ? 'block' : 'none' }}>
-            <Form.Item
-              label="업체명"
-              name="businessName"
-              rules={[{ required: true, message: '업체명을 입력하세요' }]}
-            >
-              <Input placeholder="업체명 입력" />
-            </Form.Item>
-            <Form.Item
-              label="사업자등록번호"
-              name="businessNumber"
-              rules={[{ required: true, message: '사업자등록번호를 입력하세요' }]}
-            >
-              <Input placeholder="000-00-00000" />
-            </Form.Item>
-          </div>
-
-          {/* Step 3: 대리점 위치 */}
-          <div style={{ display: current === 3 ? 'block' : 'none' }}>
             <Form.Item
               label="주소"
               name="address"
@@ -419,11 +427,11 @@ export default function DealerRegisterPage() {
 function getFieldsForStep(step: number): string[] {
   switch (step) {
     case 1:
-      return ['name', 'loginId', 'password', 'passwordConfirm', 'email', 'phone'];
+      return ['loginId', 'password', 'passwordConfirm'];
     case 2:
-      return ['businessName', 'businessNumber'];
+      return ['name', 'businessName', 'businessNumber'];
     case 3:
-      return ['address'];
+      return ['email', 'phone', 'address'];
     case 4:
       return ['serviceRegions'];
     case 5:

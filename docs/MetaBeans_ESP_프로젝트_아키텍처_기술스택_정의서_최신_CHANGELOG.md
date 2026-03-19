@@ -20,4 +20,8 @@
 > **v1.1 변경 이력 (2026-03-18)**:  
 > - 폴더 구조: StoreTree.tsx 제거 (실제 구현은 Sidebar.tsx 내 매장-장비-컨트롤러 트리 포함)
 
+> **v1.1 변경 이력 (2026-03-19)**:  
+> - 컴포넌트: BusinessCertUpload.tsx 추가 (사업자등록증 업로드, HQ/Dealer 회원가입 사업자 정보 단계)
+> - 회원가입: HQRegisterPage, DealerRegisterPage에 사업자등록증 업로드 UI 적용 (드래그앤드롭, JPG/PNG/PDF 최대 10MB)
+
 ---

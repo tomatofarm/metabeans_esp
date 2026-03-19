@@ -22,6 +22,7 @@ import { registerHQ, checkLoginId, getDealerList } from '../../../api/auth.api';
 import { BUSINESS_TYPES } from '../../../types/auth.types';
 import type { DealerListItem } from '../../../types/auth.types';
 import StepIndicator from '../../../components/common/StepIndicator';
+import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -259,6 +260,13 @@ export default function HQRegisterPage() {
               rules={[{ required: true, message: '대표자명을 입력하세요' }]}
             >
               <Input placeholder="대표자명 입력" />
+            </Form.Item>
+            <Form.Item
+              name="businessCertFile"
+              valuePropName="fileList"
+              getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList ?? [])}
+            >
+              <BusinessCertUpload />
             </Form.Item>
           </div>
 
