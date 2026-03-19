@@ -149,6 +149,10 @@ export interface RegisterHQRequest {
     corporationName: string;
     businessNumber: string;
     representativeName: string;
+    /** 법인등록번호 (HQ 가입 UI 전용, 선택) */
+    corporateRegistrationNumber?: string;
+    /** 설립일자 YYYY-MM-DD (HQ 가입 UI 전용, 선택) */
+    establishmentDate?: string;
   };
   hqInfo: {
     zipCode?: string;

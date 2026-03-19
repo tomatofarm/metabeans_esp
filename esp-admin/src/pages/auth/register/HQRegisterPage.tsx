@@ -15,9 +15,10 @@ import {
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
+import dayjs from 'dayjs';
 import { registerHQ, checkLoginId } from '../../../api/auth.api';
 import StepIndicator from '../../../components/common/StepIndicator';
-import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
+import HQBusinessInfoSection from '../../../components/common/HQBusinessInfoSection';
 import LocationContactForm from '../../../components/common/LocationContactForm';
 
 const { Title, Text } = Typography;
@@ -80,6 +81,12 @@ export default function HQRegisterPage() {
           corporationName: values.corporationName,
           businessNumber: values.businessNumber,
           representativeName: values.representativeName,
+          corporateRegistrationNumber: values.corporateRegistrationNumber?.trim()
+            ? values.corporateRegistrationNumber.trim()
+            : undefined,
+          establishmentDate: values.establishmentDate
+            ? dayjs(values.establishmentDate).format('YYYY-MM-DD')
+            : undefined,
         },
         hqInfo: {
           zipCode: values.hqZipCode,
@@ -215,43 +222,9 @@ export default function HQRegisterPage() {
             </Form.Item>
           </div>
 
-          {/* Step 2: 사업자 정보 */}
+          {/* Step 2: 사업자 정보 (HQ 전용 레이아웃 + 법인등록번호/설립일자) */}
           <div style={{ display: current === 2 ? 'block' : 'none' }}>
-            <Form.Item
-              label="브랜드명"
-              name="brandName"
-              rules={[{ required: true, message: '브랜드명을 입력하세요' }]}
-            >
-              <Input placeholder="프랜차이즈 브랜드명 입력" />
-            </Form.Item>
-            <Form.Item
-              label="법인명"
-              name="corporationName"
-              rules={[{ required: true, message: '법인명을 입력하세요' }]}
-            >
-              <Input placeholder="법인명 입력" />
-            </Form.Item>
-            <Form.Item
-              label="사업자등록번호"
-              name="businessNumber"
-              rules={[{ required: true, message: '사업자등록번호를 입력하세요' }]}
-            >
-              <Input placeholder="000-00-00000" />
-            </Form.Item>
-            <Form.Item
-              label="대표자명"
-              name="representativeName"
-              rules={[{ required: true, message: '대표자명을 입력하세요' }]}
-            >
-              <Input placeholder="대표자명 입력" />
-            </Form.Item>
-            <Form.Item
-              name="businessCertFile"
-              valuePropName="fileList"
-              getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList ?? [])}
-            >
-              <BusinessCertUpload />
-            </Form.Item>
+            <HQBusinessInfoSection />
           </div>
 
           {/* Step 3: 매장 정보 (본사 위치 + 담당자) */}

@@ -3,22 +3,27 @@ import { Upload, message } from 'antd';
 import { FileImageOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
 import type { RcFile, UploadChangeParam } from 'antd/es/upload/interface';
+import BusinessCertNoticeBanner, {
+  BUSINESS_CERT_SUPPORT_EMAIL,
+} from './BusinessCertNoticeBanner';
 
 const ACCEPT_TYPES = '.jpg,.jpeg,.png,.pdf';
 const MAX_SIZE_MB = 10;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-const SUPPORT_EMAIL = 'support@metabean.net';
 
 export interface BusinessCertUploadProps {
   value?: UploadFile[];
   fileList?: UploadFile[];
   onChange?: (fileList: UploadFile[]) => void;
+  /** 상단 안내 배너 표시 (HQ 등에서 배너를 상단에 한 번만 두고 false로 중복 방지) */
+  showNoticeBanner?: boolean;
 }
 
 export default function BusinessCertUpload({
   value,
   fileList,
   onChange,
+  showNoticeBanner = true,
 }: BusinessCertUploadProps) {
   const files = fileList ?? value ?? [];
 
@@ -46,45 +51,7 @@ export default function BusinessCertUpload({
 
   return (
     <div>
-      {/* 사업자등록증 제출 안내 배너 */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 12,
-          padding: '14px 16px',
-          marginBottom: 16,
-          background: '#f3e8ff',
-          borderRadius: 4,
-          borderLeft: '4px solid #7c3aed',
-        }}
-      >
-        <span style={{ fontSize: 18, lineHeight: 1 }}>💡</span>
-        <div>
-          <div
-            style={{
-              fontWeight: 700,
-              color: '#5b21b6',
-              marginBottom: 6,
-              fontSize: 14,
-            }}
-          >
-            사업자등록증 제출 안내
-          </div>
-          <div
-            style={{
-              fontSize: 13,
-              color: '#6b21a8',
-              lineHeight: 1.6,
-            }}
-          >
-            사업자등록증은 이미지 파일로 업로드하거나{' '}
-            <strong>{SUPPORT_EMAIL}</strong>으로 이메일 제출하실 수 있습니다.
-            <br />
-            <strong>제출 기한:</strong> 신청 후 7일 이내
-          </div>
-        </div>
-      </div>
+      {showNoticeBanner ? <BusinessCertNoticeBanner /> : null}
 
       {/* 업로드 영역 */}
       <div style={{ marginBottom: 8 }}>
@@ -130,7 +97,7 @@ export default function BusinessCertUpload({
             color: 'var(--color-mid)',
           }}
         >
-          또는 {SUPPORT_EMAIL}으로 이메일 제출 가능 (신청 후 7일 이내)
+          또는 {BUSINESS_CERT_SUPPORT_EMAIL}으로 이메일 제출 가능 (신청 후 7일 이내)
         </div>
       </div>
     </div>
