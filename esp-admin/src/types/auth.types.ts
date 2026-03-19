@@ -124,8 +124,9 @@ export interface RegisterStoreInfo {
   address: string;
   addressDetail?: string;
   phone?: string;
-  businessType?: string;
-  floorCount?: number;
+  businessType: string;
+  /** 층수 (가입 UI에서 미수집 시 1 등으로 전달 가능) */
+  floorCount: number;
 }
 
 // 매장점주 회원가입 요청

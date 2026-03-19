@@ -24,6 +24,7 @@ import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
 import { useNavigate, Link } from 'react-router-dom';
 import { useKakaoPostcodePopup } from 'react-daum-postcode';
 import { registerOwner, checkLoginId, getDealerList } from '../../../api/auth.api';
+import { BUSINESS_TYPES } from '../../../types/auth.types';
 import type { DealerListItem } from '../../../types/auth.types';
 import StepIndicator from '../../../components/common/StepIndicator';
 
@@ -99,6 +100,9 @@ export default function OwnerRegisterPage() {
           address: values.storeAddress,
           addressDetail: values.storeAddressDetail,
           phone: values.storePhone,
+          businessType: values.businessType,
+          /** 가입 UI에서 층수 미수집 — API/DB 기본과 맞춤 */
+          floorCount: 1,
         },
         dealerId: values.dealerId,
         termsAgreed: values.termsAgreed,
@@ -286,10 +290,7 @@ export default function OwnerRegisterPage() {
             >
               <BusinessCertUpload />
             </Form.Item>
-          </div>
 
-          {/* Step 3: 매장 정보 */}
-          <div style={{ display: current === 3 ? 'block' : 'none' }}>
             <Form.Item
               label="매장명"
               name="storeName"
@@ -297,7 +298,23 @@ export default function OwnerRegisterPage() {
             >
               <Input placeholder="매장명 입력" />
             </Form.Item>
+            <Form.Item
+              label="업종"
+              name="businessType"
+              rules={[{ required: true, message: '업종을 선택하세요' }]}
+            >
+              <Select placeholder="업종 선택">
+                {BUSINESS_TYPES.map((type) => (
+                  <Select.Option key={type} value={type}>
+                    {type}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </div>
 
+          {/* Step 3: 매장 정보 */}
+          <div style={{ display: current === 3 ? 'block' : 'none' }}>
             <Form.Item label="매장 주소" style={{ marginBottom: 16 }}>
               <Row gutter={8}>
                 <Col flex="0 0 120px">
@@ -486,10 +503,9 @@ function getFieldsForStep(step: number): string[] {
     case 1:
       return ['name', 'loginId', 'password', 'passwordConfirm'];
     case 2:
-      return ['businessNumber', 'businessName', 'businessCertFile'];
+      return ['businessNumber', 'businessName', 'businessCertFile', 'storeName', 'businessType'];
     case 3:
       return [
-        'storeName',
         'storeAddress',
         'storeZipCode',
         'storePhone',

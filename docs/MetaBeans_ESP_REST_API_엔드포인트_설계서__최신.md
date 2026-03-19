@@ -2,9 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
 
-**문서 버전**: v1.11  
+**문서 버전**: v1.12  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-16 (v1.11)  
+**최종 수정일**: 2026-03-16 (v1.12)  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -301,12 +301,14 @@ POST /registration/owner
 | store.addressDetail | string | | 상세 주소 |
 | store.phone | string | ✅ | 매장 전화번호 (`account.phone`과 동일 값 허용) |
 | store.businessType | string | ✅ | 업종 코드/명 (데이터구조 정의서 `stores.business_type` 준수) |
-| store.floorCount | number | ✅ | 층수 (≥1) |
+| store.floorCount | number | ✅ | 층수 (≥1). 가입 화면에서 미수집 시 클라이언트가 **`1`** 등 기본값 전달 가능. |
 | dealerId | number | ✅ | 담당 대리점 ID (`GET /registration/dealer-list` 등에서 선택) |
 | termsAgreed | boolean | ✅ | 이용약관 동의 |
 | marketingAgreed | boolean | | 마케팅 수신 동의 (기본 false) |
 
 > **account.phone / account.email**: 기본 정보 단계에서 수집하지 않는 화면 설계인 경우, **매장 정보 단계의 전화·이메일과 동일 값**을 `account`에 넣어 전달하면 된다 (HQ의 `hqInfo.contactPhone`/`contactEmail`과 `account` 정렬과 동일 개념).
+
+> **점주 가입 UI (매장 정보 단계)**: 주소·우편번호·매장 전화·이메일 입력 후 **하단에 매장명·업종**을 배치할 수 있다 (`BUSINESS_TYPES` 등 고정 목록 선택).
 
 **Response 201**
 ```json
