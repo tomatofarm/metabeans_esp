@@ -132,6 +132,8 @@ export interface RegisterStoreInfo {
 export interface RegisterOwnerRequest {
   account: RegisterAccountInfo;
   business: RegisterBusinessInfo;
+  /** 사업자등록증 첨부 (프론트 폼, Phase 2 multipart 전송) */
+  businessCertFile?: unknown;
   store: RegisterStoreInfo;
   dealerId: number;
   termsAgreed: boolean;
@@ -147,10 +149,15 @@ export interface RegisterHQRequest {
     representativeName: string;
   };
   hqInfo: {
+    zipCode?: string;
     address: string;
     addressDetail?: string;
     phone?: string;
-    businessType: string;
+    email?: string;
+    contactName?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+    businessType?: string;
   };
   dealerId?: number;
   termsAgreed: boolean;
@@ -174,8 +181,14 @@ export interface RegisterDealerRequest {
   account: RegisterAccountInfo;
   business: RegisterBusinessInfo;
   location: {
+    zipCode?: string;
     address: string;
     addressDetail?: string;
+    phone?: string;
+    email?: string;
+    contactName?: string;
+    contactPhone?: string;
+    contactEmail?: string;
   };
   serviceRegions: string[];
   termsAgreed: boolean;

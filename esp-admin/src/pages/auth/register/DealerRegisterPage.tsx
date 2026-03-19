@@ -14,14 +14,14 @@ import {
 import {
   UserOutlined,
   LockOutlined,
-  MailOutlined,
-  PhoneOutlined,
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { registerDealer, checkLoginId } from '../../../api/auth.api';
 import { SERVICE_REGIONS } from '../../../utils/constants';
 import StepIndicator from '../../../components/common/StepIndicator';
+import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
+import LocationContactForm from '../../../components/common/LocationContactForm';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -76,16 +76,22 @@ export default function DealerRegisterPage() {
           loginId: values.loginId,
           password: values.password,
           name: values.name,
-          phone: values.phone,
-          email: values.email,
+          phone: values.contactPhone,
+          email: values.contactEmail,
         },
         business: {
           businessName: values.businessName,
           businessNumber: values.businessNumber,
         },
         location: {
+          zipCode: values.zipCode,
           address: values.address,
           addressDetail: values.addressDetail,
+          phone: values.phone,
+          email: values.email,
+          contactName: values.contactName,
+          contactPhone: values.contactPhone,
+          contactEmail: values.contactEmail,
         },
         serviceRegions: values.serviceRegions,
         termsAgreed: values.termsAgreed,
@@ -174,13 +180,6 @@ export default function DealerRegisterPage() {
           {/* Step 1: 기본 정보 */}
           <div style={{ display: current === 1 ? 'block' : 'none' }}>
             <Form.Item
-              label="대표자명"
-              name="name"
-              rules={[{ required: true, message: '대표자명을 입력하세요' }]}
-            >
-              <Input prefix={<UserOutlined />} placeholder="대표자명 입력" />
-            </Form.Item>
-            <Form.Item
               label="아이디"
               name="loginId"
               rules={[
@@ -224,27 +223,17 @@ export default function DealerRegisterPage() {
             >
               <Input.Password prefix={<LockOutlined />} placeholder="비밀번호 확인" />
             </Form.Item>
-            <Form.Item
-              label="이메일"
-              name="email"
-              rules={[
-                { required: true, message: '이메일을 입력하세요' },
-                { type: 'email', message: '유효한 이메일을 입력하세요' },
-              ]}
-            >
-              <Input prefix={<MailOutlined />} placeholder="이메일 입력" />
-            </Form.Item>
-            <Form.Item
-              label="휴대전화"
-              name="phone"
-              rules={[{ required: true, message: '휴대전화를 입력하세요' }]}
-            >
-              <Input prefix={<PhoneOutlined />} placeholder="010-0000-0000" />
-            </Form.Item>
           </div>
 
           {/* Step 2: 사업자 정보 */}
           <div style={{ display: current === 2 ? 'block' : 'none' }}>
+            <Form.Item
+              label="대표자명"
+              name="name"
+              rules={[{ required: true, message: '대표자명을 입력하세요' }]}
+            >
+              <Input prefix={<UserOutlined />} placeholder="대표자명 입력" />
+            </Form.Item>
             <Form.Item
               label="업체명"
               name="businessName"
@@ -259,20 +248,18 @@ export default function DealerRegisterPage() {
             >
               <Input placeholder="000-00-00000" />
             </Form.Item>
+            <Form.Item
+              name="businessCertFile"
+              valuePropName="fileList"
+              getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList ?? [])}
+            >
+              <BusinessCertUpload />
+            </Form.Item>
           </div>
 
           {/* Step 3: 대리점 위치 */}
           <div style={{ display: current === 3 ? 'block' : 'none' }}>
-            <Form.Item
-              label="주소"
-              name="address"
-              rules={[{ required: true, message: '주소를 입력하세요' }]}
-            >
-              <Input placeholder="주소 검색" />
-            </Form.Item>
-            <Form.Item label="상세 주소" name="addressDetail">
-              <Input placeholder="상세 주소 입력" />
-            </Form.Item>
+            <LocationContactForm prefix="대리점" fieldPrefix="dealer" />
           </div>
 
           {/* Step 4: 서비스 가능 지역 */}
@@ -419,11 +406,11 @@ export default function DealerRegisterPage() {
 function getFieldsForStep(step: number): string[] {
   switch (step) {
     case 1:
-      return ['name', 'loginId', 'password', 'passwordConfirm', 'email', 'phone'];
+      return ['loginId', 'password', 'passwordConfirm'];
     case 2:
-      return ['businessName', 'businessNumber'];
+      return ['name', 'businessName', 'businessNumber'];
     case 3:
-      return ['address'];
+      return ['address', 'phone', 'email', 'contactName', 'contactPhone', 'contactEmail'];
     case 4:
       return ['serviceRegions'];
     case 5:

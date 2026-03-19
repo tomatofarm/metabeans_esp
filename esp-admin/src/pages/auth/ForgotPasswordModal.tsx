@@ -58,7 +58,7 @@ export default function ForgotPasswordModal({
           }
         />
       ) : (
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" className="auth-form" style={{ marginTop: 16 }}>
           <Form.Item
             label="아이디"
             name="loginId"

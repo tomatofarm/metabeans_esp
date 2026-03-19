@@ -122,8 +122,12 @@ export const AS_STATUS_COLORS: Record<string, string> = {
 export const SERVICE_REGIONS = [
   '서울 동부',
   '서울 서부',
+  '서울 남부',
+  '서울 북부',
   '경기 동부',
   '경기 서부',
+  '경기 북부',
+  '경기 남부',
   '인천',
   '부산',
   '대구',

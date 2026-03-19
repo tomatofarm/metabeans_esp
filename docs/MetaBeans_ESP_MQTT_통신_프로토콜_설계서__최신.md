@@ -1,5 +1,7 @@
 # MetaBeans ESP — MQTT 통신 프로토콜 설계서 v2.1
 
+> 📋 [수정 이력](MetaBeans_ESP_MQTT_통신_프로토콜_설계서__최신_CHANGELOG.md)
+
 > **프롬프트 D-1**: MQTT Payload 처리 및 백엔드 연동  
 > **작성일**: 2026-02-13  
 > **최종 업데이트**: 2026-02-27 (v2.1)  

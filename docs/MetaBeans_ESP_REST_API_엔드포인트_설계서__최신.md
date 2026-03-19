@@ -1,8 +1,10 @@
 # MetaBeans ESP 관제시스템 — REST API 엔드포인트 설계서
 
-**문서 버전**: v1.2  
+> 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
+
+**문서 버전**: v1.7  
 **작성일**: 2026-02-13  
-**작성일**: 2026-02-27 (v1.2)  
+**최종 수정일**: 2026-03-16 (v1.7)  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -10,32 +12,6 @@
 4. MetaBeans_ESP_데이터구조_정의서_v3_2.md
 5. MetaBeans_ESP_프로젝트_아키텍처_기술스택_정의서.md
 6. MetaBeans_ESP_관리툴_전체구조_기획서.docx
-
-### 변경 이력 (v1.0 → v1.2)
-
-| 구분 | MQTT 260212 | MQTT 260213 | REST API 반영 |
-|------|-------------|-------------|---------------|
-| 센서 필드 | `fan_speed` | `fan_speed` + `fan_mode` + `damper_mode` 추가 | 5.1 센서 데이터 응답에 `fanMode`, `damperMode` 추가 |
-| 댐퍼 제어 | target=1, action=1만 (수동) | action=2 (모드전환), action=3 (목표풍량) 추가 | 6.1 제어 명령 테이블 확장 |
-| 팬 제어 | target=2, action=0~3만 (수동) | action=4 (모드전환), action=5 (목표풍속) 추가 | 6.1 제어 명령 테이블 확장 |
-| `value` 타입 | `int` | `number` (int 또는 float) | 6.1 Body에서 value 타입 number로 변경 |
-| config 토픽 | "추후 정의" | 전체 필드 정의 (sensor_interval, mqtt_interval 등) | 6.6 게이트웨이 원격 설정 API 신규 |
-| config/ack 토픽 | 없음 | 신규 추가 (needs_reboot 필드 포함) | 6.7 설정 변경 결과 확인 API 신규 |
-| 팬 자동제어 | 없음 | M100 인버터 PID 기반 자동제어 | 6.5 팬 자동제어 설정 API 신규 |
-
-**v1.1 → v1.2 변경 이력** (MQTT 규격 260227_v2):
-
-| 구분 | MQTT 260213 (구) | MQTT 260227_v2 (신) | REST API 반영 |
-|------|-----------------|---------------------|---------------|
-| `oilLevel` 타입 | float (0~100) | **int** (0=정상, 1=만수) | 5.1 sensorData 예시, 13.3 Mock 범위 변경 |
-| `ppSpark` 범위 | 0~99 | **0~9999** (rev2.1 파워팩) | 5.1 sensorData 예시, 13.3 Mock 범위 변경 |
-| `fanRunning` 신규 | 없음 | int (0=정지, 1=운전중) | 5.1 sensorData, 13.3 Mock 추가 |
-| `fanFreq` 신규 | 없음 | float Hz (0~50.00) | 5.1 sensorData, 13.3 Mock 추가 |
-| `fanTargetPct` 신규 | 없음 | float % (0~100) | 5.1 sensorData, 13.3 Mock 추가 |
-| `damperCtrl` 신규 | 없음 | float % (0~100) — 명령값, damper=피드백 | 5.1 sensorData, 13.3 Mock 추가 |
-| status `wifi` 신규 | 없음 | 객체 (ssid/rssi/ip/mac/channel) | 10.1 게이트웨이 상태 응답 반영 |
-| status_flags bit 5 | 인버터 정상 (단순) | RS-485 통신 정상 AND Fault Trip 없음 | 5.1 statusDetails 주석 변경 |
-
 
 ---
 
@@ -247,41 +223,90 @@ PUT /auth/password
 
 > **화면**: ESP_매장점주_회원가입.html, ESP_매장본사_회원가입.html, ESP_본사_회원가입.html, ESP_대리점_회원가입.html
 
+### 2.0 사업자등록증 업로드 (OWNER / HQ / DEALER 공통)
+
+**적용 대상**: `POST /registration/owner`, `POST /registration/hq`, `POST /registration/dealer`
+
+| 항목 | 규격 |
+|------|------|
+| 폼 필드명 | `businessCertFile` (파일 1개) |
+| Content-Type | **`multipart/form-data`** (위 세 가입 API는 **파일 첨부 시 반드시 multipart**; JSON 단독 바디로는 파일 전송 불가) |
+| 허용 형식 | JPG, PNG, PDF |
+| 최대 크기 | 10MB (파트당) |
+| 저장 | 업로드 파일은 객체 스토리지(S3 등)에 저장 후 `user_business_info.business_cert_file`(또는 동등 컬럼)에 **경로/키** 저장 |
+
+**역할별 `businessCertFile` 필수 여부**
+
+| 가입 API | 필수 | 백엔드 처리 가이드 |
+|----------|------|-------------------|
+| `POST /registration/owner` | **필수** | 미첨부·0바이트·형식 불일치 시 `400` + `VALIDATION_ERROR`. 관리툴(프론트)도 동일 정책으로 수집. |
+| `POST /registration/hq` | 선택 | 미제출 시: 신청 후 7일 이내 보완 또는 support@metabean.net 이메일 제출 등 **운영 정책**에 따름. |
+| `POST /registration/dealer` | 선택 | 위와 동일. |
+
+**multipart 요청 시 텍스트 필드**
+
+- 본문의 JSON 예시 필드(`account`, `business`, `store` 등)는 **multipart 파트**로 각각 전달하는 방식을 권장한다.  
+  - 구현 패턴 A: `account`, `business`, `store`… 를 **JSON 문자열 1개 파트**(`application/json` 또는 `text/plain`)로 넣고, `businessCertFile`은 **파일 파트**.  
+  - 구현 패턴 B: 필드를 **평탄화**한 폼 키(`account.loginId`, `store.storeName` 등) + 파일 파트.  
+- 팀 내에서 **하나의 패턴으로 통일**할 것(프론트 Phase 2 연동 시 동일 규격).
+
+> **비고**: 프론트엔드는 드래그앤드롭/클릭 업로드 UI로 수집. 백엔드는 MIME/확장자/용량 검증 후 저장.
+
 ### 2.1 매장 점주(OWNER) 가입 — 7단계
 
 ```
 POST /registration/owner
 ```
 
-**Body**
+**Content-Type**: `businessCertFile` 첨부 시 **`multipart/form-data`** (§2.0). 파일 없이 JSON만 받지 않는 것을 권장(점주는 파일 **필수**).
+
+**Body (논리 구조 — 실제 전송은 multipart 권장)**
+
 ```json
 {
   "account": {
     "loginId": "owner_kim",
     "password": "secureP@ss123",
     "name": "김점주",
-    "phone": "010-1234-5678",
+    "phone": "02-1234-5678",
     "email": "kim@store.com"
   },
   "business": {
     "businessName": "김네식당",
-    "businessNumber": "123-45-67890",
-    "address": "서울시 강남구 역삼동 123-4"
+    "businessNumber": "123-45-67890"
   },
-  "businessCertFile": "(multipart file — 사업자등록증)",
+  "businessCertFile": "(multipart file — §2.0, 점주 가입 시 필수)",
   "store": {
     "storeName": "김네식당 본점",
     "address": "서울시 강남구 역삼동 123-4",
-    "latitude": 37.5012,
-    "longitude": 127.0396
+    "addressDetail": "1층",
+    "phone": "02-1234-5678",
+    "businessType": "한식",
+    "floorCount": 2
   },
-  "affiliation": {
-    "hqId": null,
-    "dealerId": 5
-  },
-  "termsAgreed": true
+  "dealerId": 5,
+  "termsAgreed": true,
+  "marketingAgreed": false
 }
 ```
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| account | object | ✅ | 로그인 계정. **phone**·**email**은 UI상 「매장 정보」 단계에서 수집해도 되며, 이 경우 보통 **account.phone = store.phone**, **account.email**은 매장/운영 담당 이메일(별도 필드 수집)로 전달. |
+| business | object | ✅ | 상호명·사업자등록번호 (`businessName`, `businessNumber`). |
+| businessCertFile | file | ✅ | 사업자등록증. §2.0 규격. |
+| store | object | ✅ | 최초 매장 정보. |
+| store.storeName | string | ✅ | 매장명 |
+| store.address | string | ✅ | 기본 주소 |
+| store.addressDetail | string | | 상세 주소 |
+| store.phone | string | ✅ | 매장 전화번호 (`account.phone`과 동일 값 허용) |
+| store.businessType | string | ✅ | 업종 코드/명 (데이터구조 정의서 `stores.business_type` 준수) |
+| store.floorCount | number | ✅ | 층수 (≥1) |
+| dealerId | number | ✅ | 담당 대리점 ID (`GET /registration/dealer-list` 등에서 선택) |
+| termsAgreed | boolean | ✅ | 이용약관 동의 |
+| marketingAgreed | boolean | | 마케팅 수신 동의 (기본 false) |
+
+> **account.phone / account.email**: 기본 정보 단계에서 수집하지 않는 화면 설계인 경우, **매장 정보 단계의 전화·이메일과 동일 값**을 `account`에 넣어 전달하면 된다 (HQ의 `hqInfo.contactPhone`/`contactEmail`과 `account` 정렬과 동일 개념).
 
 **Response 201**
 ```json
@@ -295,7 +320,7 @@ POST /registration/owner
 }
 ```
 
-### 2.2 매장 본사(HQ) 가입 — 5단계
+### 2.2 매장 본사(HQ) 가입 — 4단계
 
 ```
 POST /registration/hq
@@ -308,22 +333,42 @@ POST /registration/hq
     "loginId": "hq_bbq",
     "password": "secureP@ss123",
     "name": "박본사",
-    "phone": "010-9876-5432",
-    "email": "park@bbq.co.kr"
+    "phone": "010-5555-1234",
+    "email": "manager@bbq.co.kr"
   },
   "business": {
-    "businessName": "비비큐 본사",
+    "corporationName": "비비큐 본사",
     "businessNumber": "987-65-43210",
-    "address": "서울시 송파구 문정동 50"
+    "representativeName": "박대표"
   },
-  "businessCertFile": "(multipart file)",
-  "hqProfile": {
-    "brandName": "BBQ",
-    "hqName": "비비큐 본사"
+  "businessCertFile": "(multipart file — 2.0 참조)",
+  "hqInfo": {
+    "zipCode": "05836",
+    "address": "서울시 송파구 문정동 50",
+    "addressDetail": "3층",
+    "phone": "02-1234-5678",
+    "email": "info@bbq.co.kr",
+    "contactName": "김담당",
+    "contactPhone": "010-5555-1234",
+    "contactEmail": "manager@bbq.co.kr"
   },
   "termsAgreed": true
 }
 ```
+
+| hqInfo 필드 | 타입 | 필수 | 설명 |
+|-------------|------|------|------|
+| zipCode | string | | 우편번호 |
+| address | string | ✅ | 기본 주소 |
+| addressDetail | string | | 상세 주소 (층/호수 등) |
+| phone | string | ✅ | 대표 전화번호 |
+| email | string | ✅ | 대표 이메일 |
+| contactName | string | ✅ | 담당자명 |
+| contactPhone | string | ✅ | 담당자 연락처 |
+| contactEmail | string | ✅ | 담당자 이메일 |
+
+> **account.phone / account.email**: 프론트 회원가입 UI에서 기본 정보 단계에 수집하지 않을 경우, `hqInfo.contactPhone`·`hqInfo.contactEmail`과 동일 값으로 전달 가능.  
+> **dealerId**: 선택. HQ 회원가입 화면에서 담당 대리점을 선택하지 않는 경우 생략 가능(관리자 배정 등).
 
 ### 2.3 본사 직원(ADMIN) 가입 — 2단계
 
@@ -360,23 +405,34 @@ POST /registration/dealer
   },
   "business": {
     "businessName": "서울환경설비",
-    "businessNumber": "456-78-90123",
-    "address": "서울시 영등포구 당산동 100"
+    "businessNumber": "456-78-90123"
   },
-  "businessCertFile": "(multipart file)",
-  "dealerProfile": {
-    "serviceRegions": ["서울 동부", "서울 서부", "경기 동부"],
-    "specialties": {
-      "newInstall": true,
-      "repair": true,
-      "cleaning": false,
-      "transport": true,
-      "inspection": false
-    }
+  "businessCertFile": "(multipart file — 2.0 참조)",
+  "location": {
+    "zipCode": "07236",
+    "address": "서울시 영등포구 당산동 100",
+    "addressDetail": "1층",
+    "phone": "02-9876-5432",
+    "email": "info@dealer.com",
+    "contactName": "김담당",
+    "contactPhone": "010-5555-1234",
+    "contactEmail": "manager@dealer.com"
   },
+  "serviceRegions": ["서울 동부", "서울 서부", "경기 동부"],
   "termsAgreed": true
 }
 ```
+
+| location 필드 | 타입 | 필수 | 설명 |
+|---------------|------|------|------|
+| zipCode | string | | 우편번호 |
+| address | string | ✅ | 기본 주소 |
+| addressDetail | string | | 상세 주소 (층/호수 등) |
+| phone | string | ✅ | 대표 전화번호 |
+| email | string | ✅ | 대표 이메일 |
+| contactName | string | ✅ | 담당자명 |
+| contactPhone | string | ✅ | 담당자 연락처 |
+| contactEmail | string | ✅ | 담당자 이메일 |
 
 ### 2.5 사업자등록번호 검증
 
