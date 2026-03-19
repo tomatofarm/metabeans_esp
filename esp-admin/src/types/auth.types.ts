@@ -155,7 +155,7 @@ export interface RegisterHQRequest {
     contactName?: string;
     contactPhone?: string;
     contactEmail?: string;
-    businessType: string;
+    businessType?: string;
   };
   dealerId?: number;
   termsAgreed: boolean;

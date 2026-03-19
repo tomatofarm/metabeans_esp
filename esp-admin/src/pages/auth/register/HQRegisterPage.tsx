@@ -13,13 +13,10 @@ import {
 import {
   UserOutlined,
   LockOutlined,
-  MailOutlined,
-  PhoneOutlined,
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { registerHQ, checkLoginId, getDealerList } from '../../../api/auth.api';
-import { BUSINESS_TYPES } from '../../../types/auth.types';
 import type { DealerListItem } from '../../../types/auth.types';
 import StepIndicator from '../../../components/common/StepIndicator';
 import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
@@ -83,8 +80,8 @@ export default function HQRegisterPage() {
           loginId: values.loginId,
           password: values.password,
           name: values.name,
-          phone: values.phone,
-          email: values.email,
+          phone: values.hqContactPhone,
+          email: values.hqContactEmail,
         },
         business: {
           corporationName: values.corporationName,
@@ -100,7 +97,6 @@ export default function HQRegisterPage() {
           contactName: values.hqContactName,
           contactPhone: values.hqContactPhone,
           contactEmail: values.hqContactEmail,
-          businessType: values.businessType,
         },
         dealerId: values.dealerId,
         termsAgreed: values.termsAgreed,
@@ -225,23 +221,6 @@ export default function HQRegisterPage() {
             >
               <Input.Password prefix={<LockOutlined />} placeholder="비밀번호 확인" />
             </Form.Item>
-            <Form.Item
-              label="이메일"
-              name="email"
-              rules={[
-                { required: true, message: '이메일을 입력하세요' },
-                { type: 'email', message: '유효한 이메일을 입력하세요' },
-              ]}
-            >
-              <Input prefix={<MailOutlined />} placeholder="이메일 입력" />
-            </Form.Item>
-            <Form.Item
-              label="휴대전화"
-              name="phone"
-              rules={[{ required: true, message: '휴대전화를 입력하세요' }]}
-            >
-              <Input prefix={<PhoneOutlined />} placeholder="010-0000-0000" />
-            </Form.Item>
           </div>
 
           {/* Step 2: 사업자 정보 */}
@@ -276,22 +255,9 @@ export default function HQRegisterPage() {
             </Form.Item>
           </div>
 
-          {/* Step 3: 매장 정보 (본사 위치 + 담당자 + 업종) */}
+          {/* Step 3: 매장 정보 (본사 위치 + 담당자) */}
           <div style={{ display: current === 3 ? 'block' : 'none' }}>
             <LocationContactForm prefix="본사" fieldPrefix="hq" />
-            <Form.Item
-              label="업종"
-              name="businessType"
-              rules={[{ required: true, message: '업종을 선택하세요' }]}
-            >
-              <Select placeholder="업종 선택">
-                {BUSINESS_TYPES.map((type) => (
-                  <Select.Option key={type} value={type}>
-                    {type}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
           </div>
 
           {/* Step 4: 담당 대리점 */}
@@ -426,11 +392,11 @@ export default function HQRegisterPage() {
 function getFieldsForStep(step: number): string[] {
   switch (step) {
     case 1:
-      return ['name', 'loginId', 'password', 'passwordConfirm', 'email', 'phone'];
+      return ['name', 'loginId', 'password', 'passwordConfirm'];
     case 2:
       return ['corporationName', 'businessNumber', 'representativeName'];
     case 3:
-      return ['hqAddress', 'hqPhone', 'hqEmail', 'hqContactName', 'hqContactPhone', 'hqContactEmail', 'businessType'];
+      return ['hqAddress', 'hqPhone', 'hqEmail', 'hqContactName', 'hqContactPhone', 'hqContactEmail'];
     case 4:
       return [];
     case 5:

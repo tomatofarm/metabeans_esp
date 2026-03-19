@@ -2,7 +2,7 @@
 
 **원본 문서**: [MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md)
 
-**버전**: v1.4  
+**버전**: v1.5  
 **작성일**: 2026-02-13  
 **최종 수정일**: 2026-03-19  
 **작성자**: 한재혁 (MetaBeans)  
@@ -29,5 +29,8 @@
 > - HQ 가입: hqInfo에 zipCode, address, addressDetail, phone, email, contactName, contactPhone, contactEmail 추가  
 > - Dealer 가입: location에 zipCode, address, addressDetail, phone, email, contactName, contactPhone, contactEmail 추가  
 > - business: business.address 제거 (hqInfo/location으로 이관)
+
+> **v1.5 변경 이력 (2026-03-19)**:  
+> - HQ 가입: hqInfo.businessType 제거(선택). account.phone/email은 담당자 연락처와 동일 값 전달 안내
 
 ---

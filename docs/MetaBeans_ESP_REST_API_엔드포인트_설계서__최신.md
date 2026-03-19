@@ -2,9 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
 
-**문서 버전**: v1.4  
+**문서 버전**: v1.5  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-19 (v1.4)  
+**최종 수정일**: 2026-03-19 (v1.5)  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -298,8 +298,8 @@ POST /registration/hq
     "loginId": "hq_bbq",
     "password": "secureP@ss123",
     "name": "박본사",
-    "phone": "010-9876-5432",
-    "email": "park@bbq.co.kr"
+    "phone": "010-5555-1234",
+    "email": "manager@bbq.co.kr"
   },
   "business": {
     "corporationName": "비비큐 본사",
@@ -315,8 +315,7 @@ POST /registration/hq
     "email": "info@bbq.co.kr",
     "contactName": "김담당",
     "contactPhone": "010-5555-1234",
-    "contactEmail": "manager@bbq.co.kr",
-    "businessType": "패스트푸드"
+    "contactEmail": "manager@bbq.co.kr"
   },
   "dealerId": 1,
   "termsAgreed": true
@@ -333,7 +332,8 @@ POST /registration/hq
 | contactName | string | ✅ | 담당자명 |
 | contactPhone | string | ✅ | 담당자 연락처 |
 | contactEmail | string | ✅ | 담당자 이메일 |
-| businessType | string | ✅ | 업종 |
+
+> **account.phone / account.email**: 프론트 회원가입 UI에서 기본 정보 단계에 수집하지 않을 경우, `hqInfo.contactPhone`·`hqInfo.contactEmail`과 동일 값으로 전달 가능.
 
 ### 2.3 본사 직원(ADMIN) 가입 — 2단계
 
