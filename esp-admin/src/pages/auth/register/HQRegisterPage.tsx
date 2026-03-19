@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Form,
   Input,
   Button,
-  Select,
   Checkbox,
   Typography,
   message,
@@ -16,13 +15,12 @@ import {
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
-import { registerHQ, checkLoginId, getDealerList } from '../../../api/auth.api';
-import type { DealerListItem } from '../../../types/auth.types';
+import { registerHQ, checkLoginId } from '../../../api/auth.api';
 import StepIndicator from '../../../components/common/StepIndicator';
 import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
 import LocationContactForm from '../../../components/common/LocationContactForm';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 const PASSWORD_REGEX =
   /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
@@ -32,7 +30,6 @@ const STEPS = [
   { title: '기본 정보' },
   { title: '사업자 정보' },
   { title: '매장 정보' },
-  { title: '담당 대리점' },
   { title: '약관 동의' },
 ];
 
@@ -40,12 +37,7 @@ export default function HQRegisterPage() {
   const [current, setCurrent] = useState(1);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [dealers, setDealers] = useState<DealerListItem[]>([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    getDealerList().then(setDealers);
-  }, []);
 
   const handleNext = async () => {
     try {
@@ -98,7 +90,6 @@ export default function HQRegisterPage() {
           contactPhone: values.hqContactPhone,
           contactEmail: values.hqContactEmail,
         },
-        dealerId: values.dealerId,
         termsAgreed: values.termsAgreed,
         marketingAgreed: values.marketingAgreed ?? false,
       });
@@ -260,24 +251,8 @@ export default function HQRegisterPage() {
             <LocationContactForm prefix="본사" fieldPrefix="hq" />
           </div>
 
-          {/* Step 4: 담당 대리점 */}
+          {/* Step 4: 약관 동의 */}
           <div style={{ display: current === 4 ? 'block' : 'none' }}>
-            <Paragraph type="secondary" style={{ marginBottom: 16 }}>
-              장비 설치 및 유지보수를 담당할 대리점을 선택해주세요.
-            </Paragraph>
-            <Form.Item label="담당 대리점" name="dealerId">
-              <Select placeholder="대리점 선택" allowClear>
-                {dealers.map((d: DealerListItem) => (
-                  <Select.Option key={d.dealerId} value={d.dealerId}>
-                    {d.dealerName} ({d.serviceRegions.join(', ')})
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </div>
-
-          {/* Step 5: 약관 동의 */}
-          <div style={{ display: current === 5 ? 'block' : 'none' }}>
             <div
               style={{
                 maxHeight: 160,
@@ -374,7 +349,7 @@ export default function HQRegisterPage() {
         {/* Navigation buttons */}
         <div className="register-nav">
           <Button onClick={handlePrev}>이전</Button>
-          {current < 5 ? (
+          {current < 4 ? (
             <Button type="primary" onClick={handleNext}>
               다음 단계
             </Button>
@@ -398,8 +373,6 @@ function getFieldsForStep(step: number): string[] {
     case 3:
       return ['hqAddress', 'hqPhone', 'hqEmail', 'hqContactName', 'hqContactPhone', 'hqContactEmail'];
     case 4:
-      return [];
-    case 5:
       return ['termsAgreed', 'privacyAgreed'];
     default:
       return [];

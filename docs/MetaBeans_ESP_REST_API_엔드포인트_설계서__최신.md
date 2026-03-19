@@ -2,9 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
 
-**문서 버전**: v1.5  
+**문서 버전**: v1.6  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-19 (v1.5)  
+**최종 수정일**: 2026-03-19 (v1.6)  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -285,7 +285,7 @@ POST /registration/owner
 }
 ```
 
-### 2.2 매장 본사(HQ) 가입 — 5단계
+### 2.2 매장 본사(HQ) 가입 — 4단계
 
 ```
 POST /registration/hq
@@ -317,7 +317,6 @@ POST /registration/hq
     "contactPhone": "010-5555-1234",
     "contactEmail": "manager@bbq.co.kr"
   },
-  "dealerId": 1,
   "termsAgreed": true
 }
 ```
@@ -333,7 +332,8 @@ POST /registration/hq
 | contactPhone | string | ✅ | 담당자 연락처 |
 | contactEmail | string | ✅ | 담당자 이메일 |
 
-> **account.phone / account.email**: 프론트 회원가입 UI에서 기본 정보 단계에 수집하지 않을 경우, `hqInfo.contactPhone`·`hqInfo.contactEmail`과 동일 값으로 전달 가능.
+> **account.phone / account.email**: 프론트 회원가입 UI에서 기본 정보 단계에 수집하지 않을 경우, `hqInfo.contactPhone`·`hqInfo.contactEmail`과 동일 값으로 전달 가능.  
+> **dealerId**: 선택. HQ 회원가입 화면에서 담당 대리점을 선택하지 않는 경우 생략 가능(관리자 배정 등).
 
 ### 2.3 본사 직원(ADMIN) 가입 — 2단계
 
