@@ -169,9 +169,7 @@ export interface RegisterAdminRequest {
   loginId: string;
   password: string;
   name: string;
-  employeeId: string;
   email: string;
-  department: string;
   termsAgreed: boolean;
   marketingAgreed: boolean;
 }

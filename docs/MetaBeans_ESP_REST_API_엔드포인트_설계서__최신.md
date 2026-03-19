@@ -2,9 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
 
-**문서 버전**: v1.7  
+**문서 버전**: v1.8  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-16 (v1.7)  
+**최종 수정일**: 2026-03-16 (v1.8)  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -382,9 +382,23 @@ POST /registration/admin
   "loginId": "admin_lee",
   "password": "secureP@ss123",
   "name": "이관리",
-  "email": "lee@metabeans.com"
+  "email": "lee@metabeans.com",
+  "termsAgreed": true,
+  "marketingAgreed": false
 }
 ```
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| loginId | string | ✅ | 로그인 아이디 |
+| password | string | ✅ | 비밀번호 |
+| name | string | ✅ | 이름 |
+| email | string | ✅ | 이메일 |
+| termsAgreed | boolean | ✅ | 이용약관 동의 |
+| marketingAgreed | boolean | | 마케팅 수신 동의 (기본 false) |
+
+> **가입 화면(UI)**: 기본 정보 단계에서 **사번·부서는 수집하지 않음**. 필요 시 승인 후 관리자/인사 시스템에서 별도 등록.
+
 - ADMIN 계정은 별도 승인 프로세스 (기존 ADMIN이 직접 생성 또는 특수 초대코드)
 
 ### 2.4 대리점(DEALER) 가입 — 6단계

@@ -13,8 +13,6 @@ import {
   UserOutlined,
   LockOutlined,
   MailOutlined,
-  IdcardOutlined,
-  TeamOutlined,
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
@@ -66,9 +64,7 @@ export default function AdminRegisterPage() {
         loginId: values.loginId,
         password: values.password,
         name: values.name,
-        employeeId: values.employeeId,
         email: values.email,
-        department: values.department,
         termsAgreed: values.termsAgreed,
         marketingAgreed: values.marketingAgreed ?? false,
       });
@@ -162,13 +158,6 @@ export default function AdminRegisterPage() {
               <Input prefix={<UserOutlined />} placeholder="이름 입력" />
             </Form.Item>
             <Form.Item
-              label="사번"
-              name="employeeId"
-              rules={[{ required: true, message: '사번을 입력하세요' }]}
-            >
-              <Input prefix={<IdcardOutlined />} placeholder="사번 입력" />
-            </Form.Item>
-            <Form.Item
               label="아이디"
               name="loginId"
               rules={[
@@ -221,13 +210,6 @@ export default function AdminRegisterPage() {
               ]}
             >
               <Input prefix={<MailOutlined />} placeholder="이메일 입력" />
-            </Form.Item>
-            <Form.Item
-              label="부서"
-              name="department"
-              rules={[{ required: true, message: '부서를 입력하세요' }]}
-            >
-              <Input prefix={<TeamOutlined />} placeholder="부서명 입력" />
             </Form.Item>
           </div>
 
@@ -284,7 +266,7 @@ export default function AdminRegisterPage() {
               [개인정보처리방침]
               <br />
               MetaBeans는 이용자의 개인정보를 안전하게 보호하기 위해 최선을 다합니다.
-              수집하는 개인정보: 이름, 사번, 이메일, 부서 등
+              수집하는 개인정보: 이름, 이메일 등
               수집 목적: 서비스 제공, 시스템 관리, 장비 모니터링 및 제어
               보유 기간: 회원 탈퇴 시까지 (법정 보관 기간 별도 적용)
             </div>
@@ -347,7 +329,7 @@ export default function AdminRegisterPage() {
 function getFieldsForStep(step: number): string[] {
   switch (step) {
     case 0:
-      return ['name', 'employeeId', 'loginId', 'password', 'passwordConfirm', 'email', 'department'];
+      return ['name', 'loginId', 'password', 'passwordConfirm', 'email'];
     case 1:
       return ['termsAgreed', 'privacyAgreed'];
     default:

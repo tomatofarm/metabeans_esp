@@ -2,7 +2,7 @@
 
 **원본 문서**: [MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md)
 
-**버전**: v1.7  
+**버전**: v1.8  
 **작성일**: 2026-02-13  
 **최종 수정일**: 2026-03-16  
 **작성자**: 한재혁 (MetaBeans)  
@@ -42,5 +42,9 @@
 > - §2.0: 텍스트 필드 + 파일 동시 전송 시 **구현 패턴 A/B** 안내 (JSON 파트 vs 평탄화 폼)  
 > - §2.1 점주 가입: 예시 Body를 **프론트/타입과 정합** (`business.address` 제거, `store` 필드·`dealerId` 루트·`marketingAgreed`, `businessCertFile` §2.0 참조)  
 > - §2.1: **account.phone/email**을 매장 정보 단계 값과 맞추는 **비고** 추가
+
+> **v1.8 변경 이력 (2026-03-16)**:  
+> - §2.3 본사 직원(ADMIN) 가입: Body에 **`termsAgreed` / `marketingAgreed`** 반영, **필드 표** 추가  
+> - §2.3: 가입 UI에서 **사번·부서 미수집** 명시 (승인 후 별도 등록 안내)
 
 ---
