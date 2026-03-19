@@ -4,12 +4,13 @@ import {
   Input,
   Button,
   Select,
-  InputNumber,
   Checkbox,
   Typography,
   message,
   Space,
   Divider,
+  Row,
+  Col,
 } from 'antd';
 import {
   UserOutlined,
@@ -17,11 +18,12 @@ import {
   MailOutlined,
   PhoneOutlined,
   ArrowLeftOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
 import { useNavigate, Link } from 'react-router-dom';
+import { useKakaoPostcodePopup } from 'react-daum-postcode';
 import { registerOwner, checkLoginId, getDealerList } from '../../../api/auth.api';
-import { BUSINESS_TYPES } from '../../../types/auth.types';
 import type { DealerListItem } from '../../../types/auth.types';
 import StepIndicator from '../../../components/common/StepIndicator';
 
@@ -45,6 +47,7 @@ export default function OwnerRegisterPage() {
   const [loading, setLoading] = useState(false);
   const [dealers, setDealers] = useState<DealerListItem[]>([]);
   const navigate = useNavigate();
+  const openPostcode = useKakaoPostcodePopup();
 
   useEffect(() => {
     getDealerList().then(setDealers);
@@ -96,8 +99,6 @@ export default function OwnerRegisterPage() {
           address: values.storeAddress,
           addressDetail: values.storeAddressDetail,
           phone: values.storePhone,
-          businessType: values.businessType,
-          floorCount: values.floorCount ?? 1,
         },
         dealerId: values.dealerId,
         termsAgreed: values.termsAgreed,
@@ -128,6 +129,30 @@ export default function OwnerRegisterPage() {
     } catch {
       message.error('중복 확인 중 오류가 발생했습니다.');
     }
+  };
+
+  const handleStoreAddressSearch = () => {
+    openPostcode({
+      onComplete: (data: {
+        zonecode: string;
+        address: string;
+        addressType: 'R' | 'J';
+        bname?: string;
+        buildingName?: string;
+      }) => {
+        let fullAddress = data.address;
+        if (data.addressType === 'R') {
+          let extra = '';
+          if (data.bname) extra += data.bname;
+          if (data.buildingName) extra += extra ? `, ${data.buildingName}` : data.buildingName;
+          if (extra) fullAddress += ` (${extra})`;
+        }
+        form.setFieldsValue({
+          storeZipCode: data.zonecode,
+          storeAddress: fullAddress,
+        });
+      },
+    });
   };
 
   return (
@@ -272,15 +297,37 @@ export default function OwnerRegisterPage() {
             >
               <Input placeholder="매장명 입력" />
             </Form.Item>
-            <Form.Item
-              label="매장 주소"
-              name="storeAddress"
-              rules={[{ required: true, message: '매장 주소를 입력하세요' }]}
-            >
-              <Input placeholder="주소 검색" />
+
+            <Form.Item label="매장 주소" style={{ marginBottom: 16 }}>
+              <Row gutter={8}>
+                <Col flex="0 0 120px">
+                  <Form.Item name="storeZipCode" noStyle>
+                    <Input placeholder="우편번호" />
+                  </Form.Item>
+                </Col>
+                <Col flex="0 0 120px">
+                  <Button
+                    htmlType="button"
+                    icon={<SearchOutlined />}
+                    onClick={handleStoreAddressSearch}
+                    style={{ width: '100%' }}
+                  >
+                    주소 검색
+                  </Button>
+                </Col>
+              </Row>
             </Form.Item>
+
+            <Form.Item
+              label="기본 주소"
+              name="storeAddress"
+              rules={[{ required: true, message: '기본 주소를 입력하세요' }]}
+            >
+              <Input placeholder="기본 주소" />
+            </Form.Item>
+
             <Form.Item label="상세 주소" name="storeAddressDetail">
-              <Input placeholder="상세 주소 입력" />
+              <Input placeholder="상세 주소를 입력하세요 (층/호수 등)" />
             </Form.Item>
             <Form.Item
               label="매장 전화번호"
@@ -298,27 +345,6 @@ export default function OwnerRegisterPage() {
               ]}
             >
               <Input prefix={<MailOutlined />} placeholder="이메일 입력" />
-            </Form.Item>
-            <Form.Item
-              label="업종"
-              name="businessType"
-              rules={[{ required: true, message: '업종을 선택하세요' }]}
-            >
-              <Select placeholder="업종 선택">
-                {BUSINESS_TYPES.map((type) => (
-                  <Select.Option key={type} value={type}>
-                    {type}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item
-              label="층수"
-              name="floorCount"
-              rules={[{ required: true, message: '층수를 입력하세요' }]}
-              initialValue={1}
-            >
-              <InputNumber min={1} max={10} style={{ width: '100%' }} />
             </Form.Item>
           </div>
 
@@ -465,10 +491,9 @@ function getFieldsForStep(step: number): string[] {
       return [
         'storeName',
         'storeAddress',
+        'storeZipCode',
         'storePhone',
         'ownerEmail',
-        'businessType',
-        'floorCount',
       ];
     case 4:
       return ['dealerId'];

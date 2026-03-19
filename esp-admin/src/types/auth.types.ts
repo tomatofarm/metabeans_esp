@@ -124,8 +124,8 @@ export interface RegisterStoreInfo {
   address: string;
   addressDetail?: string;
   phone?: string;
-  businessType: string;
-  floorCount: number;
+  businessType?: string;
+  floorCount?: number;
 }
 
 // 매장점주 회원가입 요청

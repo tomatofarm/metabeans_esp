@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Upload, message } from 'antd';
 import { FileImageOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
+import type { RcFile, UploadChangeParam } from 'antd/es/upload/interface';
 
 const ACCEPT_TYPES = '.jpg,.jpeg,.png,.pdf';
 const MAX_SIZE_MB = 10;
@@ -20,9 +21,8 @@ export default function BusinessCertUpload({
   onChange,
 }: BusinessCertUploadProps) {
   const files = fileList ?? value ?? [];
-  const [isDragging, setIsDragging] = useState(false);
 
-  const handleBeforeUpload: UploadProps['beforeUpload'] = useCallback((file) => {
+  const handleBeforeUpload: UploadProps['beforeUpload'] = useCallback((file: RcFile) => {
     const isValidType = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'].includes(
       file.type,
     );
@@ -38,8 +38,8 @@ export default function BusinessCertUpload({
   }, []);
 
   const handleChange: UploadProps['onChange'] = useCallback(
-    ({ fileList }) => {
-      onChange?.(fileList);
+    (info: UploadChangeParam<UploadFile>) => {
+      onChange?.(info.fileList);
     },
     [onChange],
   );
@@ -107,13 +107,11 @@ export default function BusinessCertUpload({
           beforeUpload={handleBeforeUpload}
           onChange={handleChange}
           style={{
-            border: `2px dashed ${isDragging ? '#7c3aed' : '#d9d9d9'}`,
+            border: '2px dashed #d9d9d9',
             borderRadius: 4,
             background: '#fafafa',
             padding: '32px 24px',
           }}
-          onDragEnter={() => setIsDragging(true)}
-          onDragLeave={() => setIsDragging(false)}
         >
           <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>
             <FileImageOutlined
