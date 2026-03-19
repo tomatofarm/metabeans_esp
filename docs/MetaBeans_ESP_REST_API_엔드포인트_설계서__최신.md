@@ -2,9 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
 
-**문서 버전**: v1.3  
+**문서 버전**: v1.4  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-19 (v1.3)  
+**최종 수정일**: 2026-03-19 (v1.4)  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -302,18 +302,38 @@ POST /registration/hq
     "email": "park@bbq.co.kr"
   },
   "business": {
-    "businessName": "비비큐 본사",
+    "corporationName": "비비큐 본사",
     "businessNumber": "987-65-43210",
-    "address": "서울시 송파구 문정동 50"
+    "representativeName": "박대표"
   },
   "businessCertFile": "(multipart file — 2.0 참조)",
-  "hqProfile": {
-    "brandName": "BBQ",
-    "hqName": "비비큐 본사"
+  "hqInfo": {
+    "zipCode": "05836",
+    "address": "서울시 송파구 문정동 50",
+    "addressDetail": "3층",
+    "phone": "02-1234-5678",
+    "email": "info@bbq.co.kr",
+    "contactName": "김담당",
+    "contactPhone": "010-5555-1234",
+    "contactEmail": "manager@bbq.co.kr",
+    "businessType": "패스트푸드"
   },
+  "dealerId": 1,
   "termsAgreed": true
 }
 ```
+
+| hqInfo 필드 | 타입 | 필수 | 설명 |
+|-------------|------|------|------|
+| zipCode | string | | 우편번호 |
+| address | string | ✅ | 기본 주소 |
+| addressDetail | string | | 상세 주소 (층/호수 등) |
+| phone | string | ✅ | 대표 전화번호 |
+| email | string | ✅ | 대표 이메일 |
+| contactName | string | ✅ | 담당자명 |
+| contactPhone | string | ✅ | 담당자 연락처 |
+| contactEmail | string | ✅ | 담당자 이메일 |
+| businessType | string | ✅ | 업종 |
 
 ### 2.3 본사 직원(ADMIN) 가입 — 2단계
 
@@ -350,23 +370,34 @@ POST /registration/dealer
   },
   "business": {
     "businessName": "서울환경설비",
-    "businessNumber": "456-78-90123",
-    "address": "서울시 영등포구 당산동 100"
+    "businessNumber": "456-78-90123"
   },
   "businessCertFile": "(multipart file — 2.0 참조)",
-  "dealerProfile": {
-    "serviceRegions": ["서울 동부", "서울 서부", "경기 동부"],
-    "specialties": {
-      "newInstall": true,
-      "repair": true,
-      "cleaning": false,
-      "transport": true,
-      "inspection": false
-    }
+  "location": {
+    "zipCode": "07236",
+    "address": "서울시 영등포구 당산동 100",
+    "addressDetail": "1층",
+    "phone": "02-9876-5432",
+    "email": "info@dealer.com",
+    "contactName": "김담당",
+    "contactPhone": "010-5555-1234",
+    "contactEmail": "manager@dealer.com"
   },
+  "serviceRegions": ["서울 동부", "서울 서부", "경기 동부"],
   "termsAgreed": true
 }
 ```
+
+| location 필드 | 타입 | 필수 | 설명 |
+|---------------|------|------|------|
+| zipCode | string | | 우편번호 |
+| address | string | ✅ | 기본 주소 |
+| addressDetail | string | | 상세 주소 (층/호수 등) |
+| phone | string | ✅ | 대표 전화번호 |
+| email | string | ✅ | 대표 이메일 |
+| contactName | string | ✅ | 담당자명 |
+| contactPhone | string | ✅ | 담당자 연락처 |
+| contactEmail | string | ✅ | 담당자 이메일 |
 
 ### 2.5 사업자등록번호 검증
 

@@ -23,6 +23,7 @@ import { BUSINESS_TYPES } from '../../../types/auth.types';
 import type { DealerListItem } from '../../../types/auth.types';
 import StepIndicator from '../../../components/common/StepIndicator';
 import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
+import LocationContactForm from '../../../components/common/LocationContactForm';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -91,9 +92,14 @@ export default function HQRegisterPage() {
           representativeName: values.representativeName,
         },
         hqInfo: {
+          zipCode: values.hqZipCode,
           address: values.hqAddress,
           addressDetail: values.hqAddressDetail,
           phone: values.hqPhone,
+          email: values.hqEmail,
+          contactName: values.hqContactName,
+          contactPhone: values.hqContactPhone,
+          contactEmail: values.hqContactEmail,
           businessType: values.businessType,
         },
         dealerId: values.dealerId,
@@ -270,21 +276,9 @@ export default function HQRegisterPage() {
             </Form.Item>
           </div>
 
-          {/* Step 3: 매장 정보 (본사 주소, 업종) */}
+          {/* Step 3: 매장 정보 (본사 위치 + 담당자 + 업종) */}
           <div style={{ display: current === 3 ? 'block' : 'none' }}>
-            <Form.Item
-              label="본사 주소"
-              name="hqAddress"
-              rules={[{ required: true, message: '본사 주소를 입력하세요' }]}
-            >
-              <Input placeholder="주소 검색" />
-            </Form.Item>
-            <Form.Item label="상세 주소" name="hqAddressDetail">
-              <Input placeholder="상세 주소 입력" />
-            </Form.Item>
-            <Form.Item label="전화번호" name="hqPhone">
-              <Input prefix={<PhoneOutlined />} placeholder="02-0000-0000" />
-            </Form.Item>
+            <LocationContactForm prefix="본사" fieldPrefix="hq" />
             <Form.Item
               label="업종"
               name="businessType"
@@ -436,7 +430,7 @@ function getFieldsForStep(step: number): string[] {
     case 2:
       return ['corporationName', 'businessNumber', 'representativeName'];
     case 3:
-      return ['hqAddress', 'businessType'];
+      return ['hqAddress', 'hqPhone', 'hqEmail', 'hqContactName', 'hqContactPhone', 'hqContactEmail', 'businessType'];
     case 4:
       return [];
     case 5:

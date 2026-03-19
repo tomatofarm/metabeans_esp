@@ -147,9 +147,14 @@ export interface RegisterHQRequest {
     representativeName: string;
   };
   hqInfo: {
+    zipCode?: string;
     address: string;
     addressDetail?: string;
     phone?: string;
+    email?: string;
+    contactName?: string;
+    contactPhone?: string;
+    contactEmail?: string;
     businessType: string;
   };
   dealerId?: number;
@@ -174,8 +179,14 @@ export interface RegisterDealerRequest {
   account: RegisterAccountInfo;
   business: RegisterBusinessInfo;
   location: {
+    zipCode?: string;
     address: string;
     addressDetail?: string;
+    phone?: string;
+    email?: string;
+    contactName?: string;
+    contactPhone?: string;
+    contactEmail?: string;
   };
   serviceRegions: string[];
   termsAgreed: boolean;
