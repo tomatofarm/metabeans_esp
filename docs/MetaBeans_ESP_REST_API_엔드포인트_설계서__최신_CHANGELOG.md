@@ -2,9 +2,9 @@
 
 **원본 문서**: [MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md)
 
-**버전**: v1.6  
+**버전**: v1.7  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-19  
+**최종 수정일**: 2026-03-16  
 **작성자**: 한재혁 (MetaBeans)  
 **대상**: 고블린게임즈 개발팀, 내부 기획팀
 
@@ -35,5 +35,12 @@
 
 > **v1.6 변경 이력 (2026-03-19)**:  
 > - HQ 가입: 회원가입 단계에서 담당 대리점 선택 제거, dealerId는 선택(예시 Body에서 제거)
+
+> **v1.7 변경 이력 (2026-03-16)**:  
+> - §2.0 사업자등록증: 적용 대상에 **`POST /registration/owner` 추가** (OWNER/HQ/DEALER 공통 규격으로 명시)  
+> - §2.0: **multipart/form-data** 전제, **역할별 필수 여부** 표 추가 (OWNER `businessCertFile` **필수** + 400 가이드 / HQ·DEALER 선택)  
+> - §2.0: 텍스트 필드 + 파일 동시 전송 시 **구현 패턴 A/B** 안내 (JSON 파트 vs 평탄화 폼)  
+> - §2.1 점주 가입: 예시 Body를 **프론트/타입과 정합** (`business.address` 제거, `store` 필드·`dealerId` 루트·`marketingAgreed`, `businessCertFile` §2.0 참조)  
+> - §2.1: **account.phone/email**을 매장 정보 단계 값과 맞추는 **비고** 추가
 
 ---

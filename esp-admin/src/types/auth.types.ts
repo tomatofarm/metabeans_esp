@@ -132,6 +132,8 @@ export interface RegisterStoreInfo {
 export interface RegisterOwnerRequest {
   account: RegisterAccountInfo;
   business: RegisterBusinessInfo;
+  /** 사업자등록증 첨부 (프론트 폼, Phase 2 multipart 전송) */
+  businessCertFile?: unknown;
   store: RegisterStoreInfo;
   dealerId: number;
   termsAgreed: boolean;

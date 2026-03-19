@@ -18,6 +18,7 @@ import {
   PhoneOutlined,
   ArrowLeftOutlined,
 } from '@ant-design/icons';
+import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
 import { useNavigate, Link } from 'react-router-dom';
 import { registerOwner, checkLoginId, getDealerList } from '../../../api/auth.api';
 import { BUSINESS_TYPES } from '../../../types/auth.types';
@@ -82,13 +83,14 @@ export default function OwnerRegisterPage() {
           loginId: values.loginId,
           password: values.password,
           name: values.name,
-          phone: values.phone,
-          email: values.email,
+          phone: values.storePhone,
+          email: values.ownerEmail,
         },
         business: {
           businessName: values.businessName,
           businessNumber: values.businessNumber,
         },
+        businessCertFile: values.businessCertFile,
         store: {
           storeName: values.storeName,
           address: values.storeAddress,
@@ -226,23 +228,6 @@ export default function OwnerRegisterPage() {
             >
               <Input.Password prefix={<LockOutlined />} placeholder="비밀번호 확인" />
             </Form.Item>
-            <Form.Item
-              label="이메일"
-              name="email"
-              rules={[
-                { required: true, message: '이메일을 입력하세요' },
-                { type: 'email', message: '유효한 이메일을 입력하세요' },
-              ]}
-            >
-              <Input prefix={<MailOutlined />} placeholder="이메일 입력" />
-            </Form.Item>
-            <Form.Item
-              label="휴대전화"
-              name="phone"
-              rules={[{ required: true, message: '휴대전화를 입력하세요' }]}
-            >
-              <Input prefix={<PhoneOutlined />} placeholder="010-0000-0000" />
-            </Form.Item>
           </div>
 
           {/* Step 2: 사업자 정보 */}
@@ -260,6 +245,21 @@ export default function OwnerRegisterPage() {
               rules={[{ required: true, message: '상호명을 입력하세요' }]}
             >
               <Input placeholder="상호명 입력" />
+            </Form.Item>
+            <Form.Item
+              name="businessCertFile"
+              valuePropName="fileList"
+              getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList ?? [])}
+              rules={[
+                {
+                  validator: (_: unknown, fileList: { length?: number }[]) =>
+                    fileList && fileList.length > 0
+                      ? Promise.resolve()
+                      : Promise.reject(new Error('사업자등록증을 첨부해주세요')),
+                },
+              ]}
+            >
+              <BusinessCertUpload />
             </Form.Item>
           </div>
 
@@ -282,8 +282,22 @@ export default function OwnerRegisterPage() {
             <Form.Item label="상세 주소" name="storeAddressDetail">
               <Input placeholder="상세 주소 입력" />
             </Form.Item>
-            <Form.Item label="매장 전화번호" name="storePhone">
+            <Form.Item
+              label="매장 전화번호"
+              name="storePhone"
+              rules={[{ required: true, message: '매장 전화번호를 입력하세요' }]}
+            >
               <Input prefix={<PhoneOutlined />} placeholder="02-0000-0000" />
+            </Form.Item>
+            <Form.Item
+              label="이메일"
+              name="ownerEmail"
+              rules={[
+                { required: true, message: '이메일을 입력하세요' },
+                { type: 'email', message: '유효한 이메일을 입력하세요' },
+              ]}
+            >
+              <Input prefix={<MailOutlined />} placeholder="이메일 입력" />
             </Form.Item>
             <Form.Item
               label="업종"
@@ -444,11 +458,18 @@ export default function OwnerRegisterPage() {
 function getFieldsForStep(step: number): string[] {
   switch (step) {
     case 1:
-      return ['name', 'loginId', 'password', 'passwordConfirm', 'email', 'phone'];
+      return ['name', 'loginId', 'password', 'passwordConfirm'];
     case 2:
-      return ['businessNumber', 'businessName'];
+      return ['businessNumber', 'businessName', 'businessCertFile'];
     case 3:
-      return ['storeName', 'storeAddress', 'businessType', 'floorCount'];
+      return [
+        'storeName',
+        'storeAddress',
+        'storePhone',
+        'ownerEmail',
+        'businessType',
+        'floorCount',
+      ];
     case 4:
       return ['dealerId'];
     case 5:
