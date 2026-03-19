@@ -144,6 +144,8 @@ export interface RegisterOwnerRequest {
 export interface RegisterHQRequest {
   account: RegisterAccountInfo;
   business: {
+    /** 프랜차이즈 브랜드명 (DB hq_profiles.brand_name) */
+    brandName: string;
     corporationName: string;
     businessNumber: string;
     representativeName: string;

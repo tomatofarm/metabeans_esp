@@ -76,6 +76,7 @@ export default function HQRegisterPage() {
           email: values.hqContactEmail,
         },
         business: {
+          brandName: values.brandName,
           corporationName: values.corporationName,
           businessNumber: values.businessNumber,
           representativeName: values.representativeName,
@@ -216,6 +217,13 @@ export default function HQRegisterPage() {
 
           {/* Step 2: 사업자 정보 */}
           <div style={{ display: current === 2 ? 'block' : 'none' }}>
+            <Form.Item
+              label="브랜드명"
+              name="brandName"
+              rules={[{ required: true, message: '브랜드명을 입력하세요' }]}
+            >
+              <Input placeholder="프랜차이즈 브랜드명 입력" />
+            </Form.Item>
             <Form.Item
               label="법인명"
               name="corporationName"
@@ -369,7 +377,7 @@ function getFieldsForStep(step: number): string[] {
     case 1:
       return ['name', 'loginId', 'password', 'passwordConfirm'];
     case 2:
-      return ['corporationName', 'businessNumber', 'representativeName'];
+      return ['brandName', 'corporationName', 'businessNumber', 'representativeName'];
     case 3:
       return ['hqAddress', 'hqPhone', 'hqEmail', 'hqContactName', 'hqContactPhone', 'hqContactEmail'];
     case 4:

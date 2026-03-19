@@ -2,7 +2,7 @@
 
 **원본 문서**: [MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md)
 
-**버전**: v1.8  
+**버전**: v1.9  
 **작성일**: 2026-02-13  
 **최종 수정일**: 2026-03-16  
 **작성자**: 한재혁 (MetaBeans)  
@@ -46,5 +46,8 @@
 > **v1.8 변경 이력 (2026-03-16)**:  
 > - §2.3 본사 직원(ADMIN) 가입: Body에 **`termsAgreed` / `marketingAgreed`** 반영, **필드 표** 추가  
 > - §2.3: 가입 UI에서 **사번·부서 미수집** 명시 (승인 후 별도 등록 안내)
+
+> **v1.9 변경 이력 (2026-03-16)**:  
+> - §2.2 HQ 가입: `business.brandName`(브랜드명) **필수** 추가, 예시 Body·**business 필드 표** 반영 (`hq_profiles.brand_name` 매핑 안내)
 
 ---

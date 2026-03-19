@@ -2,9 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
 
-**문서 버전**: v1.8  
+**문서 버전**: v1.9  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-16 (v1.8)  
+**최종 수정일**: 2026-03-16 (v1.9)  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -337,6 +337,7 @@ POST /registration/hq
     "email": "manager@bbq.co.kr"
   },
   "business": {
+    "brandName": "비비큐",
     "corporationName": "비비큐 본사",
     "businessNumber": "987-65-43210",
     "representativeName": "박대표"
@@ -355,6 +356,13 @@ POST /registration/hq
   "termsAgreed": true
 }
 ```
+
+| business 필드 | 타입 | 필수 | 설명 |
+|-----------------|------|------|------|
+| brandName | string | ✅ | 프랜차이즈 브랜드명 (DB `hq_profiles.brand_name` 매핑) |
+| corporationName | string | ✅ | 법인명 |
+| businessNumber | string | ✅ | 사업자등록번호 |
+| representativeName | string | ✅ | 대표자명 |
 
 | hqInfo 필드 | 타입 | 필수 | 설명 |
 |-------------|------|------|------|
