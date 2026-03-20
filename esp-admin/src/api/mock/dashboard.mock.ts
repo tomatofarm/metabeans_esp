@@ -271,6 +271,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
       storeId: 1,
       storeName: '강남점',
       address: '서울시 강남구 테헤란로 123',
+      phone: '02-1234-5678',
       businessType: '튀김',
       iaqData: generateGatewaySensorData(1),
       floorIaqList: [
@@ -347,6 +348,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
       storeId: 2,
       storeName: '홍대점',
       address: '서울시 마포구 홍익로 45',
+      phone: '02-2345-6789',
       businessType: '굽기',
       iaqData: generateGatewaySensorData(2),
       floorIaqList: [
@@ -416,6 +418,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
       storeId: 3,
       storeName: '신촌점',
       address: '서울시 서대문구 신촌로 67',
+      phone: '02-3456-7890',
       businessType: '커피로스팅',
       iaqData: generateGatewaySensorData(4),
       floorIaqList: [

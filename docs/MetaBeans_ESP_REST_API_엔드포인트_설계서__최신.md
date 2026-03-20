@@ -2,9 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
 
-**문서 버전**: v1.12  
+**문서 버전**: v1.13  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-16 (v1.12)  
+**최종 수정일**: 2026-03-16 (v1.13)  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -732,6 +732,50 @@ GET /dashboard/store-tree
 **상태 전파 규칙** (피드백 p.27):
 - Controller → Equipment → Floor/Gateway → Store 순으로 하위 중 최고 위험도 전파
 - 문제 없으면 `GOOD` + "정상 운영", 문제 있으면 해당 색상 + "문제 발생"
+
+### 3.7 개별 매장 대시보드 (사이드바에서 매장 선택 시)
+
+> **화면**: `StoreDashboardPage` (개별 매장 대시보드). 사이드바에서 매장 노드 선택 후 `/dashboard` 영역에 표시.
+
+```
+GET /dashboard/stores/:storeId
+🔒 인증 필요 | 역할: ALL (접근 가능 매장만)
+```
+
+**Response 200** — 매장 헤더 + 집계 데이터 (프론트 `StoreDashboard` 타입과 정합)
+
+```json
+{
+  "success": true,
+  "data": {
+    "storeId": 101,
+    "storeName": "김네식당 본점",
+    "address": "서울시 강남구 테헤란로 123",
+    "phone": "02-1234-5678",
+    "businessType": "한식",
+    "iaqData": {},
+    "floorIaqList": [],
+    "equipments": [],
+    "issues": [],
+    "recentAsRequests": []
+  }
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| storeId | number | ✅ | 매장 ID |
+| storeName | string | ✅ | 매장명 |
+| address | string | ✅ | 기본 주소(표시용 문자열) |
+| phone | string | ✅ | 매장 대표 연락처(전화). DB `stores.phone` 등과 매핑 |
+| businessType | string | ✅ | 업종 (`stores.business_type`) |
+| iaqData | object \| null | | 최신 IAQ 요약(층 통합이면 null 가능) |
+| floorIaqList | array | | 층별 IAQ |
+| equipments | array | | 해당 매장 장비 현황 요약 |
+| issues | array | | 해당 매장 이슈 목록 |
+| recentAsRequests | array | | 최근 A/S 신청 요약 |
+
+> **비고**: Phase 1 Mock은 단일 응답으로 묶어 두었으며, Phase 2에서 성능·캐시 필요 시 `§3.2`·`§3.4` 등 기존 엔드포인트 조합으로 분할해도 된다. 다만 **헤더(매장명·주소·연락처·업종)** 는 개별 매장 대시보드 진입 시 반드시 제공하는 것을 권장한다.
 
 ---
 
@@ -2002,7 +2046,7 @@ GET /files/:fileId
 | 3 | 매장본사 회원가입 | `POST /registration/hq`, `GET /auth/check-login-id` |
 | 4 | 본사직원 회원가입 | `POST /registration/admin` |
 | 5 | 대리점 회원가입 | `POST /registration/dealer`, `GET /auth/check-login-id` |
-| 6 | 대시보드 | `GET /dashboard/summary`, `GET /dashboard/issues`, `GET /dashboard/alarms`, `GET /dashboard/iaq`, `GET /dashboard/outdoor-air`, `GET /dashboard/store-tree` |
+| 6 | 대시보드 | `GET /dashboard/summary`, `GET /dashboard/issues`, `GET /dashboard/alarms`, `GET /dashboard/iaq`, `GET /dashboard/outdoor-air`, `GET /dashboard/store-tree`, `GET /dashboard/stores/:storeId` |
 | 7 | 장비관리 — 장비정보 | `GET /equipment`, `GET /equipment/:id`, `POST /equipment`, `PUT /equipment/:id`, `DELETE /equipment/:id` |
 | 8 | 장비관리 — 실시간모니터링 | `GET /monitoring/equipment/:id/latest`, `GET /monitoring/equipment/:id/history`, `GET /monitoring/gateway/:id/iaq-history` |
 | 9 | 장비관리 — ESG | `GET /monitoring/equipment/:id/esg` |

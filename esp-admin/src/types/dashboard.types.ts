@@ -75,6 +75,8 @@ export interface StoreDashboard {
   storeId: number;
   storeName: string;
   address: string;
+  /** 매장 대표 연락처(전화) */
+  phone: string;
   businessType: string;
   iaqData: GatewaySensorData | null;
   floorIaqList: FloorIaqData[];

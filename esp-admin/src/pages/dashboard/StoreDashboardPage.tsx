@@ -117,8 +117,12 @@ export default function StoreDashboardPage({ storeId, onEquipmentClick }: StoreD
         <Typography.Title level={4} style={{ margin: 0 }}>
           {data.storeName}
         </Typography.Title>
-        <Typography.Text type="secondary">
-          {data.address} · {data.businessType}
+        <Typography.Text type="secondary" style={{ display: 'block', marginTop: 4 }}>
+          {data.address}
+          {data.businessType ? ` · ${data.businessType}` : ''}
+        </Typography.Text>
+        <Typography.Text type="secondary" style={{ display: 'block', marginTop: 2 }}>
+          연락처 {data.phone || '-'}
         </Typography.Text>
       </div>
 
