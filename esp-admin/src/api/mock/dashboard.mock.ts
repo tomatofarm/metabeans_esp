@@ -17,6 +17,7 @@ import type {
 import type { GatewaySensorData, ControllerSensorData } from '../../types/sensor.types';
 import type { ASRequestListItem } from '../../types/as-service.types';
 import { mockDelay, wrapResponse, STORE_ID_MAP } from './common.mock';
+import { filterItemsByStoreAccess, type AuthorizedStoresParam } from '../../utils/mockAccess';
 import { SENSOR_RANGES } from '../../utils/constants';
 import { FILTER_CHECK_MESSAGE } from '../../utils/statusHelper';
 
@@ -107,7 +108,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 1,
       storeId: 2,
-      storeName: '홍대점',
+      storeName: '숯불갈비 홍대점',
       equipmentId: 4,
       equipmentName: 'ESP 집진기 #1 (B1)',
       issueType: 'COMM_ERROR',
@@ -118,7 +119,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 2,
       storeId: 2,
-      storeName: '홍대점',
+      storeName: '숯불갈비 홍대점',
       equipmentId: 3,
       equipmentName: 'ESP 집진기 #1 (1F)',
       issueType: 'COMM_ERROR',
@@ -132,7 +133,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 3,
       storeId: 1,
-      storeName: '강남점',
+      storeName: '바삭치킨 강남점',
       equipmentId: 1,
       equipmentName: 'ESP 집진기 #1',
       issueType: 'INLET_TEMP',
@@ -145,7 +146,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 4,
       storeId: 3,
-      storeName: '신촌점',
+      storeName: '로스팅하우스 신촌점',
       equipmentId: 5,
       equipmentName: 'ESP 집진기 #1',
       issueType: 'INLET_TEMP',
@@ -161,7 +162,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 5,
       storeId: 1,
-      storeName: '강남점',
+      storeName: '바삭치킨 강남점',
       equipmentId: 2,
       equipmentName: 'ESP 집진기 #2',
       issueType: 'FILTER_CHECK',
@@ -177,7 +178,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 6,
       storeId: 2,
-      storeName: '홍대점',
+      storeName: '숯불갈비 홍대점',
       equipmentId: 3,
       equipmentName: 'ESP 집진기 #1 (1F)',
       issueType: 'DUST_REMOVAL',
@@ -232,7 +233,7 @@ export async function mockGetStoreMapData(): Promise<StoreMapItem[]> {
   const data: StoreMapItem[] = [
     {
       storeId: 1,
-      storeName: '강남점',
+      storeName: '바삭치킨 강남점',
       address: '서울시 강남구 테헤란로 123',
       latitude: 37.4979,
       longitude: 127.0276,
@@ -242,7 +243,7 @@ export async function mockGetStoreMapData(): Promise<StoreMapItem[]> {
     },
     {
       storeId: 2,
-      storeName: '홍대점',
+      storeName: '숯불갈비 홍대점',
       address: '서울시 마포구 홍익로 45',
       latitude: 37.5563,
       longitude: 126.9234,
@@ -252,7 +253,7 @@ export async function mockGetStoreMapData(): Promise<StoreMapItem[]> {
     },
     {
       storeId: 3,
-      storeName: '신촌점',
+      storeName: '로스팅하우스 신촌점',
       address: '서울시 서대문구 신촌로 67',
       latitude: 37.5599,
       longitude: 126.9371,
@@ -269,7 +270,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
   const storeMap: Record<number, StoreDashboard> = {
     1: {
       storeId: 1,
-      storeName: '강남점',
+      storeName: '바삭치킨 강남점',
       address: '서울시 강남구 테헤란로 123',
       phone: '02-1234-5678',
       businessType: '튀김',
@@ -301,7 +302,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 3,
           storeId: 1,
-          storeName: '강남점',
+          storeName: '바삭치킨 강남점',
           equipmentId: 1,
           equipmentName: 'ESP 집진기 #1',
           issueType: 'INLET_TEMP',
@@ -314,7 +315,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 5,
           storeId: 1,
-          storeName: '강남점',
+          storeName: '바삭치킨 강남점',
           equipmentId: 2,
           equipmentName: 'ESP 집진기 #2',
           issueType: 'FILTER_CHECK',
@@ -346,7 +347,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
     },
     2: {
       storeId: 2,
-      storeName: '홍대점',
+      storeName: '숯불갈비 홍대점',
       address: '서울시 마포구 홍익로 45',
       phone: '02-2345-6789',
       businessType: '굽기',
@@ -379,7 +380,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 1,
           storeId: 2,
-          storeName: '홍대점',
+          storeName: '숯불갈비 홍대점',
           equipmentId: 4,
           equipmentName: 'ESP 집진기 #1 (B1)',
           issueType: 'COMM_ERROR',
@@ -390,7 +391,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 2,
           storeId: 2,
-          storeName: '홍대점',
+          storeName: '숯불갈비 홍대점',
           equipmentId: 3,
           equipmentName: 'ESP 집진기 #1 (1F)',
           issueType: 'COMM_ERROR',
@@ -401,7 +402,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 6,
           storeId: 2,
-          storeName: '홍대점',
+          storeName: '숯불갈비 홍대점',
           equipmentId: 3,
           equipmentName: 'ESP 집진기 #1 (1F)',
           issueType: 'DUST_REMOVAL',
@@ -416,7 +417,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
     },
     3: {
       storeId: 3,
-      storeName: '신촌점',
+      storeName: '로스팅하우스 신촌점',
       address: '서울시 서대문구 신촌로 67',
       phone: '02-3456-7890',
       businessType: '커피로스팅',
@@ -439,7 +440,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 4,
           storeId: 3,
-          storeName: '신촌점',
+          storeName: '로스팅하우스 신촌점',
           equipmentId: 5,
           equipmentName: 'ESP 집진기 #1',
           issueType: 'INLET_TEMP',
@@ -483,7 +484,7 @@ export async function mockGetEquipmentDashboard(equipmentId: number): Promise<Eq
       modelName: 'MB-ESP-3000',
       installDate: '2025-06-15',
       dealerName: '서울환경테크',
-      storeName: '강남점',
+      storeName: '바삭치킨 강남점',
       status: 'red',
       controllers: [
         {
@@ -511,7 +512,7 @@ export async function mockGetEquipmentDashboard(equipmentId: number): Promise<Eq
       modelName: 'MB-ESP-2000',
       installDate: '2025-08-20',
       dealerName: '서울환경테크',
-      storeName: '강남점',
+      storeName: '바삭치킨 강남점',
       status: 'yellow',
       controllers: [
         {
@@ -531,7 +532,7 @@ export async function mockGetEquipmentDashboard(equipmentId: number): Promise<Eq
       modelName: 'MB-ESP-3000',
       installDate: '2025-07-10',
       dealerName: '경기설비',
-      storeName: '홍대점',
+      storeName: '숯불갈비 홍대점',
       status: 'yellow',
       controllers: [
         {
@@ -559,7 +560,7 @@ export async function mockGetEquipmentDashboard(equipmentId: number): Promise<Eq
       modelName: 'MB-ESP-1500',
       installDate: '2025-09-01',
       dealerName: '경기설비',
-      storeName: '홍대점',
+      storeName: '숯불갈비 홍대점',
       status: 'red',
       controllers: [
         {
@@ -579,7 +580,7 @@ export async function mockGetEquipmentDashboard(equipmentId: number): Promise<Eq
       modelName: 'MB-ESP-2000',
       installDate: '2025-10-05',
       dealerName: '서울환경테크',
-      storeName: '신촌점',
+      storeName: '로스팅하우스 신촌점',
       status: 'yellow',
       controllers: [
         {
@@ -704,8 +705,7 @@ export async function mockGetRoleRecentAs(storeIds: string[]): Promise<RoleAsReq
 // 역할별 긴급 알람 (storeIds 필터)
 export async function mockGetRoleEmergencyAlarms(storeIds: string[]): Promise<EmergencyAlarm[]> {
   const resolved = resolveStoreIds(storeIds);
-  const allAlarms = await mockGetEmergencyAlarms();
-  return allAlarms.filter((a) => resolved.includes(a.storeId));
+  return mockGetEmergencyAlarms(resolved);
 }
 
 // 대시보드용 미처리 A/S 목록 (전체 — ADMIN용)
@@ -714,7 +714,7 @@ const PENDING_AS_STATUSES = new Set(['PENDING', 'ACCEPTED', 'ASSIGNED', 'VISIT_S
 export async function mockGetDashboardPendingAs(limit = 10): Promise<ASRequestListItem[]> {
   // as-service.mock의 데이터를 동적으로 import하여 최신 상태 반영
   const { mockGetASRequests } = await import('./as-service.mock');
-  const res = await mockGetASRequests({ pageSize: 100 });
+  const res = await mockGetASRequests({ pageSize: 100, authorizedStoreIds: null });
   const pending = res.data
     .filter((r) => PENDING_AS_STATUSES.has(r.status))
     .slice(0, limit);
@@ -725,7 +725,7 @@ export async function mockGetDashboardPendingAs(limit = 10): Promise<ASRequestLi
 export async function mockGetRoleDashboardPendingAs(storeIds: string[], limit = 10): Promise<ASRequestListItem[]> {
   const resolved = resolveStoreIds(storeIds);
   const { mockGetASRequests } = await import('./as-service.mock');
-  const res = await mockGetASRequests({ pageSize: 100 });
+  const res = await mockGetASRequests({ pageSize: 100, authorizedStoreIds: resolved });
   const pending = res.data
     .filter((r) => PENDING_AS_STATUSES.has(r.status) && resolved.includes(r.storeId))
     .slice(0, limit);
@@ -733,13 +733,15 @@ export async function mockGetRoleDashboardPendingAs(storeIds: string[], limit = 
 }
 
 // 7. 긴급 알람 목록 (Red만)
-export async function mockGetEmergencyAlarms(): Promise<EmergencyAlarm[]> {
+export async function mockGetEmergencyAlarms(
+  authorizedStoreIds: AuthorizedStoresParam = null,
+): Promise<EmergencyAlarm[]> {
   const now = dayjs();
   const data: EmergencyAlarm[] = [
     {
       alarmId: 1,
       storeId: 2,
-      storeName: '홍대점',
+      storeName: '숯불갈비 홍대점',
       equipmentId: 4,
       equipmentName: 'ESP 집진기 #1 (B1)',
       controllerId: 6,
@@ -753,7 +755,7 @@ export async function mockGetEmergencyAlarms(): Promise<EmergencyAlarm[]> {
     {
       alarmId: 2,
       storeId: 1,
-      storeName: '강남점',
+      storeName: '바삭치킨 강남점',
       equipmentId: 1,
       equipmentName: 'ESP 집진기 #1',
       controllerId: 1,
@@ -765,5 +767,6 @@ export async function mockGetEmergencyAlarms(): Promise<EmergencyAlarm[]> {
       status: 'ACTIVE',
     },
   ];
-  return mockDelay(data, 300);
+  const filtered = filterItemsByStoreAccess(data, authorizedStoreIds);
+  return mockDelay(filtered, 300);
 }

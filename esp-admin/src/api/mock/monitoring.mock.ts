@@ -1,5 +1,6 @@
 import type { ControllerSensorData, RealtimeMonitoringData, RealtimeControllerData, SensorHistoryDataPoint } from '../../types/sensor.types';
 import { mockDelay, mockStoreTree } from './common.mock';
+import { assertMockEquipmentStoreAccess, type AuthorizedStoresParam } from '../../utils/mockAccess';
 import { SENSOR_RANGES } from '../../utils/constants';
 
 // --- 유틸 ---
@@ -95,7 +96,11 @@ const ABNORMAL_SCENARIOS: Record<number, Partial<ControllerSensorData>> = {
 };
 
 // Mock API: 실시간 센서 데이터 조회
-export async function mockGetRealtimeSensorData(equipmentId: number): Promise<RealtimeMonitoringData> {
+export async function mockGetRealtimeSensorData(
+  equipmentId: number,
+  authorizedStoreIds: AuthorizedStoresParam = null,
+): Promise<RealtimeMonitoringData> {
+  assertMockEquipmentStoreAccess(equipmentId, authorizedStoreIds);
   const meta = getEquipmentMeta(equipmentId);
   const controllers = getControllersForEquipment(equipmentId);
 
@@ -138,7 +143,9 @@ export async function mockGetSensorHistory(
   equipmentId: number,
   _from?: number,
   _to?: number,
+  authorizedStoreIds: AuthorizedStoresParam = null,
 ): Promise<SensorHistoryDataPoint[]> {
+  assertMockEquipmentStoreAccess(equipmentId, authorizedStoreIds);
   const controllers = getControllersForEquipment(equipmentId);
   const now = Math.floor(Date.now() / 1000);
   const points: SensorHistoryDataPoint[] = [];

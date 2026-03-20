@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   mockGetEquipments,
@@ -17,6 +18,13 @@ import type {
   EquipmentDetail,
 } from '../types/equipment.types';
 import type { ApiResponse } from './mock/common.mock';
+import { useAuthStore } from '../stores/authStore';
+import { resolveAuthorizedNumericStoreIds } from '../utils/mockAccess';
+
+function useMockAuthorizedStores() {
+  const storeIds = useAuthStore((s) => s.user?.storeIds);
+  return useMemo(() => resolveAuthorizedNumericStoreIds(storeIds), [storeIds]);
+}
 
 // 장비 목록 조회
 export function useEquipments(params?: {
@@ -26,18 +34,22 @@ export function useEquipments(params?: {
   connectionStatus?: string;
   search?: string;
 }) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['equipments', params],
-    queryFn: () => mockGetEquipments(params),
+    queryKey: ['equipments', user?.userId, authorizedStoreIds, params],
+    queryFn: () => mockGetEquipments({ ...params, authorizedStoreIds }),
     staleTime: 30 * 1000,
   });
 }
 
 // 장비 상세 조회
 export function useEquipmentDetail(equipmentId: number | null) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['equipment', equipmentId],
-    queryFn: () => mockGetEquipmentDetail(equipmentId!),
+    queryKey: ['equipment', user?.userId, authorizedStoreIds, equipmentId],
+    queryFn: () => mockGetEquipmentDetail(equipmentId!, authorizedStoreIds),
     enabled: equipmentId !== null,
     staleTime: 30 * 1000,
   });
@@ -54,18 +66,22 @@ export function useEquipmentModels() {
 
 // 매장 옵션
 export function useStoreOptions() {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['storeOptions'],
-    queryFn: () => mockGetStoreOptions(),
+    queryKey: ['storeOptions', user?.userId, authorizedStoreIds],
+    queryFn: () => mockGetStoreOptions(authorizedStoreIds),
     staleTime: 5 * 60 * 1000,
   });
 }
 
 // 층 옵션
 export function useFloorOptions(storeId: number | null) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['floorOptions', storeId],
-    queryFn: () => mockGetFloorOptions(storeId!),
+    queryKey: ['floorOptions', user?.userId, authorizedStoreIds, storeId],
+    queryFn: () => mockGetFloorOptions(storeId!, authorizedStoreIds),
     enabled: storeId !== null,
     staleTime: 5 * 60 * 1000,
   });

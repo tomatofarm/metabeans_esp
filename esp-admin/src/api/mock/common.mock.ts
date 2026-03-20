@@ -8,6 +8,13 @@ export const STORE_ID_MAP: Record<string, number> = {
   'store-003': 3,
 };
 
+/** Mock 전역: 매장 표시명 (사이드바 트리·A/S·장비·대시보드 통일) */
+export const MOCK_STORE_DISPLAY_NAME: Record<number, string> = {
+  1: '바삭치킨 강남점',
+  2: '숯불갈비 홍대점',
+  3: '로스팅하우스 신촌점',
+};
+
 // Mock 사용자 데이터 (역할별)
 export const mockUsers: Record<string, { user: LoginUser; password: string }> = {
   admin: {

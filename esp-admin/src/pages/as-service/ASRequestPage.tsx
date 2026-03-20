@@ -66,19 +66,7 @@ export default function ASRequestPage() {
   const selectedStoreId = Form.useWatch('storeId', form);
   const { data: equipmentOptions = [] } = useASEquipmentOptions(selectedStoreId ?? null);
 
-  // 역할별 매장 필터링
-  const filteredStoreOptions = storeOptions.filter((store) => {
-    if (!user) return false;
-    if (user.role === 'ADMIN') return true;
-    // storeIds가 'store-001' 형태 → storeId(숫자)와 매핑
-    const storeIdMap: Record<string, number> = {
-      'store-001': 1,
-      'store-002': 2,
-      'store-003': 3,
-    };
-    const allowedIds = user.storeIds.map((sid) => storeIdMap[sid]).filter(Boolean);
-    return allowedIds.includes(store.storeId);
-  });
+  // 매장 옵션은 mock/API에서 storeIds 기준으로 이미 필터됨
 
   // URL 파라미터에서 알림 정보 자동 채움
   useEffect(() => {
@@ -190,7 +178,7 @@ export default function ASRequestPage() {
         >
           <Select
             placeholder="매장을 선택하세요"
-            options={filteredStoreOptions.map((s) => ({
+            options={storeOptions.map((s) => ({
               value: s.storeId,
               label: s.storeName,
             }))}

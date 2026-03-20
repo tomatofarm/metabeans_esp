@@ -16,6 +16,7 @@ import {
   FAN_ACTION_LABELS,
 } from '../../types/control.types';
 import { mockDelay } from './common.mock';
+import { assertMockEquipmentStoreAccess, type AuthorizedStoresParam } from '../../utils/mockAccess';
 
 // --- 유틸 ---
 function randomChoice<T>(arr: T[]): T {
@@ -135,14 +136,22 @@ export async function mockSendControlCommand(request: SendControlRequest): Promi
 /**
  * 제어 이력 조회
  */
-export async function mockGetControlHistory(equipmentId: number): Promise<ControlCommand[]> {
+export async function mockGetControlHistory(
+  equipmentId: number,
+  authorizedStoreIds: AuthorizedStoresParam = null,
+): Promise<ControlCommand[]> {
+  assertMockEquipmentStoreAccess(equipmentId, authorizedStoreIds);
   return mockDelay(generateMockControlHistory(equipmentId), 300);
 }
 
 /**
  * 팬 자동제어 설정 조회
  */
-export async function mockGetFanAutoSettings(equipmentId: number): Promise<FanAutoSettings> {
+export async function mockGetFanAutoSettings(
+  equipmentId: number,
+  authorizedStoreIds: AuthorizedStoresParam = null,
+): Promise<FanAutoSettings> {
+  assertMockEquipmentStoreAccess(equipmentId, authorizedStoreIds);
   const settings = mockFanAutoSettingsMap[equipmentId] ?? {
     equipmentId,
     fanControlMode: 'MANUAL' as const,
@@ -160,7 +169,9 @@ export async function mockGetFanAutoSettings(equipmentId: number): Promise<FanAu
 export async function mockUpdateFanAutoSettings(
   equipmentId: number,
   settings: Partial<FanAutoSettings>,
+  authorizedStoreIds: AuthorizedStoresParam = null,
 ): Promise<FanAutoSettings> {
+  assertMockEquipmentStoreAccess(equipmentId, authorizedStoreIds);
   const current = mockFanAutoSettingsMap[equipmentId] ?? {
     equipmentId,
     fanControlMode: 'MANUAL' as const,

@@ -19,6 +19,12 @@ import type {
   RepairType,
 } from '../../types/as-service.types';
 import { mockDelay, wrapResponse, type ApiResponse } from './common.mock';
+import {
+  filterItemsByStoreAccess,
+  filterStoreOptionsByAccess,
+  isStoreIdAllowed,
+  type AuthorizedStoresParam,
+} from '../../utils/mockAccess';
 import { FILTER_CHECK_MESSAGE } from '../../utils/statusHelper';
 
 // --- Mock 알림 데이터 ---
@@ -29,7 +35,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 1,
     storeId: 2,
-    storeName: '홍대점 (굽기)',
+    storeName: '숯불갈비 홍대점',
     equipmentId: 4,
     equipmentName: 'ESP 집진기 #1 (B1)',
     controllerId: 6,
@@ -43,7 +49,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 2,
     storeId: 2,
-    storeName: '홍대점 (굽기)',
+    storeName: '숯불갈비 홍대점',
     equipmentId: 3,
     equipmentName: 'ESP 집진기 #1 (1F)',
     controllerId: 5,
@@ -57,7 +63,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 3,
     storeId: 1,
-    storeName: '강남점 (튀김)',
+    storeName: '바삭치킨 강남점',
     equipmentId: 1,
     equipmentName: 'ESP 집진기 #1',
     controllerId: 1,
@@ -73,7 +79,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 4,
     storeId: 3,
-    storeName: '신촌점 (커피로스팅)',
+    storeName: '로스팅하우스 신촌점',
     equipmentId: 5,
     equipmentName: 'ESP 집진기 #1',
     controllerId: 7,
@@ -89,7 +95,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 5,
     storeId: 1,
-    storeName: '강남점 (튀김)',
+    storeName: '바삭치킨 강남점',
     equipmentId: 2,
     equipmentName: 'ESP 집진기 #2',
     alertType: 'FILTER_CHECK',
@@ -103,7 +109,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 6,
     storeId: 2,
-    storeName: '홍대점 (굽기)',
+    storeName: '숯불갈비 홍대점',
     equipmentId: 3,
     equipmentName: 'ESP 집진기 #1 (1F)',
     alertType: 'DUST_REMOVAL',
@@ -117,7 +123,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 7,
     storeId: 1,
-    storeName: '강남점 (튀김)',
+    storeName: '바삭치킨 강남점',
     equipmentId: 1,
     equipmentName: 'ESP 집진기 #1',
     controllerId: 2,
@@ -132,7 +138,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 8,
     storeId: 1,
-    storeName: '강남점 (튀김)',
+    storeName: '바삭치킨 강남점',
     equipmentId: 2,
     equipmentName: 'ESP 집진기 #2',
     controllerId: 3,
@@ -153,7 +159,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9001,
     storeId: 1,
-    storeName: '강남점 (튀김)',
+    storeName: '바삭치킨 강남점',
     equipmentId: 1,
     equipmentName: 'ESP 집진기 #1',
     urgency: 'HIGH',
@@ -169,7 +175,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9002,
     storeId: 1,
-    storeName: '강남점 (튀김)',
+    storeName: '바삭치킨 강남점',
     equipmentId: 2,
     equipmentName: 'ESP 집진기 #2',
     urgency: 'NORMAL',
@@ -185,7 +191,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9003,
     storeId: 2,
-    storeName: '홍대점 (굽기)',
+    storeName: '숯불갈비 홍대점',
     equipmentId: 4,
     equipmentName: 'ESP 집진기 #1 (B1)',
     urgency: 'HIGH',
@@ -201,7 +207,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9004,
     storeId: 3,
-    storeName: '신촌점 (커피로스팅)',
+    storeName: '로스팅하우스 신촌점',
     equipmentId: 5,
     equipmentName: 'ESP 집진기 #1',
     urgency: 'NORMAL',
@@ -217,7 +223,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9005,
     storeId: 2,
-    storeName: '홍대점 (굽기)',
+    storeName: '숯불갈비 홍대점',
     equipmentId: 3,
     equipmentName: 'ESP 집진기 #1 (1F)',
     urgency: 'NORMAL',
@@ -233,7 +239,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9006,
     storeId: 1,
-    storeName: '강남점 (튀김)',
+    storeName: '바삭치킨 강남점',
     equipmentId: 1,
     equipmentName: 'ESP 집진기 #1',
     urgency: 'NORMAL',
@@ -248,7 +254,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9007,
     storeId: 3,
-    storeName: '신촌점 (커피로스팅)',
+    storeName: '로스팅하우스 신촌점',
     equipmentId: 5,
     equipmentName: 'ESP 집진기 #1',
     urgency: 'HIGH',
@@ -264,7 +270,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9008,
     storeId: 2,
-    storeName: '홍대점 (굽기)',
+    storeName: '숯불갈비 홍대점',
     equipmentId: 3,
     equipmentName: 'ESP 집진기 #1 (1F)',
     urgency: 'NORMAL',
@@ -307,17 +313,20 @@ export async function mockGetASAlerts(params?: {
   to?: string;
   page?: number;
   pageSize?: number;
+  /** Mock: 로그인 사용자 접근 가능 매장 (null = 전체) */
+  authorizedStoreIds?: AuthorizedStoresParam;
 }): Promise<ApiResponse<ASAlert[]>> {
-  let filtered = [...mockAlerts];
+  let filtered = filterItemsByStoreAccess(
+    [...mockAlerts],
+    params?.authorizedStoreIds ?? null,
+    params?.storeId,
+  );
 
   if (params?.severity) {
     filtered = filtered.filter((a) => a.severity === params.severity);
   }
   if (params?.alertType) {
     filtered = filtered.filter((a) => a.alertType === params.alertType);
-  }
-  if (params?.storeId) {
-    filtered = filtered.filter((a) => a.storeId === params.storeId);
   }
   if (params?.isResolved !== undefined) {
     filtered = filtered.filter((a) => a.isResolved === params.isResolved);
@@ -354,17 +363,19 @@ export async function mockGetASRequests(params?: {
   to?: string;
   page?: number;
   pageSize?: number;
+  authorizedStoreIds?: AuthorizedStoresParam;
 }): Promise<ApiResponse<ASRequestListItem[]>> {
-  let filtered = [...mockASRequests];
+  let filtered = filterItemsByStoreAccess(
+    [...mockASRequests],
+    params?.authorizedStoreIds ?? null,
+    params?.storeId,
+  );
 
   if (params?.status) {
     filtered = filtered.filter((r) => r.status === params.status);
   }
   if (params?.urgency) {
     filtered = filtered.filter((r) => r.urgency === params.urgency);
-  }
-  if (params?.storeId) {
-    filtered = filtered.filter((r) => r.storeId === params.storeId);
   }
   if (params?.from) {
     const fromDate = dayjs(params.from);
@@ -394,7 +405,12 @@ let nextRequestId = 9100;
 
 export async function mockCreateASRequest(
   req: ASCreateRequest,
+  authorizedStoreIds?: AuthorizedStoresParam,
 ): Promise<ApiResponse<ASCreateResponse>> {
+  if (!isStoreIdAllowed(req.storeId, authorizedStoreIds ?? null)) {
+    throw new Error('AUTH_FORBIDDEN');
+  }
+
   const requestId = nextRequestId++;
 
   // 매장 dealer 자동 매칭
@@ -408,9 +424,9 @@ export async function mockCreateASRequest(
 
   // 내부 목록에도 추가 (목록 즉시 반영)
   const storeNames: Record<number, string> = {
-    1: '강남점 (튀김)',
-    2: '홍대점 (굽기)',
-    3: '신촌점 (커피로스팅)',
+    1: '바삭치킨 강남점',
+    2: '숯불갈비 홍대점',
+    3: '로스팅하우스 신촌점',
   };
 
   const equipOptions = mockEquipmentOptions[req.storeId] ?? [];
@@ -447,7 +463,11 @@ export async function mockCreateASRequest(
 // 매장별 장비 옵션 조회
 export async function mockGetEquipmentOptionsByStore(
   storeId: number,
+  authorizedStoreIds?: AuthorizedStoresParam,
 ): Promise<EquipmentOption[]> {
+  if (!isStoreIdAllowed(storeId, authorizedStoreIds ?? null)) {
+    return mockDelay([], 200);
+  }
   return mockDelay(mockEquipmentOptions[storeId] ?? [], 200);
 }
 
@@ -458,13 +478,16 @@ export interface ASStoreOption {
 }
 
 const mockASStoreOptions: ASStoreOption[] = [
-  { storeId: 1, storeName: '강남점 (튀김)' },
-  { storeId: 2, storeName: '홍대점 (굽기)' },
-  { storeId: 3, storeName: '신촌점 (커피로스팅)' },
+  { storeId: 1, storeName: '바삭치킨 강남점' },
+  { storeId: 2, storeName: '숯불갈비 홍대점' },
+  { storeId: 3, storeName: '로스팅하우스 신촌점' },
 ];
 
-export async function mockGetASStoreOptions(): Promise<ASStoreOption[]> {
-  return mockDelay(mockASStoreOptions, 200);
+export async function mockGetASStoreOptions(
+  authorizedStoreIds?: AuthorizedStoresParam,
+): Promise<ASStoreOption[]> {
+  const list = filterStoreOptionsByAccess(mockASStoreOptions, authorizedStoreIds ?? null);
+  return mockDelay(list, 200);
 }
 
 // --- 대리점 옵션 ---
@@ -631,7 +654,12 @@ function buildASDetail(requestId: number): ASDetail | null {
 // A/S 상세 조회
 export async function mockGetASDetail(
   requestId: number,
+  authorizedStoreIds?: AuthorizedStoresParam,
 ): Promise<ApiResponse<ASDetail | null>> {
+  const request = mockASRequests.find((r) => r.requestId === requestId);
+  if (request && !isStoreIdAllowed(request.storeId, authorizedStoreIds ?? null)) {
+    return mockDelay(wrapResponse(null), 400);
+  }
   const detail = buildASDetail(requestId);
   return mockDelay(wrapResponse(detail), 400);
 }
@@ -640,8 +668,12 @@ export async function mockGetASDetail(
 export async function mockUpdateASStatus(
   requestId: number,
   update: ASStatusUpdateRequest,
+  authorizedStoreIds?: AuthorizedStoresParam,
 ): Promise<ApiResponse<{ success: boolean }>> {
   const request = mockASRequests.find((r) => r.requestId === requestId);
+  if (request && !isStoreIdAllowed(request.storeId, authorizedStoreIds ?? null)) {
+    throw new Error('AUTH_FORBIDDEN');
+  }
   if (request) {
     request.status = update.status;
     request.updatedAt = new Date().toISOString();
@@ -660,8 +692,12 @@ export async function mockUpdateASStatus(
 export async function mockAssignDealer(
   requestId: number,
   dealerId: number,
+  authorizedStoreIds?: AuthorizedStoresParam,
 ): Promise<ApiResponse<{ success: boolean }>> {
   const request = mockASRequests.find((r) => r.requestId === requestId);
+  if (request && !isStoreIdAllowed(request.storeId, authorizedStoreIds ?? null)) {
+    throw new Error('AUTH_FORBIDDEN');
+  }
   if (request) {
     const dealer = mockDealerOptions.find((d) => d.dealerId === dealerId);
     if (dealer) {
@@ -677,7 +713,12 @@ export async function mockAssignDealer(
 // 보고서 조회
 export async function mockGetASReport(
   requestId: number,
+  authorizedStoreIds?: AuthorizedStoresParam,
 ): Promise<ApiResponse<(ASReport & { attachments: ASReportAttachment[]; result: string; remarks?: string; laborCost?: number; totalCost?: number }) | null>> {
+  const request = mockASRequests.find((r) => r.requestId === requestId);
+  if (request && !isStoreIdAllowed(request.storeId, authorizedStoreIds ?? null)) {
+    return mockDelay(wrapResponse(null), 400);
+  }
   const report = mockReports[requestId] ?? null;
   return mockDelay(wrapResponse(report), 400);
 }
@@ -688,7 +729,12 @@ let nextReportId = 2000;
 export async function mockCreateASReport(
   requestId: number,
   data: ASReportCreateRequest,
+  authorizedStoreIds?: AuthorizedStoresParam,
 ): Promise<ApiResponse<{ reportId: number }>> {
+  const reqRow = mockASRequests.find((r) => r.requestId === requestId);
+  if (reqRow && !isStoreIdAllowed(reqRow.storeId, authorizedStoreIds ?? null)) {
+    throw new Error('AUTH_FORBIDDEN');
+  }
   const reportId = nextReportId++;
   mockReports[requestId] = {
     reportId,
@@ -726,17 +772,19 @@ export async function mockGetASStatusList(params?: {
   to?: string;
   page?: number;
   pageSize?: number;
+  authorizedStoreIds?: AuthorizedStoresParam;
 }): Promise<ApiResponse<ASRequestListItem[]>> {
-  let filtered = [...mockASRequests];
+  let filtered = filterItemsByStoreAccess(
+    [...mockASRequests],
+    params?.authorizedStoreIds ?? null,
+    params?.storeId,
+  );
 
   if (params?.status) {
     filtered = filtered.filter((r) => r.status === params.status);
   }
   if (params?.urgency) {
     filtered = filtered.filter((r) => r.urgency === params.urgency);
-  }
-  if (params?.storeId) {
-    filtered = filtered.filter((r) => r.storeId === params.storeId);
   }
   if (params?.dealerId) {
     filtered = filtered.filter((r) => r.dealerId === params.dealerId);

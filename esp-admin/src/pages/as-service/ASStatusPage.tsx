@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Table, Select, DatePicker } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { useASStatusList } from '../../api/as-service.api';
+import { useASStatusList, useASStoreOptions } from '../../api/as-service.api';
 import { formatDateTime, formatDate, formatDateCompact } from '../../utils/formatters';
 import { AS_STATUS_LABELS, FAULT_TYPE_LABELS } from '../../utils/constants';
 import StatusBadge from '../../components/common/StatusBadge';
 import type { BadgeStatus } from '../../components/common/StatusBadge';
 import type { ASRequestListItem, ASStatus, FaultType } from '../../types/as-service.types';
+import { useRole } from '../../hooks/useRole';
 
 const { RangePicker } = DatePicker;
 
@@ -15,12 +16,6 @@ const AS_STATUS_BADGE: Record<string, BadgeStatus> = {
   PENDING: 'default', ACCEPTED: 'info', ASSIGNED: 'warning', VISIT_SCHEDULED: 'info',
   IN_PROGRESS: 'warning', COMPLETED: 'success', REPORT_SUBMITTED: 'info', CLOSED: 'default', CANCELLED: 'default',
 };
-
-const STORE_OPTIONS = [
-  { value: 1, label: '강남점 (튀김)' },
-  { value: 2, label: '홍대점 (굽기)' },
-  { value: 3, label: '신촌점 (커피로스팅)' },
-];
 
 const DEALER_OPTIONS = [
   { value: 1, label: '서울환경테크' },
@@ -38,6 +33,11 @@ interface ASStatusPageProps {
 }
 
 export default function ASStatusPage({ onRowClick }: ASStatusPageProps) {
+  const { isAdmin, isDealer } = useRole();
+  const showDealerFilter = isAdmin || isDealer;
+
+  const { data: storeOptions = [] } = useASStoreOptions();
+  const storeSelectOptions = storeOptions.map((s) => ({ value: s.storeId, label: s.storeName }));
   const [statusFilter, setStatusFilter] = useState<ASStatus | undefined>();
   const [storeId, setStoreId] = useState<number | undefined>();
   const [dealerId, setDealerId] = useState<number | undefined>();
@@ -135,18 +135,20 @@ export default function ASStatusPage({ onRowClick }: ASStatusPageProps) {
           placeholder="매장 선택"
           allowClear
           style={{ width: 180 }}
-          options={STORE_OPTIONS}
+          options={storeSelectOptions}
           value={storeId}
           onChange={(val) => setStoreId(val)}
         />
-        <Select
-          placeholder="대리점"
-          allowClear
-          style={{ width: 160 }}
-          options={DEALER_OPTIONS}
-          value={dealerId}
-          onChange={(val) => setDealerId(val)}
-        />
+        {showDealerFilter && (
+          <Select
+            placeholder="대리점"
+            allowClear
+            style={{ width: 160 }}
+            options={DEALER_OPTIONS}
+            value={dealerId}
+            onChange={(val) => setDealerId(val)}
+          />
+        )}
         <RangePicker
           onChange={(dates) =>
             setDateRange(dates as [dayjs.Dayjs | null, dayjs.Dayjs | null] | null)

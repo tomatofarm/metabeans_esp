@@ -11,6 +11,11 @@ import type {
   DealerOption,
 } from '../../types/equipment.types';
 import { mockDelay, wrapResponse, type ApiResponse } from './common.mock';
+import {
+  filterStoreOptionsByAccess,
+  isStoreIdAllowed,
+  type AuthorizedStoresParam,
+} from '../../utils/mockAccess';
 
 // --- Mock 기초 데이터 ---
 
@@ -50,9 +55,9 @@ const mockModels: EquipmentModel[] = [
 ];
 
 const mockStoreOptions: StoreOption[] = [
-  { storeId: 1, storeName: '강남점 (튀김)', siteId: 'site-001' },
-  { storeId: 2, storeName: '홍대점 (굽기)', siteId: 'site-002' },
-  { storeId: 3, storeName: '신촌점 (커피로스팅)', siteId: 'site-003' },
+  { storeId: 1, storeName: '바삭치킨 강남점', siteId: 'site-001' },
+  { storeId: 2, storeName: '숯불갈비 홍대점', siteId: 'site-002' },
+  { storeId: 3, storeName: '로스팅하우스 신촌점', siteId: 'site-003' },
 ];
 
 const mockFloorOptions: Record<number, FloorOption[]> = {
@@ -84,7 +89,7 @@ const mockEquipmentDetails: EquipmentDetail[] = [
     equipmentId: 1,
     equipmentSerial: 'MB-ESP-2024-00001',
     mqttEquipmentId: 'esp-001',
-    store: { storeId: 1, storeName: '강남점 (튀김)', siteId: 'site-001' },
+    store: { storeId: 1, storeName: '바삭치킨 강남점', siteId: 'site-001' },
     floor: { floorId: 1, floorCode: '1F', floorName: '1층 주방' },
     equipmentName: 'ESP 집진기 #1',
     model: { modelId: 2, modelName: 'MB-ESP-3000', manufacturer: 'MetaBeans' },
@@ -127,7 +132,7 @@ const mockEquipmentDetails: EquipmentDetail[] = [
     equipmentId: 2,
     equipmentSerial: 'MB-ESP-2024-00002',
     mqttEquipmentId: 'esp-002',
-    store: { storeId: 1, storeName: '강남점 (튀김)', siteId: 'site-001' },
+    store: { storeId: 1, storeName: '바삭치킨 강남점', siteId: 'site-001' },
     floor: { floorId: 1, floorCode: '1F', floorName: '1층 주방' },
     equipmentName: 'ESP 집진기 #2',
     model: { modelId: 3, modelName: 'MB-ESP-2000', manufacturer: 'MetaBeans' },
@@ -163,7 +168,7 @@ const mockEquipmentDetails: EquipmentDetail[] = [
     equipmentId: 3,
     equipmentSerial: 'MB-ESP-2024-00003',
     mqttEquipmentId: 'esp-001',
-    store: { storeId: 2, storeName: '홍대점 (굽기)', siteId: 'site-002' },
+    store: { storeId: 2, storeName: '숯불갈비 홍대점', siteId: 'site-002' },
     floor: { floorId: 2, floorCode: '1F', floorName: '1층' },
     equipmentName: 'ESP 집진기 #1',
     model: { modelId: 2, modelName: 'MB-ESP-3000', manufacturer: 'MetaBeans' },
@@ -206,7 +211,7 @@ const mockEquipmentDetails: EquipmentDetail[] = [
     equipmentId: 4,
     equipmentSerial: 'MB-ESP-2024-00004',
     mqttEquipmentId: 'esp-001',
-    store: { storeId: 2, storeName: '홍대점 (굽기)', siteId: 'site-002' },
+    store: { storeId: 2, storeName: '숯불갈비 홍대점', siteId: 'site-002' },
     floor: { floorId: 3, floorCode: 'B1', floorName: '지하 1층' },
     equipmentName: 'ESP 집진기 #1',
     model: { modelId: 4, modelName: 'MB-ESP-1500', manufacturer: 'MetaBeans' },
@@ -242,7 +247,7 @@ const mockEquipmentDetails: EquipmentDetail[] = [
     equipmentId: 5,
     equipmentSerial: 'MB-ESP-2024-00005',
     mqttEquipmentId: 'esp-001',
-    store: { storeId: 3, storeName: '신촌점 (커피로스팅)', siteId: 'site-003' },
+    store: { storeId: 3, storeName: '로스팅하우스 신촌점', siteId: 'site-003' },
     floor: { floorId: 4, floorCode: '1F', floorName: '1층' },
     equipmentName: 'ESP 집진기 #1',
     model: { modelId: 3, modelName: 'MB-ESP-2000', manufacturer: 'MetaBeans' },
@@ -285,8 +290,19 @@ export async function mockGetEquipments(params?: {
   status?: string;
   connectionStatus?: string;
   search?: string;
+  authorizedStoreIds?: AuthorizedStoresParam;
 }): Promise<ApiResponse<EquipmentListItem[]>> {
   let filtered = mockEquipmentDetails;
+
+  const auth = params?.authorizedStoreIds;
+  if (auth !== undefined && auth !== null) {
+    if (auth.length === 0) {
+      filtered = [];
+    } else {
+      const set = new Set(auth);
+      filtered = filtered.filter((e) => set.has(e.store.storeId));
+    }
+  }
 
   if (params?.storeId) {
     filtered = filtered.filter((e) => e.store.storeId === params.storeId);
@@ -336,9 +352,13 @@ export async function mockGetEquipments(params?: {
 // 장비 상세 조회
 export async function mockGetEquipmentDetail(
   equipmentId: number,
+  authorizedStoreIds?: AuthorizedStoresParam,
 ): Promise<ApiResponse<EquipmentDetail>> {
   const equipment = mockEquipmentDetails.find((e) => e.equipmentId === equipmentId);
   if (!equipment) {
+    throw new Error('RESOURCE_NOT_FOUND');
+  }
+  if (!isStoreIdAllowed(equipment.store.storeId, authorizedStoreIds ?? null)) {
     throw new Error('RESOURCE_NOT_FOUND');
   }
   return mockDelay(wrapResponse(equipment), 300);
@@ -476,12 +496,21 @@ export async function mockGetEquipmentModels(): Promise<ApiResponse<EquipmentMod
 }
 
 // 매장 옵션 목록
-export async function mockGetStoreOptions(): Promise<StoreOption[]> {
-  return mockDelay(mockStoreOptions, 200);
+export async function mockGetStoreOptions(
+  authorizedStoreIds?: AuthorizedStoresParam,
+): Promise<StoreOption[]> {
+  const list = filterStoreOptionsByAccess(mockStoreOptions, authorizedStoreIds ?? null);
+  return mockDelay(list, 200);
 }
 
 // 층 옵션 목록
-export async function mockGetFloorOptions(storeId: number): Promise<FloorOption[]> {
+export async function mockGetFloorOptions(
+  storeId: number,
+  authorizedStoreIds?: AuthorizedStoresParam,
+): Promise<FloorOption[]> {
+  if (!isStoreIdAllowed(storeId, authorizedStoreIds ?? null)) {
+    return mockDelay([], 200);
+  }
   return mockDelay(mockFloorOptions[storeId] ?? [], 200);
 }
 

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   mockSendControlCommand,
@@ -7,6 +8,17 @@ import {
   mockSendGatewayConfig,
 } from './mock/control.mock';
 import type { SendControlRequest, FanAutoSettings, ConfigCommand } from '../types/control.types';
+import { useAuthStore } from '../stores/authStore';
+import { resolveAuthorizedNumericStoreIds } from '../utils/mockAccess';
+
+function getAuthorizedStoresSnapshot() {
+  return resolveAuthorizedNumericStoreIds(useAuthStore.getState().user?.storeIds);
+}
+
+function useMockAuthorizedStores() {
+  const storeIds = useAuthStore((s) => s.user?.storeIds);
+  return useMemo(() => resolveAuthorizedNumericStoreIds(storeIds), [storeIds]);
+}
 
 // 제어 명령 전송
 export function useSendControlCommand() {
@@ -21,9 +33,11 @@ export function useSendControlCommand() {
 
 // 제어 이력 조회
 export function useControlHistory(equipmentId: number | null) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['control', 'history', equipmentId],
-    queryFn: () => mockGetControlHistory(equipmentId!),
+    queryKey: ['control', 'history', user?.userId, authorizedStoreIds, equipmentId],
+    queryFn: () => mockGetControlHistory(equipmentId!, authorizedStoreIds),
     enabled: equipmentId !== null,
     staleTime: 30 * 1000,
   });
@@ -31,9 +45,11 @@ export function useControlHistory(equipmentId: number | null) {
 
 // 팬 자동제어 설정 조회
 export function useFanAutoSettings(equipmentId: number | null) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['control', 'fan-auto-settings', equipmentId],
-    queryFn: () => mockGetFanAutoSettings(equipmentId!),
+    queryKey: ['control', 'fan-auto-settings', user?.userId, authorizedStoreIds, equipmentId],
+    queryFn: () => mockGetFanAutoSettings(equipmentId!, authorizedStoreIds),
     enabled: equipmentId !== null,
     staleTime: 60 * 1000,
   });
@@ -44,7 +60,7 @@ export function useUpdateFanAutoSettings() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ equipmentId, settings }: { equipmentId: number; settings: Partial<FanAutoSettings> }) =>
-      mockUpdateFanAutoSettings(equipmentId, settings),
+      mockUpdateFanAutoSettings(equipmentId, settings, getAuthorizedStoresSnapshot()),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['control', 'fan-auto-settings', variables.equipmentId] });
     },

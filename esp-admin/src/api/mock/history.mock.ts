@@ -3,6 +3,7 @@ import type { EquipmentChangeHistory, AlarmEvent, AlarmType, AlarmSeverity } fro
 import type { SensorHistoryDataPoint } from '../../types/sensor.types';
 import { SENSOR_RANGES } from '../../utils/constants';
 import { mockDelay, mockStoreTree } from './common.mock';
+import { assertMockEquipmentStoreAccess, type AuthorizedStoresParam } from '../../utils/mockAccess';
 
 // --- 유틸 ---
 function randomFloat(min: number, max: number, decimals: number): number {
@@ -61,7 +62,9 @@ export async function mockGetSensorHistoryRange(
   equipmentId: number,
   from: number, // epoch seconds
   to: number,   // epoch seconds
+  authorizedStoreIds: AuthorizedStoresParam = null,
 ): Promise<SensorHistoryDataPoint[]> {
+  assertMockEquipmentStoreAccess(equipmentId, authorizedStoreIds);
   const controllers = getControllersForEquipment(equipmentId);
   const points: SensorHistoryDataPoint[] = [];
   const durationSec = to - from;
@@ -119,7 +122,9 @@ export async function mockGetControlHistoryRange(
   from: number,
   to: number,
   targetFilter?: ControlTarget,
+  authorizedStoreIds: AuthorizedStoresParam = null,
 ): Promise<ControlCommand[]> {
+  assertMockEquipmentStoreAccess(equipmentId, authorizedStoreIds);
   const history: ControlCommand[] = [];
   const durationMs = (to - from) * 1000;
   const targets: ControlTarget[] = [0, 1, 2];
@@ -223,7 +228,9 @@ export async function mockGetAlarmHistory(
   from: number,
   to: number,
   typeFilter?: AlarmType,
+  authorizedStoreIds: AuthorizedStoresParam = null,
 ): Promise<AlarmEvent[]> {
+  assertMockEquipmentStoreAccess(equipmentId, authorizedStoreIds);
   const meta = getEquipmentMeta(equipmentId);
   const controllers = getControllersForEquipment(equipmentId);
   const alarms: AlarmEvent[] = [];
@@ -298,7 +305,9 @@ const CHANGERS = ['관리자', '김대리', '박본사'];
 
 export async function mockGetEquipmentChangeHistory(
   equipmentId: number,
+  authorizedStoreIds: AuthorizedStoresParam = null,
 ): Promise<EquipmentChangeHistory[]> {
+  assertMockEquipmentStoreAccess(equipmentId, authorizedStoreIds);
   const changes: EquipmentChangeHistory[] = [];
   const now = Date.now();
   const count = randomInt(8, 15);

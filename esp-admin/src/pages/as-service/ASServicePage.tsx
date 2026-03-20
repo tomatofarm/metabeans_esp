@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Tabs, Button, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
@@ -8,8 +8,17 @@ import ASStatusPage from './ASStatusPage';
 import ASDetailPage from './ASDetailPage';
 import ASReportPage from './ASReportPage';
 import ASReportFormPage from './ASReportFormPage';
+import { useAuth } from '../../hooks/useAuth';
+import { getVisibleAsServiceTabs, type AsServiceTabKey } from '../../utils/roleHelper';
 
 const { Title } = Typography;
+
+const TAB_DEF: { key: AsServiceTabKey; label: string; path: string }[] = [
+  { key: 'alerts', label: '알림 현황', path: '/as-service' },
+  { key: 'request', label: 'A/S 신청', path: '/as-service/request' },
+  { key: 'status', label: '처리 현황', path: '/as-service/status' },
+  { key: 'report', label: '완료 보고서', path: '/as-service/report' },
+];
 
 type SubView =
   | { type: 'list' }
@@ -20,48 +29,59 @@ type SubView =
 function ASServiceTabs() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { role } = useAuth();
+
+  const visibleTabs = useMemo(() => getVisibleAsServiceTabs(role), [role]);
+  const visibleSet = useMemo(() => new Set(visibleTabs), [visibleTabs]);
+
+  const tabItems = useMemo(
+    () => TAB_DEF.filter((t) => visibleSet.has(t.key)).map(({ key, label }) => ({ key, label })),
+    [visibleSet],
+  );
 
   // 처리 현황 탭의 서브 뷰 상태
   const [statusSubView, setStatusSubView] = useState<SubView>({ type: 'list' });
   // 완료 보고서 탭의 서브 뷰 상태
   const [reportSubView, setReportSubView] = useState<SubView>({ type: 'list' });
 
-  const getActiveTab = () => {
+  /** 권한 없는 URL로 직접 진입 시 리다이렉트 */
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/as-service/request') && !visibleSet.has('request')) {
+      navigate('/as-service', { replace: true });
+      return;
+    }
+    if (path.includes('/as-service/status') && !visibleSet.has('status')) {
+      navigate('/as-service', { replace: true });
+      return;
+    }
+    if (path.includes('/as-service/report') && !visibleSet.has('report')) {
+      navigate('/as-service', { replace: true });
+    }
+  }, [location.pathname, navigate, visibleSet]);
+
+  const getActiveTab = (): AsServiceTabKey => {
     if (location.pathname.includes('/as-service/request')) return 'request';
     if (location.pathname.includes('/as-service/status')) return 'status';
     if (location.pathname.includes('/as-service/report')) return 'report';
     return 'alerts';
   };
 
-  const handleTabChange = (key: string) => {
-    // 탭 전환 시 서브 뷰 초기화
-    if (key === 'status') setStatusSubView({ type: 'list' });
-    if (key === 'report') setReportSubView({ type: 'list' });
+  const activeTab = getActiveTab();
+  const safeActiveKey = visibleSet.has(activeTab) ? activeTab : visibleTabs[0] ?? 'alerts';
 
-    switch (key) {
-      case 'alerts':
-        navigate('/as-service');
-        break;
-      case 'request':
-        navigate('/as-service/request');
-        break;
-      case 'status':
-        navigate('/as-service/status');
-        break;
-      case 'report':
-        navigate('/as-service/report');
-        break;
-    }
+  const handleTabChange = (key: string) => {
+    const k = key as AsServiceTabKey;
+    const def = TAB_DEF.find((t) => t.key === k);
+    if (!def || !visibleSet.has(k)) return;
+
+    if (k === 'status') setStatusSubView({ type: 'list' });
+    if (k === 'report') setReportSubView({ type: 'list' });
+
+    navigate(def.path);
   };
 
-  const tabItems = [
-    { key: 'alerts', label: '알림 현황' },
-    { key: 'request', label: 'A/S 신청' },
-    { key: 'status', label: '처리 현황' },
-    { key: 'report', label: '완료 보고서' },
-  ];
-
-  const activeTab = getActiveTab();
+  const showRequestButton = visibleSet.has('request') && safeActiveKey !== 'request';
 
   // 처리 현황 탭 내 서브 뷰 렌더링
   const renderStatusContent = () => {
@@ -148,21 +168,22 @@ function ASServiceTabs() {
         <Title level={4} style={{ margin: 0 }}>
           A/S 관리
         </Title>
-        {activeTab !== 'request' && (
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate('/as-service/request')}
-          >
+        {showRequestButton && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/as-service/request')}>
             A/S 신청
           </Button>
         )}
       </div>
-      <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} className="as-tabs" />
-      {activeTab === 'alerts' && <ASAlertListPage />}
-      {activeTab === 'request' && <ASRequestPage />}
-      {activeTab === 'status' && renderStatusContent()}
-      {activeTab === 'report' && renderReportContent()}
+      <Tabs
+        activeKey={safeActiveKey}
+        onChange={handleTabChange}
+        items={tabItems}
+        className="as-tabs"
+      />
+      {safeActiveKey === 'alerts' && <ASAlertListPage />}
+      {safeActiveKey === 'request' && <ASRequestPage />}
+      {safeActiveKey === 'status' && renderStatusContent()}
+      {safeActiveKey === 'report' && renderReportContent()}
     </div>
   );
 }

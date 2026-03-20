@@ -3,7 +3,7 @@ import { Select, DatePicker, Button, Spin, Empty } from 'antd';
 import { ToolOutlined, WarningOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { useASAlerts } from '../../api/as-service.api';
+import { useASAlerts, useASStoreOptions } from '../../api/as-service.api';
 import StatusBadge from '../../components/common/StatusBadge';
 import { formatDateTime, formatRelativeTime } from '../../utils/formatters';
 import type { ASAlert, AlertType, AlertSeverity } from '../../types/as-service.types';
@@ -23,14 +23,10 @@ const SEVERITY_CLASS_MAP: Record<AlertSeverity, string> = {
   CRITICAL: 'critical',
 };
 
-const STORE_OPTIONS = [
-  { value: 1, label: '강남점 (튀김)' },
-  { value: 2, label: '홍대점 (굽기)' },
-  { value: 3, label: '신촌점 (커피로스팅)' },
-];
-
 export default function ASAlertListPage() {
   const navigate = useNavigate();
+  const { data: storeOptions = [] } = useASStoreOptions();
+  const storeSelectOptions = storeOptions.map((s) => ({ value: s.storeId, label: s.storeName }));
   const [storeId, setStoreId] = useState<number | undefined>();
   const [alertType, setAlertType] = useState<AlertType | undefined>();
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
@@ -64,7 +60,7 @@ export default function ASAlertListPage() {
           placeholder="매장 선택"
           allowClear
           style={{ width: 180 }}
-          options={STORE_OPTIONS}
+          options={storeSelectOptions}
           value={storeId}
           onChange={(val) => setStoreId(val)}
         />

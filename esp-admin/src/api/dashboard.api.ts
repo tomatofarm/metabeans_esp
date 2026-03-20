@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   mockGetDashboardSummary,
@@ -15,6 +16,8 @@ import {
   mockGetDashboardPendingAs,
   mockGetRoleDashboardPendingAs,
 } from './mock/dashboard.mock';
+import { useAuthStore } from '../stores/authStore';
+import { resolveAuthorizedNumericStoreIds } from '../utils/mockAccess';
 
 export function useDashboardSummary() {
   return useQuery({
@@ -67,9 +70,14 @@ export function useEsgSummary() {
 }
 
 export function useEmergencyAlarms() {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMemo(
+    () => resolveAuthorizedNumericStoreIds(user?.storeIds),
+    [user?.storeIds],
+  );
   return useQuery({
-    queryKey: ['dashboard', 'emergencyAlarms'],
-    queryFn: () => mockGetEmergencyAlarms(),
+    queryKey: ['dashboard', 'emergencyAlarms', user?.userId, authorizedStoreIds],
+    queryFn: () => mockGetEmergencyAlarms(authorizedStoreIds),
     staleTime: 30 * 1000,
   });
 }

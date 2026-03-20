@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   mockGetASAlerts,
@@ -22,6 +23,17 @@ import type {
   ASStatusUpdateRequest,
   ASReportCreateRequest,
 } from '../types/as-service.types';
+import { useAuthStore } from '../stores/authStore';
+import { resolveAuthorizedNumericStoreIds, type AuthorizedStoresParam } from '../utils/mockAccess';
+
+function getAuthorizedStoresSnapshot(): AuthorizedStoresParam {
+  return resolveAuthorizedNumericStoreIds(useAuthStore.getState().user?.storeIds);
+}
+
+function useMockAuthorizedStores(): AuthorizedStoresParam {
+  const storeIds = useAuthStore((s) => s.user?.storeIds);
+  return useMemo(() => resolveAuthorizedNumericStoreIds(storeIds), [storeIds]);
+}
 
 // 알림 현황 조회
 export function useASAlerts(params?: {
@@ -34,9 +46,11 @@ export function useASAlerts(params?: {
   page?: number;
   pageSize?: number;
 }) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['as-alerts', params],
-    queryFn: () => mockGetASAlerts(params),
+    queryKey: ['as-alerts', user?.userId, authorizedStoreIds, params],
+    queryFn: () => mockGetASAlerts({ ...params, authorizedStoreIds }),
     staleTime: 30 * 1000,
   });
 }
@@ -51,9 +65,11 @@ export function useASRequests(params?: {
   page?: number;
   pageSize?: number;
 }) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['as-requests', params],
-    queryFn: () => mockGetASRequests(params),
+    queryKey: ['as-requests', user?.userId, authorizedStoreIds, params],
+    queryFn: () => mockGetASRequests({ ...params, authorizedStoreIds }),
     staleTime: 30 * 1000,
   });
 }
@@ -62,7 +78,8 @@ export function useASRequests(params?: {
 export function useCreateASRequest() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (req: ASCreateRequest) => mockCreateASRequest(req),
+    mutationFn: (req: ASCreateRequest) =>
+      mockCreateASRequest(req, getAuthorizedStoresSnapshot()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['as-requests'] });
       queryClient.invalidateQueries({ queryKey: ['as-alerts'] });
@@ -72,18 +89,22 @@ export function useCreateASRequest() {
 
 // 매장 옵션 (A/S 신청 폼용)
 export function useASStoreOptions() {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['as-store-options'],
-    queryFn: () => mockGetASStoreOptions(),
+    queryKey: ['as-store-options', user?.userId, authorizedStoreIds],
+    queryFn: () => mockGetASStoreOptions(authorizedStoreIds),
     staleTime: 5 * 60 * 1000,
   });
 }
 
 // 매장별 장비 옵션
 export function useASEquipmentOptions(storeId: number | null) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['as-equipment-options', storeId],
-    queryFn: () => mockGetEquipmentOptionsByStore(storeId!),
+    queryKey: ['as-equipment-options', user?.userId, authorizedStoreIds, storeId],
+    queryFn: () => mockGetEquipmentOptionsByStore(storeId!, authorizedStoreIds),
     enabled: storeId !== null,
     staleTime: 5 * 60 * 1000,
   });
@@ -100,18 +121,22 @@ export function useASStatusList(params?: {
   page?: number;
   pageSize?: number;
 }) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['as-status-list', params],
-    queryFn: () => mockGetASStatusList(params),
+    queryKey: ['as-status-list', user?.userId, authorizedStoreIds, params],
+    queryFn: () => mockGetASStatusList({ ...params, authorizedStoreIds }),
     staleTime: 30 * 1000,
   });
 }
 
 // A/S 상세 조회
 export function useASDetail(requestId: number | null) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['as-detail', requestId],
-    queryFn: () => mockGetASDetail(requestId!),
+    queryKey: ['as-detail', user?.userId, authorizedStoreIds, requestId],
+    queryFn: () => mockGetASDetail(requestId!, authorizedStoreIds),
     enabled: requestId !== null,
     staleTime: 30 * 1000,
   });
@@ -122,7 +147,7 @@ export function useUpdateASStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ requestId, update }: { requestId: number; update: ASStatusUpdateRequest }) =>
-      mockUpdateASStatus(requestId, update),
+      mockUpdateASStatus(requestId, update, getAuthorizedStoresSnapshot()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['as-requests'] });
       queryClient.invalidateQueries({ queryKey: ['as-status-list'] });
@@ -136,7 +161,7 @@ export function useAssignDealer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ requestId, dealerId }: { requestId: number; dealerId: number }) =>
-      mockAssignDealer(requestId, dealerId),
+      mockAssignDealer(requestId, dealerId, getAuthorizedStoresSnapshot()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['as-requests'] });
       queryClient.invalidateQueries({ queryKey: ['as-status-list'] });
@@ -156,9 +181,11 @@ export function useDealerOptions() {
 
 // 보고서 조회
 export function useASReport(requestId: number | null) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['as-report', requestId],
-    queryFn: () => mockGetASReport(requestId!),
+    queryKey: ['as-report', user?.userId, authorizedStoreIds, requestId],
+    queryFn: () => mockGetASReport(requestId!, authorizedStoreIds),
     enabled: requestId !== null,
     staleTime: 30 * 1000,
   });
@@ -169,7 +196,7 @@ export function useCreateASReport() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ requestId, data }: { requestId: number; data: ASReportCreateRequest }) =>
-      mockCreateASReport(requestId, data),
+      mockCreateASReport(requestId, data, getAuthorizedStoresSnapshot()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['as-requests'] });
       queryClient.invalidateQueries({ queryKey: ['as-status-list'] });

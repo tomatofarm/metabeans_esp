@@ -1,5 +1,28 @@
 import type { UserRole } from '../types/auth.types';
 
+/** A/S 관리 하위 탭 (system.mock 권한: as.create / as.process / as.report 와 정합) */
+export type AsServiceTabKey = 'alerts' | 'request' | 'status' | 'report';
+
+/**
+ * 역할별로 보이는 A/S 탭 키 (같은 페이지·다른 탭 = 데이터는 mockAccess로 매장 스코프)
+ * - 알림: as.view (전 역할)
+ * - A/S 신청: as.create → ADMIN, OWNER
+ * - 처리 현황: as.view (전 역할, 목록은 접근 매장만)
+ * - 완료 보고서: as.report → ADMIN, DEALER
+ */
+export function getVisibleAsServiceTabs(role: UserRole | null | undefined): AsServiceTabKey[] {
+  if (!role) return ['alerts'];
+  const tabs: AsServiceTabKey[] = ['alerts'];
+  if (role === 'ADMIN' || role === 'OWNER') {
+    tabs.push('request');
+  }
+  tabs.push('status');
+  if (role === 'ADMIN' || role === 'DEALER') {
+    tabs.push('report');
+  }
+  return tabs;
+}
+
 // 역할별 메뉴 접근 맵
 export const roleMenuMap: Record<UserRole, string[]> = {
   ADMIN: ['dashboard', 'equipment', 'as-service', 'customer', 'system'],

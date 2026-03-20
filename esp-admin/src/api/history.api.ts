@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   mockGetSensorHistoryRange,
@@ -7,6 +8,13 @@ import {
 } from './mock/history.mock';
 import type { ControlTarget } from '../types/control.types';
 import type { AlarmType } from '../types/equipment.types';
+import { useAuthStore } from '../stores/authStore';
+import { resolveAuthorizedNumericStoreIds } from '../utils/mockAccess';
+
+function useMockAuthorizedStores() {
+  const storeIds = useAuthStore((s) => s.user?.storeIds);
+  return useMemo(() => resolveAuthorizedNumericStoreIds(storeIds), [storeIds]);
+}
 
 // 센서 이력 데이터 (기간 지원)
 export function useSensorHistoryRange(
@@ -14,9 +22,12 @@ export function useSensorHistoryRange(
   from: number | null,
   to: number | null,
 ) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['history', 'sensor', equipmentId, from, to],
-    queryFn: () => mockGetSensorHistoryRange(equipmentId!, from!, to!),
+    queryKey: ['history', 'sensor', user?.userId, authorizedStoreIds, equipmentId, from, to],
+    queryFn: () =>
+      mockGetSensorHistoryRange(equipmentId!, from!, to!, authorizedStoreIds),
     enabled: equipmentId !== null && from !== null && to !== null,
     staleTime: 60 * 1000,
   });
@@ -29,9 +40,12 @@ export function useControlHistoryRange(
   to: number | null,
   targetFilter?: ControlTarget,
 ) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['history', 'control', equipmentId, from, to, targetFilter],
-    queryFn: () => mockGetControlHistoryRange(equipmentId!, from!, to!, targetFilter),
+    queryKey: ['history', 'control', user?.userId, authorizedStoreIds, equipmentId, from, to, targetFilter],
+    queryFn: () =>
+      mockGetControlHistoryRange(equipmentId!, from!, to!, targetFilter, authorizedStoreIds),
     enabled: equipmentId !== null && from !== null && to !== null,
     staleTime: 30 * 1000,
   });
@@ -44,9 +58,12 @@ export function useAlarmHistory(
   to: number | null,
   typeFilter?: AlarmType,
 ) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['history', 'alarm', equipmentId, from, to, typeFilter],
-    queryFn: () => mockGetAlarmHistory(equipmentId!, from!, to!, typeFilter),
+    queryKey: ['history', 'alarm', user?.userId, authorizedStoreIds, equipmentId, from, to, typeFilter],
+    queryFn: () =>
+      mockGetAlarmHistory(equipmentId!, from!, to!, typeFilter, authorizedStoreIds),
     enabled: equipmentId !== null && from !== null && to !== null,
     staleTime: 30 * 1000,
   });
@@ -54,9 +71,11 @@ export function useAlarmHistory(
 
 // 장비 변경 이력
 export function useEquipmentChangeHistory(equipmentId: number | null) {
+  const user = useAuthStore((s) => s.user);
+  const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
-    queryKey: ['history', 'equipment-change', equipmentId],
-    queryFn: () => mockGetEquipmentChangeHistory(equipmentId!),
+    queryKey: ['history', 'equipment-change', user?.userId, authorizedStoreIds, equipmentId],
+    queryFn: () => mockGetEquipmentChangeHistory(equipmentId!, authorizedStoreIds),
     enabled: equipmentId !== null,
     staleTime: 60 * 1000,
   });
