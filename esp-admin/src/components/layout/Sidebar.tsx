@@ -149,7 +149,16 @@ function buildControllerToEquipmentMap(stores: StoreTreeNode[]): Record<number, 
 
 export default function Sidebar() {
   const [searchText, setSearchText] = useState('');
-  const { sidebarCollapsed, selectStore, selectEquipment, selectController } = useUiStore();
+  const {
+    sidebarCollapsed,
+    selectedStoreId,
+    selectedEquipmentId,
+    selectedControllerId,
+    selectStore,
+    selectEquipment,
+    selectController,
+    clearSelection,
+  } = useUiStore();
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const location = useLocation();
@@ -169,7 +178,22 @@ export default function Sidebar() {
     [roleFilteredStores, searchText],
   );
 
+  /** uiStore와 트리 하이라이트 동기화 (재클릭 시 선택 해제도 store에 반영) */
+  const selectedTreeKeys = useMemo(() => {
+    if (selectedControllerId != null) return [`controller-${selectedControllerId}`];
+    if (selectedEquipmentId != null) return [`equipment-${selectedEquipmentId}`];
+    if (selectedStoreId != null) return [`store-${selectedStoreId}`];
+    return [];
+  }, [selectedControllerId, selectedEquipmentId, selectedStoreId]);
+
   const handleSelect = (selectedKeys: React.Key[]) => {
+    // 같은 매장/장비/컨트롤러를 다시 눌러 선택 해제된 경우 → 역할별 기본 대시보드로 복귀
+    if (selectedKeys.length === 0) {
+      clearSelection();
+      navigate('/dashboard');
+      return;
+    }
+
     const key = selectedKeys[0]?.toString();
     if (!key) return;
 
@@ -182,6 +206,7 @@ export default function Sidebar() {
     switch (type) {
       case 'store':
         selectStore(numId);
+        navigate('/dashboard');
         break;
       case 'equipment':
         selectEquipment(numId);
@@ -228,6 +253,7 @@ export default function Sidebar() {
           showIcon
           defaultExpandAll
           treeData={treeData}
+          selectedKeys={selectedTreeKeys}
           onSelect={handleSelect}
           className="sidebar-tree"
           style={{ padding: '0 4px' }}

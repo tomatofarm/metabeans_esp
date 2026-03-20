@@ -4,6 +4,14 @@
 > 한 파일이 여러 카테고리에 속할 수 있음 (재사용 컴포넌트 등)  
 > **경로 기준**: `esp-admin/src/` (예: `pages/auth/LoginPage.tsx` → `esp-admin/src/pages/auth/LoginPage.tsx`)
 
+
+--- 노트
+
+왼 쪽에 메뉴 -> 사이드바, 장비트리
+위에 메뉴 -> 상단 메뉴
+
+---
+
 ---
 
 ## 사용 방법
