@@ -15,6 +15,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useASReport, useASDetail } from '../../api/as-service.api';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import { formatDateTime, formatDate } from '../../utils/formatters';
 import { AS_STATUS_LABELS } from '../../utils/constants';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -49,6 +50,7 @@ interface ASReportPageProps {
 
 export default function ASReportPage({ requestId, onBack }: ASReportPageProps) {
   const navigate = useNavigate();
+  const { isAllowed: canCreateAs } = useFeaturePermission('as.create');
   const { data: reportData, isLoading: reportLoading } = useASReport(requestId);
   const { data: detailData, isLoading: detailLoading } = useASDetail(requestId);
 
@@ -248,22 +250,24 @@ export default function ASReportPage({ requestId, onBack }: ASReportPageProps) {
           <Button icon={<ArrowLeftOutlined />} onClick={onBack}>
             돌아가기
           </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              if (detail) {
-                const params = new URLSearchParams();
-                params.set('storeId', String(detail.store.storeId));
-                params.set('equipmentId', String(detail.equipment.equipmentId));
-                navigate(`/as-service/request?${params.toString()}`);
-              } else {
-                navigate('/as-service/request');
-              }
-            }}
-          >
-            A/S 신청
-          </Button>
+          {canCreateAs && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                if (detail) {
+                  const params = new URLSearchParams();
+                  params.set('storeId', String(detail.store.storeId));
+                  params.set('equipmentId', String(detail.equipment.equipmentId));
+                  navigate(`/as-service/request?${params.toString()}`);
+                } else {
+                  navigate('/as-service/request');
+                }
+              }}
+            >
+              A/S 신청
+            </Button>
+          )}
         </Space>
       </div>
     </div>

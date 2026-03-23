@@ -4,6 +4,7 @@ import { ToolOutlined, WarningOutlined, ExclamationCircleOutlined } from '@ant-d
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useASAlerts, useASStoreOptions } from '../../api/as-service.api';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import StatusBadge from '../../components/common/StatusBadge';
 import { formatDateTime, formatRelativeTime } from '../../utils/formatters';
 import type { ASAlert, AlertType, AlertSeverity } from '../../types/as-service.types';
@@ -25,6 +26,7 @@ const SEVERITY_CLASS_MAP: Record<AlertSeverity, string> = {
 
 export default function ASAlertListPage() {
   const navigate = useNavigate();
+  const { isAllowed: canCreateAs } = useFeaturePermission('as.create');
   const { data: storeOptions = [] } = useASStoreOptions();
   const storeSelectOptions = storeOptions.map((s) => ({ value: s.storeId, label: s.storeName }));
   const [storeId, setStoreId] = useState<number | undefined>();
@@ -123,14 +125,16 @@ export default function ASAlertListPage() {
                     ) : (
                       <>
                         <StatusBadge status="danger" label="미해결" />
-                        <Button
-                          type="primary"
-                          size="small"
-                          icon={<ToolOutlined />}
-                          onClick={() => handleASRequest(alert)}
-                        >
-                          A/S 신청
-                        </Button>
+                        {canCreateAs && (
+                          <Button
+                            type="primary"
+                            size="small"
+                            icon={<ToolOutlined />}
+                            onClick={() => handleASRequest(alert)}
+                          >
+                            A/S 신청
+                          </Button>
+                        )}
                       </>
                     )}
                   </div>

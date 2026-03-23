@@ -10,6 +10,7 @@ import ASReportPage from './ASReportPage';
 import ASReportFormPage from './ASReportFormPage';
 import { useAuth } from '../../hooks/useAuth';
 import { getVisibleAsServiceTabs, type AsServiceTabKey } from '../../utils/roleHelper';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 
 const { Title } = Typography;
 
@@ -30,8 +31,18 @@ function ASServiceTabs() {
   const navigate = useNavigate();
   const location = useLocation();
   const { role } = useAuth();
+  const { isAllowed: canCreateAs } = useFeaturePermission('as.create');
+  const { isAllowed: canReportAs } = useFeaturePermission('as.report');
 
-  const visibleTabs = useMemo(() => getVisibleAsServiceTabs(role), [role]);
+  const visibleTabs = useMemo(
+    () =>
+      getVisibleAsServiceTabs(role).filter((tab) => {
+        if (tab === 'request') return canCreateAs;
+        if (tab === 'report') return canReportAs;
+        return true;
+      }),
+    [role, canCreateAs, canReportAs],
+  );
   const visibleSet = useMemo(() => new Set(visibleTabs), [visibleTabs]);
 
   const tabItems = useMemo(
@@ -81,7 +92,7 @@ function ASServiceTabs() {
     navigate(def.path);
   };
 
-  const showRequestButton = visibleSet.has('request') && safeActiveKey !== 'request';
+  const showRequestButton = canCreateAs && visibleSet.has('request') && safeActiveKey !== 'request';
 
   // 처리 현황 탭 내 서브 뷰 렌더링
   const renderStatusContent = () => {
