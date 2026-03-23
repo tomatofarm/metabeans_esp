@@ -147,6 +147,23 @@ function buildControllerToEquipmentMap(stores: StoreTreeNode[]): Record<number, 
   return map;
 }
 
+/**
+ * URL에 특정 장비 id가 묶인 화면(편집·등록)에서는 사이드바로 다른 장비를 고를 때
+ * 그대로 두면 라우트 param이 안 바뀌어 화면이 고정됨 → 일반 장비 탭으로 이동.
+ */
+function resolveEquipmentPathOnTreeSelect(currentPath: string): string {
+  if (
+    currentPath.startsWith('/equipment/edit/') ||
+    currentPath === '/equipment/register'
+  ) {
+    return '/equipment';
+  }
+  if (currentPath.startsWith('/equipment')) {
+    return currentPath;
+  }
+  return '/equipment';
+}
+
 export default function Sidebar() {
   const [searchText, setSearchText] = useState('');
   const {
@@ -200,8 +217,7 @@ export default function Sidebar() {
     const [type, id] = key.split('-');
     const numId = parseInt(id ?? '0', 10);
 
-    // 이미 장비 관련 페이지에 있으면 현재 경로 유지, 아니면 /equipment로 이동
-    const equipPath = location.pathname.startsWith('/equipment') ? location.pathname : '/equipment';
+    const equipPath = resolveEquipmentPathOnTreeSelect(location.pathname);
 
     switch (type) {
       case 'store':
