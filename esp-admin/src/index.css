@@ -1058,6 +1058,121 @@ body {
   transform: scale(1.05);
 }
 
+/* Fan control section (manual UI) */
+.fan-control-section {
+  margin-top: 4px;
+}
+
+.fan-control-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.fan-control-title-icon {
+  font-size: 20px;
+  color: var(--color-primary);
+}
+
+.fan-control-mode-group {
+  margin-bottom: 16px;
+}
+
+.fan-control-mode-group .control-mode-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 12px 20px;
+  font-size: 15px;
+}
+
+.fan-manual-panel {
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 16px 18px 18px;
+}
+
+.fan-manual-panel-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-mid);
+  margin-bottom: 12px;
+}
+
+.fan-manual-level-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.fan-manual-level-btn {
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 6px;
+  min-height: 78px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fan-manual-level-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+}
+
+.fan-manual-level-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.fan-manual-level-btn-active {
+  background: var(--color-primary);
+  border-color: transparent;
+  color: #fff;
+}
+
+.fan-manual-level-icon {
+  font-size: 18px;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.fan-manual-level-label {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.fan-manual-level-hz {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.fan-manual-level-btn-active .fan-manual-level-hz {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.fan-manual-warning {
+  margin: 6px 0 14px;
+  color: #d48806;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fan-manual-apply-btn {
+  height: 44px !important;
+  border-radius: 8px !important;
+  font-weight: 600;
+}
+
+.fan-auto-panel {
+  padding-top: 4px;
+}
+
 /* History period filter bar */
 .period-filter {
   display: flex;

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Button, Table, Space, Spin, Empty, Typography,
-  InputNumber, Descriptions, Divider, message,
+  InputNumber, Descriptions, message,
 } from 'antd';
 import {
   WarningOutlined, SwapOutlined,
@@ -31,12 +31,12 @@ function getHistoryActionLabel(target: ControlTarget, action: number, value?: nu
   return `${CONTROL_TARGET_LABELS[target]} action=${action}`;
 }
 
-const FAN_SPEED_OPTIONS = [
-  { value: FAN_ACTIONS.OFF, label: 'OFF', color: 'default' },
-  { value: FAN_ACTIONS.LOW, label: 'LOW (15Hz)', color: 'blue' },
-  { value: FAN_ACTIONS.MID, label: 'MID (30Hz)', color: 'orange' },
-  { value: FAN_ACTIONS.HIGH, label: 'HIGH (50Hz)', color: 'red' },
-];
+const MANUAL_FAN_LEVEL_OPTIONS = [
+  { value: FAN_ACTIONS.OFF, label: '끄기', icon: '⏻', freq: '0 Hz' },
+  { value: FAN_ACTIONS.LOW, label: '하', icon: '🌀', freq: '15 Hz' },
+  { value: FAN_ACTIONS.MID, label: '중', icon: '🌀🌀', freq: '30 Hz' },
+  { value: FAN_ACTIONS.HIGH, label: '상', icon: '🌀🌀🌀', freq: '50 Hz' },
+] as const;
 
 export default function ControlFanPage() {
   const selectedEquipmentId = useUiStore((s) => s.selectedEquipmentId);
@@ -46,6 +46,7 @@ export default function ControlFanPage() {
   const sendCommand = useSendControlCommand();
   const [pendingCmds, setPendingCmds] = useState<Record<string, boolean>>({});
   const [targetVelocityInputs, setTargetVelocityInputs] = useState<Record<string, number>>({});
+  const [manualDraftFanActionByCtrl, setManualDraftFanActionByCtrl] = useState<Record<string, number>>({});
   const prevFanModes = useRef<Record<number, number>>({});
   const [safetyAlerts, setSafetyAlerts] = useState<Record<number, boolean>>({});
 
@@ -61,16 +62,25 @@ export default function ControlFanPage() {
     }
   }, [realtimeData]);
 
-  const handleFanSpeed = useCallback(
-    (controllerId: string, controllerLabel: string, action: number) => {
-      const speedLabel = FAN_SPEED_OPTIONS.find((o) => o.value === action)?.label ?? `action=${action}`;
+  const clearManualFanDraft = useCallback((draftKey: string) => {
+    setManualDraftFanActionByCtrl((prev) => {
+      if (!(draftKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[draftKey];
+      return next;
+    });
+  }, []);
+
+  const handleApplyManualFanSpeed = useCallback(
+    (controllerId: string, controllerLabel: string, action: number, pendingKey: string, draftKey: string) => {
+      const selected = MANUAL_FAN_LEVEL_OPTIONS.find((o) => o.value === action);
+      const speedLabel = selected ? `${selected.label} (${selected.freq})` : `action=${action}`;
 
       showConfirmModal({
         title: '팬 속도 제어',
         content: `${controllerLabel}의 팬 속도를 ${speedLabel}(으)로 설정하시겠습니까?`,
         onOk: () => {
-          const key = `${controllerId}-fan`;
-          setPendingCmds((prev) => ({ ...prev, [key]: true }));
+          setPendingCmds((prev) => ({ ...prev, [pendingKey]: true }));
 
           sendCommand.mutate(
             {
@@ -83,21 +93,22 @@ export default function ControlFanPage() {
               onSuccess: (res) => {
                 if (res.result === 'SUCCESS') {
                   message.success(`${controllerLabel} 팬 ${speedLabel} 설정 성공`);
+                  clearManualFanDraft(draftKey);
                 } else {
                   message.error(`팬 제어 실패: ${res.failReason}`);
                 }
-                setPendingCmds((prev) => ({ ...prev, [key]: false }));
+                setPendingCmds((prev) => ({ ...prev, [pendingKey]: false }));
               },
               onError: () => {
                 message.error('제어 명령 전송 실패');
-                setPendingCmds((prev) => ({ ...prev, [key]: false }));
+                setPendingCmds((prev) => ({ ...prev, [pendingKey]: false }));
               },
             },
           );
         },
       });
     },
-    [sendCommand],
+    [sendCommand, clearManualFanDraft],
   );
 
   const handleModeChange = useCallback(
@@ -322,6 +333,13 @@ export default function ControlFanPage() {
         const modeKey = `${ctrl.controllerName}-mode`;
         const velocityKey = `${ctrl.controllerName}-velocity`;
         const velocityInput = targetVelocityInputs[ctrl.controllerName] ?? 5.0;
+        const fanDraftKey = `fan-draft-${ctrl.controllerId}`;
+        const isManualSpeed = sd.fanSpeed === FAN_ACTIONS.OFF
+          || sd.fanSpeed === FAN_ACTIONS.LOW
+          || sd.fanSpeed === FAN_ACTIONS.MID
+          || sd.fanSpeed === FAN_ACTIONS.HIGH;
+        const currentManualAction = isManualSpeed ? sd.fanSpeed : FAN_ACTIONS.OFF;
+        const draftManualAction = manualDraftFanActionByCtrl[fanDraftKey] ?? currentManualAction;
 
         return (
           <div className="control-card" key={ctrl.controllerId} style={{ marginBottom: 16 }}>
@@ -367,77 +385,109 @@ export default function ControlFanPage() {
               </Descriptions.Item>
             </Descriptions>
 
-            {/* 모드 전환 */}
-            <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Text strong>제어 모드:</Text>
-              <div className="control-mode-group">
+            <div className="fan-control-section">
+              <div className="fan-control-title-row">
+                <FanIcon className="fan-control-title-icon" />
+                <Title level={5} style={{ margin: 0 }}>
+                  송풍기 팬 모터 제어
+                </Title>
+              </div>
+
+              {/* 모드 전환 */}
+              <div className="control-mode-group fan-control-mode-group">
                 <button
-                  className={`control-mode-btn ${!isAutoMode ? 'control-mode-btn-active' : ''}`}
-                  disabled={!!pendingCmds[modeKey]}
-                  onClick={() => { if (isAutoMode) handleModeChange(ctrl.controllerName, ctrl.controllerName, false); }}
-                >
-                  수동
-                </button>
-                <button
+                  type="button"
                   className={`control-mode-btn ${isAutoMode ? 'control-mode-btn-active' : ''}`}
                   disabled={!!pendingCmds[modeKey]}
                   onClick={() => { if (!isAutoMode) handleModeChange(ctrl.controllerName, ctrl.controllerName, true); }}
                 >
                   자동
                 </button>
+                <button
+                  type="button"
+                  className={`control-mode-btn ${!isAutoMode ? 'control-mode-btn-active' : ''}`}
+                  disabled={!!pendingCmds[modeKey]}
+                  onClick={() => { if (isAutoMode) handleModeChange(ctrl.controllerName, ctrl.controllerName, false); }}
+                >
+                  수동
+                </button>
               </div>
-            </div>
 
-            <Divider style={{ margin: '12px 0' }} />
-
-            {/* 수동 제어: 팬 속도 선택 */}
-            {!isAutoMode && (
-              <div>
-                <Text strong>팬 속도 설정</Text>
-                <div className="fan-speed-group" style={{ marginTop: 8 }}>
-                  {FAN_SPEED_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      className={`fan-speed-btn ${sd.fanSpeed === opt.value ? 'fan-speed-btn-active' : ''}`}
-                      disabled={!!pendingCmds[fanKey]}
-                      onClick={() => handleFanSpeed(ctrl.controllerName, ctrl.controllerName, opt.value)}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 자동 제어: 목표 풍속 입력 */}
-            {isAutoMode && (
-              <div>
-                <Text strong>목표 풍속 (m/s)</Text>
-                <div style={{ display: 'flex', gap: 12, marginTop: 8, alignItems: 'center' }}>
-                  <InputNumber
-                    className="auto-target-input"
-                    min={0.5}
-                    max={20.0}
-                    step={0.5}
-                    value={velocityInput}
-                    addonAfter="m/s"
-                    style={{ width: 200 }}
-                    onChange={(val) => {
-                      if (val !== null) {
-                        setTargetVelocityInputs((prev) => ({ ...prev, [ctrl.controllerName]: val }));
-                      }
-                    }}
-                  />
+              {/* 수동 제어 */}
+              {!isAutoMode && (
+                <div className="fan-manual-panel">
+                  <Text className="fan-manual-panel-label">풍량 선택</Text>
+                  <div className="fan-manual-level-grid">
+                    {MANUAL_FAN_LEVEL_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`fan-manual-level-btn ${draftManualAction === opt.value ? 'fan-manual-level-btn-active' : ''}`}
+                        disabled={!!pendingCmds[fanKey] || !isOnline}
+                        aria-pressed={draftManualAction === opt.value}
+                        onClick={() => {
+                          setManualDraftFanActionByCtrl((prev) => ({ ...prev, [fanDraftKey]: opt.value }));
+                        }}
+                      >
+                        <div className="fan-manual-level-icon">{opt.icon}</div>
+                        <div className="fan-manual-level-label">{opt.label}</div>
+                        <div className="fan-manual-level-hz">{opt.freq}</div>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="fan-manual-warning">
+                    ⚠ 수동 모드: 센서 감지 무관 강제 동작
+                  </div>
                   <Button
                     type="primary"
-                    loading={!!pendingCmds[velocityKey]}
-                    onClick={() => handleSetTargetVelocity(ctrl.controllerName, ctrl.controllerName, velocityInput)}
+                    block
+                    size="large"
+                    className="fan-manual-apply-btn"
+                    loading={!!pendingCmds[fanKey]}
+                    disabled={!isOnline || draftManualAction === currentManualAction}
+                    onClick={() => handleApplyManualFanSpeed(
+                      ctrl.controllerName,
+                      ctrl.controllerName,
+                      draftManualAction,
+                      fanKey,
+                      fanDraftKey,
+                    )}
                   >
-                    목표 풍속 적용
+                    적용
                   </Button>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* 자동 제어: 목표 풍속 입력 */}
+              {isAutoMode && (
+                <div className="fan-auto-panel">
+                  <Text strong>목표 풍속 (m/s)</Text>
+                  <div style={{ display: 'flex', gap: 12, marginTop: 8, alignItems: 'center' }}>
+                    <InputNumber
+                      className="auto-target-input"
+                      min={0.5}
+                      max={20.0}
+                      step={0.5}
+                      value={velocityInput}
+                      addonAfter="m/s"
+                      style={{ width: 200 }}
+                      onChange={(val) => {
+                        if (val !== null) {
+                          setTargetVelocityInputs((prev) => ({ ...prev, [ctrl.controllerName]: val }));
+                        }
+                      }}
+                    />
+                    <Button
+                      type="primary"
+                      loading={!!pendingCmds[velocityKey]}
+                      onClick={() => handleSetTargetVelocity(ctrl.controllerName, ctrl.controllerName, velocityInput)}
+                    >
+                      목표 풍속 적용
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         );
       })}
