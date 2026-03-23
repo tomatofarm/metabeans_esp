@@ -30,9 +30,10 @@ const STATUS_OPTIONS = Object.entries(AS_STATUS_LABELS).map(([value, label]) => 
 
 interface ASStatusPageProps {
   onRowClick?: (requestId: number) => void;
+  mode?: 'status' | 'report';
 }
 
-export default function ASStatusPage({ onRowClick }: ASStatusPageProps) {
+export default function ASStatusPage({ onRowClick, mode = 'status' }: ASStatusPageProps) {
   const { isAdmin, isDealer } = useRole();
   const showDealerFilter = isAdmin || isDealer;
 
@@ -47,6 +48,7 @@ export default function ASStatusPage({ onRowClick }: ASStatusPageProps) {
     status: statusFilter,
     storeId,
     dealerId,
+    reportOnly: mode === 'report',
     from: dateRange?.[0]?.toISOString(),
     to: dateRange?.[1]?.toISOString(),
   });

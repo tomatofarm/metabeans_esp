@@ -116,6 +116,7 @@ export function useASStatusList(params?: {
   urgency?: Urgency;
   storeId?: number;
   dealerId?: number;
+  reportOnly?: boolean;
   from?: string;
   to?: string;
   page?: number;

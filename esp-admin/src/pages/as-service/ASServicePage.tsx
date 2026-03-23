@@ -160,6 +160,7 @@ function ASServiceTabs() {
       default:
         return (
           <ASStatusPage
+            mode="report"
             onRowClick={(requestId) => setReportSubView({ type: 'report', requestId })}
           />
         );

@@ -283,6 +283,22 @@ const mockASRequests: ASRequestListItem[] = [
     createdAt: now.subtract(12, 'day').toISOString(),
     updatedAt: now.subtract(5, 'day').toISOString(),
   },
+  {
+    requestId: 9009,
+    storeId: 1,
+    storeName: '바삭치킨 강남점',
+    equipmentId: 2,
+    equipmentName: 'ESP 집진기 #2',
+    urgency: 'NORMAL',
+    faultType: 'COMM_ERROR',
+    description: '게이트웨이 통신이 간헐적으로 끊겨 통신 모듈 교체가 필요했습니다.',
+    status: 'REPORT_SUBMITTED',
+    dealerId: 1,
+    dealerName: '서울환경테크',
+    preferredVisitDatetime: '2026-02-03T13:00:00Z',
+    createdAt: now.subtract(15, 'day').toISOString(),
+    updatedAt: now.subtract(6, 'day').toISOString(),
+  },
 ];
 
 // --- 매장별 장비 옵션 ---
@@ -593,6 +609,33 @@ const mockReports: Record<number, ASReport & { attachments: ASReportAttachment[]
       },
     ],
   },
+  9009: {
+    reportId: 1004,
+    requestId: 9009,
+    dealerId: 1,
+    repairType: 'WIRING' as RepairType,
+    repairDescription: '게이트웨이 통신 모듈 배선 재정비 및 접점부 교체를 완료했습니다. 48시간 모니터링 결과 통신 정상.',
+    partsUsed: [
+      { partName: '통신 모듈 커넥터', unitPrice: 18000, quantity: 2 },
+      { partName: '쉴드 케이블', unitPrice: 12000, quantity: 3 },
+    ],
+    totalPartsCost: 72000,
+    laborCost: 70000,
+    totalCost: 142000,
+    result: 'COMPLETED',
+    remarks: '습기 많은 환경으로 월 1회 점검 권장.',
+    createdAt: now.subtract(6, 'day').toISOString(),
+    attachments: [
+      {
+        attachmentId: 105,
+        reportId: 1004,
+        fileType: 'IMAGE',
+        filePath: '/files/as-report/9009/after.jpg',
+        fileName: '통신모듈_교체_후.jpg',
+        uploadedAt: now.subtract(6, 'day').toISOString(),
+      },
+    ],
+  },
 };
 
 // --- Mock 상세 데이터 빌더 ---
@@ -768,6 +811,8 @@ export async function mockGetASStatusList(params?: {
   urgency?: Urgency;
   storeId?: number;
   dealerId?: number;
+  /** true면 보고서가 존재하는 건만 반환 (완료 보고서 탭 전용) */
+  reportOnly?: boolean;
   from?: string;
   to?: string;
   page?: number;
@@ -788,6 +833,9 @@ export async function mockGetASStatusList(params?: {
   }
   if (params?.dealerId) {
     filtered = filtered.filter((r) => r.dealerId === params.dealerId);
+  }
+  if (params?.reportOnly) {
+    filtered = filtered.filter((r) => !!mockReports[r.requestId]);
   }
   if (params?.from) {
     const fromDate = dayjs(params.from);
