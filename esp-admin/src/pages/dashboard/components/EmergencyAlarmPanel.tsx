@@ -48,26 +48,26 @@ export default function EmergencyAlarmPanel({ onAlarmClick }: EmergencyAlarmPane
   const { data: alarms } = useEmergencyAlarms();
   const { setAlerts, unreadCount } = useAlertStore();
 
-  // Sync alarm data to alertStore
+  // API가 0건이면 스토어도 비움 (없어야 할 때 옛 알람이 남지 않도록)
   useEffect(() => {
-    if (alarms && alarms.length > 0) {
-      setAlerts(
-        alarms.map((a: EmergencyAlarm) => ({
-          alarmId: a.alarmId,
-          storeId: a.storeId,
-          equipmentId: a.equipmentId,
-          controllerId: a.controllerId,
-          alarmType: a.alarmType,
-          severity: a.severity,
-          message: a.message,
-          occurredAt: a.occurredAt,
-          status: a.status,
-        })),
-      );
-    }
+    if (alarms === undefined) return;
+    setAlerts(
+      alarms.map((a: EmergencyAlarm) => ({
+        alarmId: a.alarmId,
+        storeId: a.storeId,
+        equipmentId: a.equipmentId,
+        controllerId: a.controllerId,
+        alarmType: a.alarmType,
+        severity: a.severity,
+        message: a.message,
+        occurredAt: a.occurredAt,
+        status: a.status,
+      })),
+    );
   }, [alarms, setAlerts]);
 
-  const count = alarms?.length ?? unreadCount;
+  // 로딩 전에는 스토어 건수, 수신 후에는 항상 API 건수(0 포함)
+  const count = alarms !== undefined ? alarms.length : unreadCount;
 
   const content = (
     <div style={{ width: 360, maxHeight: 400, overflow: 'auto' }}>

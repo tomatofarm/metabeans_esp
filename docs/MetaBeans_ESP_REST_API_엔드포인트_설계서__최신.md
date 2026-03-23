@@ -4,7 +4,7 @@
 
 **문서 버전**: v1.13  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-16 (v1.13)  
+**최종 수정일**: 2026-03-23  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -31,7 +31,7 @@ Development: http://localhost:3000/api/v1
 | Access Token | JWT, 15분 만료, `Authorization: Bearer {token}` 헤더 |
 | Refresh Token | JWT, 7일 만료, HttpOnly Cookie (`esp_refresh`) |
 | JWT Payload | `{ userId, loginId, role, storeIds[] }` |
-| ì—­í• (role) | `ADMIN` \| `DEALER` \| `HQ` \| `OWNER` |
+| 역할(role) | `ADMIN` \| `DEALER` \| `HQ` \| `OWNER` |
 
 ### 0.3 공통 응답 형식
 
@@ -523,7 +523,7 @@ GET /dashboard/summary
 - `OWNER`: 본인 매장만 (storeCount는 항상 1)
 - `HQ`: 관할 가맹점만
 - `DEALER`: 관할 매장만
-- `ADMIN`: ì "ì²´
+- `ADMIN`: 전체
 
 ### 3.2 실시간 발생 이슈 목록
 
