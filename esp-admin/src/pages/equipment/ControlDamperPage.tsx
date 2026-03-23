@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Button, Table, Space, Spin, Empty, Typography,
-  Slider, InputNumber, Descriptions, Divider, message,
+  InputNumber, Descriptions, message,
 } from 'antd';
 import {
   ControlOutlined,
-  WarningOutlined, SwapOutlined,
+  WarningOutlined,
+  SwapOutlined,
+  GatewayOutlined,
 } from '@ant-design/icons';
 import StatusBadge from '../../components/common/StatusBadge';
 import type { ColumnsType } from 'antd/es/table';
@@ -19,6 +21,17 @@ import { DAMPER_STEP_MAP } from '../../utils/constants';
 import { formatDateTime, formatFlow, formatNumber } from '../../utils/formatters';
 
 const { Text, Title } = Typography;
+
+const DAMPER_SEGMENT_COLORS = [
+  '#52c41a',
+  '#49c97f',
+  '#36cfc9',
+  '#2db7f5',
+  '#1890ff',
+  '#3f87ff',
+  '#5f7cff',
+  '#6b73ff',
+] as const;
 
 // 개도율에 가장 가까운 단계를 찾기
 function findClosestStep(opening: number): number {
@@ -34,10 +47,10 @@ function findClosestStep(opening: number): number {
   return closest;
 }
 
-// 슬라이더 marks 생성
-const sliderMarks: Record<number, string> = {};
-for (const s of DAMPER_STEP_MAP) {
-  sliderMarks[s.step] = `${s.opening}%`;
+function getDamperOpeningText(opening: number): string {
+  if (opening <= 0) return '닫힘';
+  if (opening >= 100) return '완전 개방';
+  return '부분 개방';
 }
 
 function getHistoryActionLabel(target: ControlTarget, action: number, value?: number): string {
@@ -59,6 +72,8 @@ export default function ControlDamperPage() {
   const sendCommand = useSendControlCommand();
   const [pendingCmds, setPendingCmds] = useState<Record<string, boolean>>({});
   const [targetFlowInputs, setTargetFlowInputs] = useState<Record<string, number>>({});
+  /** 수동: 8단계 중 선택(0~7). 미설정 시 센서 기준 단계 사용 */
+  const [manualDraftStepByCtrl, setManualDraftStepByCtrl] = useState<Record<string, number>>({});
   const prevDamperModes = useRef<Record<number, number>>({});
   const [safetyAlerts, setSafetyAlerts] = useState<Record<number, boolean>>({});
 
@@ -74,45 +89,86 @@ export default function ControlDamperPage() {
     }
   }, [realtimeData]);
 
-  const handleSetOpening = useCallback(
-    (controllerId: string, controllerLabel: string, step: number) => {
+  const clearManualDraft = useCallback((draftKey: string) => {
+    setManualDraftStepByCtrl((prev) => {
+      if (!(draftKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[draftKey];
+      return next;
+    });
+  }, []);
+
+  const runDamperOpeningCommand = useCallback(
+    (
+      controllerId: string,
+      controllerLabel: string,
+      step: number,
+      pendingKey: string,
+      draftKey: string,
+      displayStage: number,
+    ) => {
       const stepInfo = DAMPER_STEPS[step];
       if (!stepInfo) return;
 
-      showConfirmModal({
-        title: '댐퍼 개도율 설정',
-        content: `${controllerLabel}의 댐퍼 개도율을 ${step}단계 (${stepInfo.opening}%)로 설정하시겠습니까?`,
-        onOk: () => {
-          const key = `${controllerId}-damper`;
-          setPendingCmds((prev) => ({ ...prev, [key]: true }));
+      setPendingCmds((prev) => ({ ...prev, [pendingKey]: true }));
 
-          sendCommand.mutate(
-            {
-              target: 1,
-              action: DAMPER_ACTIONS.SET_OPENING,
-              value: stepInfo.value,
-              equipmentId: 'esp-001',
-              controllerId,
-            },
-            {
-              onSuccess: (res) => {
-                if (res.result === 'SUCCESS') {
-                  message.success(`${controllerLabel} 댐퍼 ${step}단계 (${stepInfo.opening}%) 설정 성공`);
-                } else {
-                  message.error(`댐퍼 제어 실패: ${res.failReason}`);
-                }
-                setPendingCmds((prev) => ({ ...prev, [key]: false }));
-              },
-              onError: () => {
-                message.error('제어 명령 전송 실패');
-                setPendingCmds((prev) => ({ ...prev, [key]: false }));
-              },
-            },
-          );
+      sendCommand.mutate(
+        {
+          target: 1,
+          action: DAMPER_ACTIONS.SET_OPENING,
+          value: stepInfo.value,
+          equipmentId: 'esp-001',
+          controllerId,
         },
+        {
+          onSuccess: (res) => {
+            if (res.result === 'SUCCESS') {
+              message.success(
+                `${controllerLabel} 방화셔터 ${displayStage}단계 (${stepInfo.opening}%) 설정 성공`,
+              );
+              clearManualDraft(draftKey);
+            } else {
+              message.error(`댐퍼 제어 실패: ${res.failReason}`);
+            }
+            setPendingCmds((prev) => ({ ...prev, [pendingKey]: false }));
+          },
+          onError: () => {
+            message.error('제어 명령 전송 실패');
+            setPendingCmds((prev) => ({ ...prev, [pendingKey]: false }));
+          },
+        },
+      );
+    },
+    [sendCommand, clearManualDraft],
+  );
+
+  const handleApplyManualDamper = useCallback(
+    (
+      controllerId: string,
+      controllerLabel: string,
+      step: number,
+      pendingKey: string,
+      draftKey: string,
+    ) => {
+      const stepInfo = DAMPER_STEPS[step];
+      if (!stepInfo) return;
+      const displayStage = step + 1;
+
+      showConfirmModal({
+        title: '방화셔터 개도 설정',
+        content: `${controllerLabel}의 방화셔터를 ${displayStage}단계 (${stepInfo.opening}%)로 설정하시겠습니까?`,
+        onOk: () =>
+          runDamperOpeningCommand(
+            controllerId,
+            controllerLabel,
+            step,
+            pendingKey,
+            draftKey,
+            displayStage,
+          ),
       });
     },
-    [sendCommand],
+    [runDamperOpeningCommand],
   );
 
   const handleModeChange = useCallback(
@@ -338,6 +394,11 @@ export default function ControlDamperPage() {
         const modeKey = `${ctrl.controllerName}-mode`;
         const flowKey = `${ctrl.controllerName}-flow`;
         const flowInput = targetFlowInputs[ctrl.controllerName] ?? 800;
+        const damperDraftKey = `damper-draft-${ctrl.controllerId}`;
+        const draftStep = manualDraftStepByCtrl[damperDraftKey] ?? currentStep;
+        const displayStage = draftStep + 1;
+        const draftOpening = DAMPER_STEP_MAP[draftStep]?.opening ?? 0;
+        const draftOpeningText = getDamperOpeningText(draftOpening);
 
         return (
           <div className="control-card" key={ctrl.controllerId} style={{ marginBottom: 16 }}>
@@ -381,94 +442,143 @@ export default function ControlDamperPage() {
               </Descriptions.Item>
             </Descriptions>
 
-            {/* 모드 전환 */}
-            <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Text strong>제어 모드:</Text>
-              <div className="control-mode-group">
+            {/* 방화셔터 제어: 제목 + 모드 탭 + (수동: 8단계 패널 / 자동: 목표 풍량) */}
+            <div className="damper-shutter-section">
+              <div className="damper-shutter-title-row">
+                <GatewayOutlined className="damper-shutter-title-icon" />
+                <Title level={5} style={{ margin: 0 }}>
+                  방화셔터 제어
+                </Title>
+              </div>
+
+              <div className="control-mode-group damper-shutter-mode-group">
                 <button
-                  className={`control-mode-btn ${!isAutoMode ? 'control-mode-btn-active' : ''}`}
-                  disabled={!!pendingCmds[modeKey]}
-                  onClick={() => { if (isAutoMode) handleModeChange(ctrl.controllerName, ctrl.controllerName, false); }}
-                >
-                  수동
-                </button>
-                <button
+                  type="button"
                   className={`control-mode-btn ${isAutoMode ? 'control-mode-btn-active' : ''}`}
                   disabled={!!pendingCmds[modeKey]}
-                  onClick={() => { if (!isAutoMode) handleModeChange(ctrl.controllerName, ctrl.controllerName, true); }}
+                  onClick={() => {
+                    if (!isAutoMode) handleModeChange(ctrl.controllerName, ctrl.controllerName, true);
+                  }}
                 >
                   자동
                 </button>
+                <button
+                  type="button"
+                  className={`control-mode-btn ${!isAutoMode ? 'control-mode-btn-active' : ''}`}
+                  disabled={!!pendingCmds[modeKey]}
+                  onClick={() => {
+                    if (isAutoMode) handleModeChange(ctrl.controllerName, ctrl.controllerName, false);
+                  }}
+                >
+                  수동
+                </button>
               </div>
-            </div>
 
-            <Divider style={{ margin: '12px 0' }} />
+              {!isAutoMode && (
+                <div className="damper-manual-panel">
+                  <Text className="damper-manual-panel-label">
+                    8단계 각도 조절 (수동)
+                  </Text>
 
-            {/* 수동 제어: 8단계 슬라이더 */}
-            {!isAutoMode && (
-              <div>
-                <Text strong>개도율 설정 (8단계)</Text>
-                <div style={{ padding: '8px 16px' }}>
-                  <Slider
-                    min={0}
-                    max={7}
-                    step={1}
-                    value={currentStep}
-                    marks={sliderMarks}
-                    disabled={!!pendingCmds[damperKey]}
-                    tooltip={{
-                      formatter: (val) => {
-                        const s = DAMPER_STEP_MAP[val ?? 0];
-                        return s ? `${s.label} (${s.opening}%)` : '';
-                      },
-                    }}
-                    onChange={(val) => handleSetOpening(ctrl.controllerName, ctrl.controllerName, val)}
-                  />
-                </div>
-                <div className="damper-grid" style={{ marginTop: 8 }}>
-                  {DAMPER_STEP_MAP.map((s) => (
-                    <button
-                      key={s.step}
-                      className={`damper-step-btn ${currentStep === s.step ? 'damper-step-btn-active' : ''}`}
-                      disabled={!!pendingCmds[damperKey]}
-                      onClick={() => handleSetOpening(ctrl.controllerName, ctrl.controllerName, s.step)}
-                    >
-                      {s.label} ({s.opening}%)
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+                  <div className="damper-eight-track" role="group" aria-label="방화셔터 8단계 선택">
+                    {DAMPER_STEP_MAP.map((s) => {
+                      const filled = s.step <= draftStep;
+                      const segmentColor = DAMPER_SEGMENT_COLORS[s.step] ?? '#1890ff';
+                      return (
+                        <button
+                          key={s.step}
+                          type="button"
+                          className={`damper-eight-segment ${filled ? 'damper-eight-segment--filled' : ''}`}
+                          style={filled ? { backgroundColor: segmentColor } : undefined}
+                          disabled={!!pendingCmds[damperKey] || !isOnline}
+                          aria-pressed={draftStep === s.step}
+                          aria-label={`${s.step + 1}단계 ${s.opening}% (${getDamperOpeningText(s.opening)})`}
+                          onClick={() =>
+                            setManualDraftStepByCtrl((prev) => ({
+                              ...prev,
+                              [damperDraftKey]: s.step,
+                            }))
+                          }
+                        />
+                      );
+                    })}
+                  </div>
 
-            {/* 자동 제어: 목표 풍량 입력 */}
-            {isAutoMode && (
-              <div>
-                <Text strong>목표 풍량 (CMH)</Text>
-                <div style={{ display: 'flex', gap: 12, marginTop: 8, alignItems: 'center' }}>
-                  <InputNumber
-                    className="auto-target-input"
-                    min={100}
-                    max={2000}
-                    step={10}
-                    value={flowInput}
-                    addonAfter="CMH"
-                    style={{ width: 200 }}
-                    onChange={(val) => {
-                      if (val !== null) {
-                        setTargetFlowInputs((prev) => ({ ...prev, [ctrl.controllerName]: val }));
-                      }
-                    }}
-                  />
+                  <div className="damper-eight-nums" aria-hidden>
+                    {DAMPER_STEP_MAP.map((s) => (
+                      <span
+                        key={s.step}
+                        className={draftStep === s.step ? 'damper-eight-num damper-eight-num--active' : 'damper-eight-num'}
+                      >
+                        {s.step + 1}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="damper-current-stage-box">
+                    <Text type="secondary">현재 </Text>
+                    <Text strong className="damper-current-stage-value">
+                      {displayStage}
+                    </Text>
+                    <Text type="secondary"> 단계</Text>
+                    <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+                      ({draftOpening}% · {draftOpeningText})
+                    </Text>
+                  </div>
+
                   <Button
                     type="primary"
-                    loading={!!pendingCmds[flowKey]}
-                    onClick={() => handleSetTargetFlow(ctrl.controllerName, ctrl.controllerName, flowInput)}
+                    block
+                    size="large"
+                    className="damper-apply-btn"
+                    loading={!!pendingCmds[damperKey]}
+                    disabled={!isOnline || draftStep === currentStep}
+                    onClick={() =>
+                      handleApplyManualDamper(
+                        ctrl.controllerName,
+                        ctrl.controllerName,
+                        draftStep,
+                        damperKey,
+                        damperDraftKey,
+                      )
+                    }
                   >
-                    목표 풍량 적용
+                    적용
                   </Button>
                 </div>
-              </div>
-            )}
+              )}
+
+              {isAutoMode && (
+                <div className="damper-auto-panel">
+                  <Text strong className="damper-manual-panel-label" style={{ display: 'block', marginBottom: 8 }}>
+                    목표 풍량 (자동)
+                  </Text>
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <InputNumber
+                      className="auto-target-input"
+                      min={100}
+                      max={2000}
+                      step={10}
+                      value={flowInput}
+                      addonAfter="CMH"
+                      style={{ width: 200 }}
+                      onChange={(val) => {
+                        if (val !== null) {
+                          setTargetFlowInputs((prev) => ({ ...prev, [ctrl.controllerName]: val }));
+                        }
+                      }}
+                    />
+                    <Button
+                      type="primary"
+                      loading={!!pendingCmds[flowKey]}
+                      onClick={() => handleSetTargetFlow(ctrl.controllerName, ctrl.controllerName, flowInput)}
+                    >
+                      목표 풍량 적용
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         );
       })}

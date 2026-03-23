@@ -1,3 +1,5 @@
+import { DAMPER_STEPS } from '../types/control.types';
+
 // 상태 색상 체계
 export const STATUS_COLORS = {
   GOOD: { color: '#52c41a', label: '정상', level: 'green' as const },
@@ -30,17 +32,12 @@ export const COMM_ISSUE_RED_SEC = 86400; // 1일(하루)
 // 센서 데이터 갱신 주기 (ms)
 export const SENSOR_INTERVAL_MS = 10000;
 
-// 방화셔터 8단계 매핑
-export const DAMPER_STEP_MAP = [
-  { step: 0, label: '0단계', opening: 0 },
-  { step: 1, label: '1단계', opening: 10 },
-  { step: 2, label: '2단계', opening: 25 },
-  { step: 3, label: '3단계', opening: 40 },
-  { step: 4, label: '4단계', opening: 60 },
-  { step: 5, label: '5단계', opening: 75 },
-  { step: 6, label: '6단계', opening: 90 },
-  { step: 7, label: '7단계', opening: 100 },
-] as const;
+/** UI·센서 피드백 매칭용 — `DAMPER_STEPS`와 동일 (0~7단계 ↔ 개도율%) */
+export const DAMPER_STEP_MAP = DAMPER_STEPS.map((s) => ({
+  step: s.step,
+  label: `${s.step}단계`,
+  opening: s.opening,
+}));
 
 // 팬 속도 라벨
 export const FAN_SPEED_LABELS: Record<number, string> = {

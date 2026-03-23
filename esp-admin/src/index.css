@@ -910,6 +910,125 @@ body {
   font-size: 0.75rem;
 }
 
+/* 방화셔터 제어 — 수동 8단계 트랙 (장치 제어) */
+.damper-shutter-section {
+  margin-top: 4px;
+}
+
+.damper-shutter-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.damper-shutter-title-icon {
+  font-size: 20px;
+  color: var(--color-primary);
+}
+
+.damper-shutter-mode-group {
+  margin-bottom: 16px;
+}
+
+.damper-shutter-mode-group .control-mode-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 12px 20px;
+  font-size: 15px;
+}
+
+.damper-manual-panel {
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 16px 18px 18px;
+}
+
+.damper-manual-panel-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-mid);
+  margin-bottom: 14px;
+}
+
+.damper-eight-track {
+  display: flex;
+  gap: 4px;
+  height: 28px;
+  margin-bottom: 6px;
+}
+
+.damper-eight-segment {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-radius: 6px;
+  background: #e2e8f0;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.damper-eight-segment:hover:not(:disabled) {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.35);
+}
+
+.damper-eight-segment:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.damper-eight-segment--filled {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.damper-eight-nums {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px;
+  margin-bottom: 14px;
+  user-select: none;
+}
+
+.damper-eight-num {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.damper-eight-num--active {
+  color: var(--color-primary);
+}
+
+.damper-current-stage-box {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.damper-current-stage-value {
+  font-size: 18px !important;
+  color: var(--color-primary) !important;
+  margin: 0 2px;
+}
+
+.damper-apply-btn {
+  height: 44px !important;
+  font-weight: 600;
+  border-radius: 8px !important;
+}
+
+.damper-auto-panel {
+  padding-top: 4px;
+}
+
 /* Fan speed buttons (same pattern as damper) */
 .fan-speed-group {
   display: flex;

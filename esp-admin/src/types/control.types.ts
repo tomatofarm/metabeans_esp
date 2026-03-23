@@ -103,7 +103,20 @@ export const FAN_ACTIONS = {
   SET_TARGET_VELOCITY: 5,
 } as const;
 
-// 방화셔터 8단계 매핑
+/**
+ * 방화셔터 개도율 — 8단계(0~7), MQTT 수동 개도(action=1) value는 개도율(%)과 동일
+ *
+ * | 단계 | 개도율 |
+ * |------|--------|
+ * | 0 | 0% |
+ * | 1 | 10% |
+ * | 2 | 25% |
+ * | 3 | 40% |
+ * | 4 | 60% |
+ * | 5 | 75% |
+ * | 6 | 90% |
+ * | 7 | 100% |
+ */
 export const DAMPER_STEPS = [
   { step: 0, opening: 0, value: 0 },
   { step: 1, opening: 10, value: 10 },
