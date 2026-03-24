@@ -230,10 +230,25 @@ body {
   color: var(--color-light);
 }
 
-/* IAQ grid cards */
+/* IAQ grid — 좁은 열·확대 시 카드가 카드 박스 밖으로 나가지 않도록 스크롤 */
+.air-quality-card .ant-card-body {
+  min-width: 0;
+}
+
+.air-quality-tabs .ant-tabs-content-holder,
+.air-quality-tabs .ant-tabs-tabpane {
+  min-width: 0;
+}
+
+.iaq-grid-scroll {
+  max-width: 100%;
+  min-width: 0;
+  overflow: auto;
+}
+
 .iaq-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(118px, 1fr));
   gap: 16px;
 }
 

@@ -120,7 +120,8 @@ function IAQGrid({ data }: { data: GatewaySensorData }) {
   ];
 
   return (
-    <div className="iaq-grid">
+    <div className="iaq-grid-scroll">
+      <div className="iaq-grid">
       {items.map((item) => {
         let color: string | undefined;
         let badge: { status: BadgeStatus; label: string };
@@ -151,6 +152,7 @@ function IAQGrid({ data }: { data: GatewaySensorData }) {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
@@ -168,11 +170,12 @@ export default function AirQualityCard({ data, floorIaqList, storeName }: AirQua
 
     return (
       <Card
+        className="air-quality-card"
         title={storeName ? `${storeName} 실내 공기질 현황` : '실내공기질 (IAQ)'}
         extra={liveBadge}
         size="small"
       >
-        <Tabs items={tabItems} size="small" />
+        <Tabs items={tabItems} size="small" className="air-quality-tabs" />
       </Card>
     );
   }
@@ -183,7 +186,7 @@ export default function AirQualityCard({ data, floorIaqList, storeName }: AirQua
   }
 
   return (
-    <Card title="실내공기질 (IAQ)" extra={liveBadge} size="small">
+    <Card className="air-quality-card" title="실내공기질 (IAQ)" extra={liveBadge} size="small">
       <IAQGrid data={data} />
     </Card>
   );

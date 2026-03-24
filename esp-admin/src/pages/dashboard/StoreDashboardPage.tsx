@@ -127,14 +127,14 @@ export default function StoreDashboardPage({ storeId, onEquipmentClick }: StoreD
       </div>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={12} style={{ minWidth: 0 }}>
           <AirQualityCard
             data={data.iaqData}
             floorIaqList={data.floorIaqList}
             storeName={data.storeName}
           />
         </Col>
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={12} style={{ minWidth: 0 }}>
           <Card title="장비 현황" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
             <Table
               dataSource={data.equipments}

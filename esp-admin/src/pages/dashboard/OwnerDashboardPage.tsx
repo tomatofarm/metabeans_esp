@@ -154,14 +154,14 @@ export default function OwnerDashboardPage({ onNavigateToEquipment }: OwnerDashb
       </div>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={12} style={{ minWidth: 0 }}>
           <AirQualityCard
             data={storeData?.iaqData}
             floorIaqList={storeData?.floorIaqList}
             storeName={storeData?.storeName}
           />
         </Col>
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={12} style={{ minWidth: 0 }}>
           <Card title="장비 상태" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
             {storeData && storeData.equipments.length > 0 ? (
               <Table
