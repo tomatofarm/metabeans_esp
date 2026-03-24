@@ -5,6 +5,8 @@ export interface CustomerListItem {
   storeId: number;
   siteId: string;
   storeName: string;
+  /** 매장본사(프랜차이즈/브랜드) — 목록·지도 팝업 표시용 */
+  hqName?: string;
   ownerName: string;
   address: string;
   latitude: number;
@@ -69,6 +71,7 @@ export interface CustomerUpdateRequest {
 export interface CustomerMapItem {
   storeId: number;
   storeName: string;
+  hqName?: string;
   address: string;
   latitude: number;
   longitude: number;
@@ -80,6 +83,8 @@ export interface CustomerMapItem {
 export interface CustomerListParams {
   search?: string;
   status?: StoreStatus;
+  /** 매장본사명 필터 */
+  hqName?: string;
   region?: string;
   dealerId?: number;
   page?: number;

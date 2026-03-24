@@ -9,9 +9,32 @@ import type {
 } from '../../types/customer.types';
 import { mockDelay, wrapResponse, type ApiResponse } from './common.mock';
 
+// --- Mock: storeId → 매장본사(프랜차이즈)명 ---
+const STORE_HQ_MAP: Record<number, string> = {
+  1: '김밥천국',
+  2: '개인매장',
+  3: '빈스커피',
+  4: '우동천하',
+  5: '화덕피자',
+  6: '떡볶이 명가',
+  7: '바비큐빌리지',
+  8: '더버거',
+  9: '고기리막국수',
+  10: '해물찜 본사',
+  11: '라멘공방',
+  12: '뷔페월드',
+  13: '카페모카',
+  14: '치킨마을',
+  15: '로스터리',
+};
+
+function enrichListItem(c: CustomerListItem): CustomerListItem {
+  return { ...c, hqName: STORE_HQ_MAP[c.storeId] ?? '기타' };
+}
+
 // --- Mock 고객(매장) 데이터 ---
 
-const mockCustomers: CustomerListItem[] = [
+const mockCustomersRaw: CustomerListItem[] = [
   {
     storeId: 1,
     siteId: 'site-001',
@@ -68,7 +91,7 @@ const mockCustomers: CustomerListItem[] = [
     phone: '02-4567-8901',
     businessType: '일식',
     equipmentCount: 1,
-    status: 'ACTIVE',
+    status: 'PENDING',
     dealerName: '경기설비',
     registeredAt: '2025-09-10T00:00:00Z',
   },
@@ -158,7 +181,7 @@ const mockCustomers: CustomerListItem[] = [
     phone: '032-1234-5678',
     businessType: '한식',
     equipmentCount: 2,
-    status: 'ACTIVE',
+    status: 'PENDING',
     dealerName: '인천환경서비스',
     registeredAt: '2025-09-01T00:00:00Z',
   },
@@ -238,6 +261,13 @@ const mockCustomers: CustomerListItem[] = [
     registeredAt: '2025-12-01T00:00:00Z',
   },
 ];
+
+const mockCustomers: CustomerListItem[] = mockCustomersRaw.map(enrichListItem);
+
+/** 고객현황 필터용 매장본사 옵션 */
+export const CUSTOMER_HQ_OPTIONS = Array.from(
+  new Set(Object.values(STORE_HQ_MAP)),
+).sort((a, b) => a.localeCompare(b));
 
 // --- Mock 대리점 옵션 ---
 
@@ -377,15 +407,21 @@ export async function mockGetCustomerList(
   let filtered = [...mockCustomers];
 
   if (params?.search) {
-    const keyword = params.search.toLowerCase();
+    const keyword = params.search.toLowerCase().replace(/\s/g, '');
+    const norm = (s: string) => s.toLowerCase().replace(/[-\s]/g, '');
     filtered = filtered.filter(
       (c) =>
         c.storeName.toLowerCase().includes(keyword) ||
-        c.ownerName.toLowerCase().includes(keyword),
+        c.ownerName.toLowerCase().includes(keyword) ||
+        c.address.toLowerCase().includes(keyword) ||
+        norm(c.phone).includes(norm(params.search!)),
     );
   }
   if (params?.status) {
     filtered = filtered.filter((c) => c.status === params.status);
+  }
+  if (params?.hqName) {
+    filtered = filtered.filter((c) => c.hqName === params.hqName);
   }
   if (params?.region) {
     filtered = filtered.filter((c) => extractRegion(c.address) === params.region);
@@ -404,6 +440,10 @@ export async function mockGetCustomerList(
     let cmp = 0;
     if (sortBy === 'storeName') {
       cmp = a.storeName.localeCompare(b.storeName);
+    } else if (sortBy === 'hqName') {
+      cmp = (a.hqName ?? '').localeCompare(b.hqName ?? '');
+    } else if (sortBy === 'dealerName') {
+      cmp = a.dealerName.localeCompare(b.dealerName);
     } else if (sortBy === 'status') {
       cmp = a.status.localeCompare(b.status);
     } else {
@@ -436,6 +476,7 @@ export async function mockGetCustomerDetail(
     storeId: customer.storeId,
     siteId: customer.siteId,
     storeName: customer.storeName,
+    brandName: customer.hqName,
     businessType: customer.businessType,
     address: customer.address,
     latitude: customer.latitude,
@@ -484,6 +525,7 @@ export async function mockGetCustomerMapData(): Promise<ApiResponse<CustomerMapI
   const mapData: CustomerMapItem[] = mockCustomers.map((c) => ({
     storeId: c.storeId,
     storeName: c.storeName,
+    hqName: c.hqName,
     address: c.address,
     latitude: c.latitude,
     longitude: c.longitude,

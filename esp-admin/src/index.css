@@ -1561,6 +1561,122 @@ body {
 
 /* === Customer (고객 현황) Styles === */
 
+.customer-page-body {
+  min-width: 0;
+}
+
+/* 지도 + 테이블 동시 표시 (본문) — 동일 높이 */
+.customer-page-layout {
+  --customer-panel-height: clamp(320px, calc(100vh - 300px), 720px);
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+@media (max-width: 1200px) {
+  .customer-page-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.customer-filter-toolbar {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.customer-map-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: var(--customer-panel-height, 520px);
+  min-height: 320px;
+  background: var(--color-white);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.customer-map-legend {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-size: 0.8rem;
+  color: var(--color-dark);
+  pointer-events: none;
+}
+
+.customer-map-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.customer-map-legend-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* split 전용: 일반 .customer-map-container(calc 100vh)와 동시에 쓰지 말 것 */
+.customer-map-container-split {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.customer-table-split {
+  display: flex;
+  flex-direction: column;
+  height: var(--customer-panel-height, 520px);
+  min-height: 320px;
+  min-width: 0;
+}
+
+.customer-table-split .customer-table-header {
+  flex-shrink: 0;
+}
+
+.customer-table-split .ant-table-wrapper {
+  flex: 1;
+  min-height: 0;
+}
+
+.customer-table-row-selected > td {
+  background: rgba(74, 108, 247, 0.08) !important;
+}
+
+.customer-map-popup {
+  min-width: 180px;
+  max-width: 260px;
+}
+
+.customer-map-popup-sub {
+  font-size: 12px;
+  color: var(--color-mid);
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.customer-map-popup-meta {
+  font-size: 12px;
+  margin-top: 6px;
+  color: #475569;
+}
+
 /* Page header */
 .customer-header {
   display: flex;
@@ -1727,6 +1843,13 @@ body {
 .customer-map-container {
   height: calc(100vh - 280px);
   min-height: 500px;
+}
+
+/* 고객현황 split: 위 규칙과 클래스를 동시에 쓰면 지도만 비정상적으로 커짐 */
+.customer-map-container.customer-map-container-split {
+  height: unset !important;
+  min-height: 0 !important;
+  flex: 1;
 }
 
 /* Customer edit modal */
