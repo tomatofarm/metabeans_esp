@@ -4,14 +4,12 @@ import {
   Button,
   Modal,
   Select,
+  Input,
   Form,
   message,
   Spin,
   Typography,
-  Checkbox,
   Descriptions,
-  Divider,
-  Popconfirm,
 } from 'antd';
 import { EditOutlined, SearchOutlined, UserOutlined, TeamOutlined, UserAddOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -20,17 +18,10 @@ import {
   useSystemUsers,
   useSystemUserDetail,
   useUpdateSystemUser,
-  useSaveUserPermissionOverride,
-  useDeleteUserPermissionOverride,
 } from '../../api/system.api';
-import type {
-  SystemUserItem,
-  UserListParams,
-  FeatureCode,
-} from '../../types/system.types';
-import { FEATURE_CODE_LIST } from '../../types/system.types';
+import type { SystemUserItem, UserListParams } from '../../types/system.types';
 import type { UserRole, AccountStatus } from '../../types/auth.types';
-import { ROLE_CONFIG, PRIMARY_COLOR } from '../../utils/constants';
+import { ROLE_CONFIG } from '../../utils/constants';
 import StatusBadge from '../../components/common/StatusBadge';
 import type { BadgeStatus } from '../../components/common/StatusBadge';
 
@@ -57,8 +48,6 @@ export default function SystemUserTab() {
   const { data: detailResponse, isLoading: detailLoading } =
     useSystemUserDetail(editUserId);
   const updateMutation = useUpdateSystemUser();
-  const saveOverrideMutation = useSaveUserPermissionOverride();
-  const deleteOverrideMutation = useDeleteUserPermissionOverride();
 
   const users = usersResponse?.data ?? [];
   const summaryUsers = summaryUsersResponse?.data ?? users;
@@ -132,34 +121,6 @@ export default function SystemUserTab() {
       handleEditClose();
     } catch {
       message.error('사용자 정보 수정에 실패했습니다.');
-    }
-  };
-
-  const handleOverrideToggle = async (
-    featureCode: FeatureCode,
-    currentOverride: boolean | null,
-  ) => {
-    if (!editUserId) return;
-    try {
-      if (currentOverride !== null) {
-        // 오버라이드 삭제 (기본 역할 권한으로 복원)
-        await deleteOverrideMutation.mutateAsync({
-          userId: editUserId,
-          featureCode,
-        });
-        message.success('권한 오버라이드가 삭제되었습니다.');
-      } else {
-        // 새 오버라이드 생성 (역할 기본 반대값으로)
-        await saveOverrideMutation.mutateAsync({
-          userId: editUserId,
-          featureCode,
-          isAllowed: true,
-          reason: '관리자에 의한 권한 변경',
-        });
-        message.success('권한 오버라이드가 추가되었습니다.');
-      }
-    } catch {
-      message.error('권한 변경에 실패했습니다.');
     }
   };
 
@@ -450,59 +411,6 @@ export default function SystemUserTab() {
                 </Form.Item>
               </div>
             </Form>
-
-            <Divider orientation="left">개별 권한 오버라이드</Divider>
-            <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
-              역할 기본 권한과 다른 권한을 부여할 수 있습니다. 체크 표시된 항목은 오버라이드가
-              적용된 항목입니다.
-            </Text>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '4px 16px',
-                maxHeight: 300,
-                overflow: 'auto',
-              }}
-            >
-              {FEATURE_CODE_LIST.map((info) => {
-                const override = userDetail.overrides.find(
-                  (o) => o.featureCode === info.code,
-                );
-                return (
-                  <Popconfirm
-                    key={info.code}
-                    title={
-                      override
-                        ? '오버라이드를 삭제하시겠습니까? (역할 기본 권한으로 복원)'
-                        : '이 기능에 대한 권한 오버라이드를 추가하시겠습니까?'
-                    }
-                    onConfirm={() =>
-                      handleOverrideToggle(
-                        info.code,
-                        override ? override.isAllowed : null,
-                      )
-                    }
-                    okText="확인"
-                    cancelText="취소"
-                  >
-                    <Checkbox
-                      checked={override ? override.isAllowed : false}
-                      style={{
-                        padding: '4px 0',
-                        fontWeight: override ? 600 : 400,
-                        color: override ? PRIMARY_COLOR : undefined,
-                      }}
-                    >
-                      <Text style={{ color: override ? PRIMARY_COLOR : undefined }}>
-                        [{info.category}] {info.label}
-                        {override && ' (오버라이드)'}
-                      </Text>
-                    </Checkbox>
-                  </Popconfirm>
-                );
-              })}
-            </div>
           </div>
         ) : (
           <Text type="secondary">사용자 정보를 찾을 수 없습니다.</Text>
