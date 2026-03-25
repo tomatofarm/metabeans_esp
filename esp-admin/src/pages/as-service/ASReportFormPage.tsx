@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Card,
   Form,
@@ -62,25 +62,32 @@ export default function ASReportFormPage({ requestId, onBack, onSuccess }: ASRep
   const [parts, setParts] = useState<(PartUsed & { key: number })[]>([
     { key: 1, partName: '', unitPrice: 0, quantity: 1 },
   ]);
-  let nextPartKey = 2;
+  /** 렌더마다 초기화되면 key가 중복되어 행이 일체화됨 → ref로 유지 */
+  const nextPartKeyRef = useRef(2);
 
   const detail = detailData?.data;
 
   const addPart = () => {
-    setParts([...parts, { key: nextPartKey++, partName: '', unitPrice: 0, quantity: 1 }]);
+    const key = nextPartKeyRef.current++;
+    setParts((prev) => [
+      ...prev,
+      { key, partName: '', unitPrice: 0, quantity: 1 },
+    ]);
   };
 
   const removePart = (key: number) => {
-    if (parts.length <= 1) {
-      message.warning('최소 1개의 부품 항목이 필요합니다.');
-      return;
-    }
-    setParts(parts.filter((p) => p.key !== key));
+    setParts((prev) => {
+      if (prev.length <= 1) {
+        message.warning('최소 1개의 부품 항목이 필요합니다.');
+        return prev;
+      }
+      return prev.filter((p) => p.key !== key);
+    });
   };
 
   const updatePart = (key: number, field: keyof PartUsed, value: string | number) => {
-    setParts(
-      parts.map((p) => (p.key === key ? { ...p, [field]: value } : p)),
+    setParts((prev) =>
+      prev.map((p) => (p.key === key ? { ...p, [field]: value } : p)),
     );
   };
 

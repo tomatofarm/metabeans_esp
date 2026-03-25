@@ -521,41 +521,7 @@ export async function mockGetDealerOptions(): Promise<DealerOption[]> {
 // --- Mock 보고서 데이터 ---
 
 const mockReports: Record<number, ASReport & { attachments: ASReportAttachment[]; result: string; remarks?: string; laborCost?: number; totalCost?: number }> = {
-  9004: {
-    reportId: 1001,
-    requestId: 9004,
-    dealerId: 1,
-    repairType: 'PART_REPLACE' as RepairType,
-    repairDescription: '팬 모터 베어링 교체 후 비정상 소음이 해결되었습니다. 내부 팬 블레이드 정렬도 함께 조정하였습니다.',
-    partsUsed: [
-      { partName: '팬 모터 베어링', unitPrice: 25000, quantity: 2 },
-      { partName: '팬 블레이드 정렬 키트', unitPrice: 15000, quantity: 1 },
-    ],
-    totalPartsCost: 65000,
-    laborCost: 80000,
-    totalCost: 145000,
-    result: 'COMPLETED',
-    remarks: '3개월 후 재점검을 권장합니다. 팬 블레이드의 마모 상태를 지속적으로 확인해주세요.',
-    createdAt: now.subtract(2, 'day').toISOString(),
-    attachments: [
-      {
-        attachmentId: 101,
-        reportId: 1001,
-        fileType: 'IMAGE',
-        filePath: '/files/as-report/9004/before.jpg',
-        fileName: '처리_전_사진.jpg',
-        uploadedAt: now.subtract(2, 'day').toISOString(),
-      },
-      {
-        attachmentId: 102,
-        reportId: 1001,
-        fileType: 'IMAGE',
-        filePath: '/files/as-report/9004/after.jpg',
-        fileName: '처리_후_사진.jpg',
-        uploadedAt: now.subtract(2, 'day').toISOString(),
-      },
-    ],
-  },
+  /** 9004: 처리 완료(COMPLETED)만 두고 보고서는 없음 → 대리점이 「완료 보고서 작성」 후 REPORT_SUBMITTED + mockCreateASReport로 채워짐 */
   9007: {
     reportId: 1002,
     requestId: 9007,
@@ -811,7 +777,7 @@ export async function mockGetASStatusList(params?: {
   urgency?: Urgency;
   storeId?: number;
   dealerId?: number;
-  /** true면 보고서가 존재하는 건만 반환 (완료 보고서 탭 전용) */
+  /** true면 완료 보고서 탭 전용: 보고서 제출(REPORT_SUBMITTED)·종료(CLOSED)이면서 보고서 레코드가 있는 건만 */
   reportOnly?: boolean;
   from?: string;
   to?: string;
@@ -835,7 +801,11 @@ export async function mockGetASStatusList(params?: {
     filtered = filtered.filter((r) => r.dealerId === params.dealerId);
   }
   if (params?.reportOnly) {
-    filtered = filtered.filter((r) => !!mockReports[r.requestId]);
+    filtered = filtered.filter(
+      (r) =>
+        !!mockReports[r.requestId] &&
+        (r.status === 'REPORT_SUBMITTED' || r.status === 'CLOSED'),
+    );
   }
   if (params?.from) {
     const fromDate = dayjs(params.from);
