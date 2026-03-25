@@ -456,6 +456,21 @@ body {
   box-shadow: 0 4px 12px rgba(74,108,247,0.4) !important;
 }
 
+/* 비밀번호 변경: 라벨↔입력은 좁게, 필드 블록(오류 메시지 포함) 간은 넉넉히 */
+.change-password-form .ant-form-item-label {
+  padding-bottom: 2px !important;
+}
+.change-password-form .ant-form-item-label > label {
+  line-height: 1.35;
+}
+.change-password-form .ant-form-item:not(.change-password-form-submit) {
+  margin-bottom: 30px !important;
+}
+.change-password-form .change-password-form-submit {
+  margin-bottom: 8px !important;
+  margin-top: 4px;
+}
+
 /* Custom step indicator */
 .step-indicator {
   display: flex;

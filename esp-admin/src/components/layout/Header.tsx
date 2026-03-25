@@ -2,7 +2,7 @@ import { Menu, Space, Button, Dropdown } from 'antd';
 import {
   LogoutOutlined,
   UserOutlined,
-  BellOutlined,
+  KeyOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
@@ -62,6 +62,16 @@ export default function Header() {
       disabled: true,
     },
     { type: 'divider' as const },
+    {
+      key: 'change-password',
+      label: (
+        <Space>
+          <KeyOutlined />
+          암호 변경
+        </Space>
+      ),
+      onClick: () => navigate('/change-password'),
+    },
     {
       key: 'logout',
       label: (

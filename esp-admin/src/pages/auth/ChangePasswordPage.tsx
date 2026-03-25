@@ -13,6 +13,7 @@ export default function ChangePasswordPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const logout = useAuthStore((s) => s.logout);
 
   const onFinish = async (values: {
     currentPassword: string;
@@ -25,6 +26,7 @@ export default function ChangePasswordPage() {
         newPassword: values.newPassword,
       });
       message.success('비밀번호가 변경되었습니다. 다시 로그인해 주세요.');
+      logout();
       navigate('/login');
     } catch (err) {
       if (err instanceof Error) {
@@ -48,8 +50,7 @@ export default function ChangePasswordPage() {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: '100vh',
-        background: '#f0f2f5',
+        minHeight: 'calc(100vh - 64px - 48px)',
       }}
     >
       <Card style={{ width: 440 }}>
@@ -64,6 +65,7 @@ export default function ChangePasswordPage() {
           </div>
 
           <Form
+            className="change-password-form"
             name="changePassword"
             onFinish={onFinish}
             autoComplete="off"
@@ -125,7 +127,7 @@ export default function ChangePasswordPage() {
               />
             </Form.Item>
 
-            <Form.Item style={{ marginBottom: 8 }}>
+            <Form.Item className="change-password-form-submit">
               <Button
                 type="primary"
                 htmlType="submit"
