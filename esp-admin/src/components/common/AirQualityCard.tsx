@@ -16,6 +16,8 @@ interface AirQualityCardProps {
   data?: GatewaySensorData | null;
   floorIaqList?: FloorIaqData[];
   storeName?: string;
+  /** 카드 타이틀을 원하는 값으로 오버라이드 (예: "근처 대기질 정보") */
+  cardTitle?: string;
 }
 
 interface IAQItemDef {
@@ -159,7 +161,12 @@ function IAQGrid({ data }: { data: GatewaySensorData }) {
 
 const liveBadge = <span className="live-badge">● LIVE</span>;
 
-export default function AirQualityCard({ data, floorIaqList, storeName }: AirQualityCardProps) {
+export default function AirQualityCard({
+  data,
+  floorIaqList,
+  storeName,
+  cardTitle,
+}: AirQualityCardProps) {
   // 층별 탭이 있는 경우
   if (floorIaqList && floorIaqList.length > 0) {
     const tabItems = floorIaqList.map((floor) => ({
@@ -171,7 +178,7 @@ export default function AirQualityCard({ data, floorIaqList, storeName }: AirQua
     return (
       <Card
         className="air-quality-card"
-        title={storeName ? `${storeName} 실내 공기질 현황` : '실내공기질 (IAQ)'}
+        title={cardTitle ?? (storeName ? `${storeName} 실내 공기질 현황` : '실내공기질 (IAQ)')}
         extra={liveBadge}
         size="small"
       >
@@ -182,11 +189,16 @@ export default function AirQualityCard({ data, floorIaqList, storeName }: AirQua
 
   // 단일 데이터 (하위 호환)
   if (!data) {
-    return <Card title="실내공기질 (IAQ)">데이터 없음</Card>;
+    return <Card title={cardTitle ?? '실내공기질 (IAQ)'}>데이터 없음</Card>;
   }
 
   return (
-    <Card className="air-quality-card" title="실내공기질 (IAQ)" extra={liveBadge} size="small">
+    <Card
+      className="air-quality-card"
+      title={cardTitle ?? (storeName ? `${storeName} 실내 공기질 현황` : '실내공기질 (IAQ)')}
+      extra={liveBadge}
+      size="small"
+    >
       <IAQGrid data={data} />
     </Card>
   );

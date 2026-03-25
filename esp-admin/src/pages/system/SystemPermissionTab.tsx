@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react';
-import { Table, Checkbox, Button, message, Spin, Typography } from 'antd';
-import { SaveOutlined, CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
+import { useMemo, useState } from 'react';
+import { Checkbox, Button, message, Spin, Table, Typography } from 'antd';
+import { SaveOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { usePermissionMatrix, useUpdatePermissions } from '../../api/system.api';
 import type { PermissionMatrix, FeatureCode } from '../../types/system.types';
 import type { UserRole } from '../../types/auth.types';
-import { ROLE_CONFIG, PRIMARY_COLOR } from '../../utils/constants';
+import { ROLE_CONFIG } from '../../utils/constants';
 
 const { Text } = Typography;
 
@@ -65,76 +65,99 @@ export default function SystemPermissionTab() {
     }
   };
 
-  // 카테고리별 그룹핑 데이터
-  const tableData = useMemo(() => {
-    const categories = new Map<string, PermissionMatrix[]>();
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, PermissionMatrix[]>();
     for (const item of matrix) {
-      const list = categories.get(item.category) ?? [];
+      const list = map.get(item.category) ?? [];
       list.push(item);
-      categories.set(item.category, list);
+      map.set(item.category, list);
     }
-
-    const rows: Array<{
-      key: string;
-      featureCode: FeatureCode;
-      label: string;
-      category: string;
-      isCategory: boolean;
-      rowSpan?: number;
-    }> = [];
-
-    for (const [category, items] of categories) {
-      items.forEach((item, idx) => {
-        rows.push({
-          key: item.featureCode,
-          featureCode: item.featureCode,
-          label: item.label,
-          category,
-          isCategory: false,
-          rowSpan: idx === 0 ? items.length : 0,
-        });
-      });
-    }
-    return rows;
+    return map;
   }, [matrix]);
 
-  const columns: ColumnsType<(typeof tableData)[number]> = [
-    {
-      title: '카테고리',
-      dataIndex: 'category',
-      key: 'category',
-      width: 120,
-      onCell: (record) => ({
-        rowSpan: record.rowSpan,
-      }),
-      render: (text: string) => <Text strong>{text}</Text>,
-    },
+  type TableRow =
+    | { key: string; type: 'group'; category: string; featureCodes: FeatureCode[] }
+    | { key: string; type: 'feature'; category: string; featureCode: FeatureCode; label: string };
+
+  const tableRows = useMemo<TableRow[]>(() => {
+    const rows: TableRow[] = [];
+    for (const [category, items] of categoryMap) {
+      const featureCodes = items.map((i) => i.featureCode);
+      rows.push({
+        key: `group:${category}`,
+        type: 'group',
+        category,
+        featureCodes,
+      });
+      for (const item of items) {
+        rows.push({
+          key: item.featureCode,
+          type: 'feature',
+          category,
+          featureCode: item.featureCode,
+          label: item.label,
+        });
+      }
+    }
+    return rows;
+  }, [categoryMap]);
+
+  const handleCategoryToggle = (category: string, role: UserRole, checked: boolean) => {
+    const items = categoryMap.get(category) ?? [];
+    setChanges((prev) => {
+      const next = { ...prev };
+      for (const item of items) {
+        const key = `${item.featureCode}:${role}`;
+        const original = item.permissions[role];
+        if (original === checked) {
+          delete next[key];
+        } else {
+          next[key] = checked;
+        }
+      }
+      return next;
+    });
+  };
+
+  const columns: ColumnsType<TableRow> = [
     {
       title: '기능',
       dataIndex: 'label',
       key: 'label',
-      width: 200,
+      width: 460,
+      render: (_: unknown, record: TableRow) => {
+        if (record.type === 'group') {
+          return <Text strong>{record.category}</Text>;
+        }
+        return <span className="system-permission-feature-label">{record.label}</span>;
+      },
     },
     ...ROLES.map((role) => ({
       title: (
-        <span className={`role-pill ${role}`}>
-          {ROLE_CONFIG[role].label}
-        </span>
+        <span className={`role-pill ${role}`}>{ROLE_CONFIG[role].label}</span>
       ),
       key: role,
       width: 130,
       align: 'center' as const,
-      render: (_: unknown, record: (typeof tableData)[number]) => {
+      render: (_: unknown, record: TableRow) => {
+        if (record.type === 'group') {
+          const values = record.featureCodes.map((code) => getPermissionValue(code, role));
+          const allChecked = values.length > 0 && values.every(Boolean);
+          return (
+            <Checkbox
+              checked={allChecked}
+              onChange={(e) => handleCategoryToggle(record.category, role, e.target.checked)}
+            />
+          );
+        }
+
         const checked = getPermissionValue(record.featureCode, role);
-        const key = `${record.featureCode}:${role}`;
-        const isChanged = key in changes;
         return (
           <Checkbox
             checked={checked}
             onChange={(e) =>
               handleCheckboxChange(record.featureCode, role, e.target.checked)
             }
-            style={isChanged ? { outline: `2px solid ${PRIMARY_COLOR}`, borderRadius: 2 } : undefined}
           />
         );
       },
@@ -152,7 +175,14 @@ export default function SystemPermissionTab() {
   return (
     <div>
       <div className="system-section-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}
+        >
           <Text type="secondary">
             역할별 기능 접근 권한을 설정합니다. 변경 후 저장 버튼을 클릭하세요.
           </Text>
@@ -166,10 +196,17 @@ export default function SystemPermissionTab() {
             저장
           </Button>
         </div>
+
         <Table
           className="system-table"
           columns={columns}
-          dataSource={tableData}
+          dataSource={tableRows}
+          rowKey="key"
+          rowClassName={(record) =>
+            record.type === 'group'
+              ? 'system-permission-group-row'
+              : 'system-permission-feature-row'
+          }
           pagination={false}
           bordered
           size="middle"

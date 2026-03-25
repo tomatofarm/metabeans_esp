@@ -2280,6 +2280,65 @@ body {
   padding: 24px;
   margin-bottom: 24px;
 }
+
+/* System > 권한 관리 (대시보드 + 기능 매트릭스) */
+.system-permission-dashboard {
+  margin-bottom: 16px;
+}
+.system-permission-dashboard-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-dark);
+  margin-bottom: 12px;
+}
+.system-permission-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 1200px) {
+  .system-permission-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .system-permission-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.system-permission-stat-card {
+  background: var(--color-white);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  padding: 18px 16px;
+}
+.system-permission-stat-card--air {
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.system-permission-stat-label {
+  font-size: 0.85rem;
+  color: var(--color-mid);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.system-permission-stat-value {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--color-dark);
+}
+
+.system-permission-group-row .ant-table-cell {
+  background: var(--color-bg-hover);
+}
+
+.system-permission-feature-label {
+  white-space: nowrap;
+}
+.system-permission-feature-row .ant-table-cell {
+  vertical-align: middle;
+}
 .system-section-title {
   font-size: 1.1rem;
   font-weight: 700;

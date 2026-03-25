@@ -23,6 +23,10 @@ import { mockDelay, wrapResponse, type ApiResponse } from './common.mock';
 // 역할별 기본 권한 매트릭스
 const defaultPermissions: Record<FeatureCode, Record<UserRole, boolean>> = {
   'dashboard.view': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
+  'dashboard.total_users': { ADMIN: true, DEALER: false, HQ: false, OWNER: false },
+  'dashboard.total_stores': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
+  'dashboard.nearby_air': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
+  'dashboard.indoor_air': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
   'equipment.view': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
   'equipment.create': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
   'equipment.edit': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
