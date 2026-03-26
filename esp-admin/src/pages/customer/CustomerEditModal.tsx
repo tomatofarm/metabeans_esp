@@ -5,60 +5,17 @@ import {
   Input,
   Select,
   Switch,
-  Descriptions,
-  Table,
-  Divider,
   message,
   Spin,
 } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
 import { useCustomerDetail, useUpdateCustomer, useCustomerDealerOptions } from '../../api/customer.api';
 import { BUSINESS_TYPES } from '../../types/auth.types';
-import type { CustomerEquipmentItem } from '../../types/customer.types';
-import type { StoreStatus } from '../../types/store.types';
-import StatusBadge from '../../components/common/StatusBadge';
-import type { BadgeStatus } from '../../components/common/StatusBadge';
 
 interface CustomerEditModalProps {
   storeId: number | null;
   open: boolean;
   onClose: () => void;
 }
-
-const STATUS_TAG: Record<StoreStatus, { status: BadgeStatus; label: string }> = {
-  ACTIVE: { status: 'success', label: '활성' },
-  INACTIVE: { status: 'default', label: '비활성' },
-  PENDING: { status: 'warning', label: '대기' },
-};
-
-const equipmentColumns: ColumnsType<CustomerEquipmentItem> = [
-  {
-    title: '장비 ID',
-    dataIndex: 'equipmentId',
-    key: 'equipmentId',
-    width: 80,
-  },
-  {
-    title: '장비명',
-    dataIndex: 'equipmentName',
-    key: 'equipmentName',
-  },
-  {
-    title: '모델',
-    dataIndex: 'modelName',
-    key: 'modelName',
-  },
-  {
-    title: '상태',
-    dataIndex: 'status',
-    key: 'status',
-    width: 80,
-    render: (val: StoreStatus) => {
-      const cfg = STATUS_TAG[val];
-      return <StatusBadge status={cfg.status} label={cfg.label} />;
-    },
-  },
-];
 
 export default function CustomerEditModal({ storeId, open, onClose }: CustomerEditModalProps) {
   const [form] = Form.useForm();
@@ -167,23 +124,6 @@ export default function CustomerEditModal({ storeId, open, onClose }: CustomerEd
               <Input.TextArea rows={3} />
             </Form.Item>
           </Form>
-
-          <Divider orientation="left">점주 정보</Divider>
-          <Descriptions bordered size="small" column={1}>
-            <Descriptions.Item label="점주명">{detail.owner.name}</Descriptions.Item>
-            <Descriptions.Item label="이메일">{detail.owner.email}</Descriptions.Item>
-            <Descriptions.Item label="전화번호">{detail.owner.phone}</Descriptions.Item>
-          </Descriptions>
-
-          <Divider orientation="left">장비 목록</Divider>
-          <Table<CustomerEquipmentItem>
-            className="customer-table"
-            rowKey="equipmentId"
-            columns={equipmentColumns}
-            dataSource={detail.equipments}
-            pagination={false}
-            size="small"
-          />
         </>
       ) : null}
     </Modal>
