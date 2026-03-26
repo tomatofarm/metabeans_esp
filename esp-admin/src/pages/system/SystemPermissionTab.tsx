@@ -11,26 +11,24 @@ const { Text } = Typography;
 
 const ROLES: UserRole[] = ['ADMIN', 'DEALER', 'HQ', 'OWNER'];
 
+type TableRow =
+  | { key: string; type: 'group'; category: string; featureCodes: FeatureCode[] }
+  | { key: string; type: 'feature'; category: string; featureCode: FeatureCode; label: string };
+
+const makeKey = (featureCode: FeatureCode, role: UserRole) => `${featureCode}:${role}`;
+
 export default function SystemPermissionTab() {
   const { data: response, isLoading } = usePermissionMatrix();
   const updateMutation = useUpdatePermissions();
 
-  // 변경된 권한 추적
-  const [changes, setChanges] = useState<
-    Record<string, boolean>
-  >({});
+  const [changes, setChanges] = useState<Record<string, boolean>>({});
 
   const matrix = response?.data ?? [];
 
-  const handleCheckboxChange = (
-    featureCode: FeatureCode,
-    role: UserRole,
-    checked: boolean,
-  ) => {
-    const key = `${featureCode}:${role}`;
+  const handleCheckboxChange = (featureCode: FeatureCode, role: UserRole, checked: boolean) => {
+    const key = makeKey(featureCode, role);
     const original = matrix.find((m) => m.featureCode === featureCode);
     if (original && original.permissions[role] === checked) {
-      // 원래 값으로 돌아감 — 변경 취소
       setChanges((prev) => {
         const next = { ...prev };
         delete next[key];
@@ -42,11 +40,9 @@ export default function SystemPermissionTab() {
   };
 
   const getPermissionValue = (featureCode: FeatureCode, role: UserRole): boolean => {
-    const key = `${featureCode}:${role}`;
-    const changed = changes[key];
+    const changed = changes[makeKey(featureCode, role)];
     if (changed !== undefined) return changed;
-    const item = matrix.find((m) => m.featureCode === featureCode);
-    return item?.permissions[role] ?? false;
+    return matrix.find((m) => m.featureCode === featureCode)?.permissions[role] ?? false;
   };
 
   const hasChanges = Object.keys(changes).length > 0;
@@ -54,7 +50,7 @@ export default function SystemPermissionTab() {
   const handleSave = async () => {
     const changeList = Object.entries(changes).map(([key, isAllowed]) => {
       const [featureCode, role] = key.split(':') as [FeatureCode, UserRole];
-      return { role, featureCode, isAllowed };
+      return { featureCode, role, isAllowed };
     });
     try {
       await updateMutation.mutateAsync({ changes: changeList });
@@ -74,10 +70,6 @@ export default function SystemPermissionTab() {
     }
     return map;
   }, [matrix]);
-
-  type TableRow =
-    | { key: string; type: 'group'; category: string; featureCodes: FeatureCode[] }
-    | { key: string; type: 'feature'; category: string; featureCode: FeatureCode; label: string };
 
   const tableRows = useMemo<TableRow[]>(() => {
     const rows: TableRow[] = [];
@@ -107,9 +99,8 @@ export default function SystemPermissionTab() {
     setChanges((prev) => {
       const next = { ...prev };
       for (const item of items) {
-        const key = `${item.featureCode}:${role}`;
-        const original = item.permissions[role];
-        if (original === checked) {
+        const key = makeKey(item.featureCode, role);
+        if (item.permissions[role] === checked) {
           delete next[key];
         } else {
           next[key] = checked;
