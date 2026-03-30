@@ -6,17 +6,14 @@ import type {
   EsgSummary,
   StoreMapItem,
   StoreDashboard,
-  StoreEquipmentStatus,
-  StoreAsRequest,
-  FloorIaqData,
   EquipmentDashboard,
-  ControllerStatus,
   SensorHistoryPoint,
   EmergencyAlarm,
+  RoleDashboardSummary,
 } from '../../types/dashboard.types';
 import type { GatewaySensorData, ControllerSensorData } from '../../types/sensor.types';
 import type { ASRequestListItem } from '../../types/as-service.types';
-import { mockDelay, wrapResponse, STORE_ID_MAP } from './common.mock';
+import { mockDelay, STORE_ID_MAP } from './common.mock';
 import { filterItemsByStoreAccess, type AuthorizedStoresParam } from '../../utils/mockAccess';
 import { SENSOR_RANGES } from '../../utils/constants';
 import { FILTER_CHECK_MESSAGE } from '../../utils/statusHelper';
@@ -615,15 +612,6 @@ export async function mockGetEsgSummary(): Promise<EsgSummary> {
 function resolveStoreIds(storeIds: string[]): number[] {
   if (storeIds.includes('*')) return [1, 2, 3];
   return storeIds.map((sid) => STORE_ID_MAP[sid]).filter((id): id is number => id !== undefined);
-}
-
-// 역할별 대시보드 요약
-export interface RoleDashboardSummary {
-  totalStores: number;
-  totalEquipments: number;
-  normalEquipments: number;
-  pendingAsRequests: number;
-  emergencyAlarms: number;
 }
 
 export async function mockGetRoleDashboardSummary(storeIds: string[]): Promise<RoleDashboardSummary> {

@@ -1,3 +1,18 @@
+/**
+ * 시스템 관리 API — REST 설계서 §9 (ADMIN 전용)
+ *
+ * | 구역 | 훅 | REST |
+ * |------|-----|------|
+ * | 권한 | usePermissionMatrix, useUpdatePermissions | GET/PUT /system/permissions |
+ * | 권한 오버라이드 | useUserPermissionOverrides, useSaveUserPermissionOverride, useDeleteUserPermissionOverride | §9.1.3 — **UI에서 사용자 편집 시 제거됨**, 훅·Mock은 잔존 |
+ * | 가입 승인 | usePendingApprovals, useApproveUser, useRejectUser | GET /system/approvals, PATCH .../approvals/:userId |
+ * | 비번 재설정 대기 | usePasswordResetRequests, useApprovePasswordReset | §9 본문에 없을 수 있음 — 백엔드 스펙 확인 |
+ * | 사용자 | useSystemUsers, useSystemUserDetail, useUpdateSystemUser | GET 목록·상세, PUT 수정 |
+ * | 사용자 | (미구현) | POST /system/users, PATCH .../status, DELETE ... |
+ * | 기준수치 | useThresholdSettings, useUpdateThresholds | §9.4 cleaning/iaq 분리 vs 단일 Mock — 연동 시 합의 |
+ *
+ * 장비 모델 CRUD: §9.4.3 — 현재 `equipment.api`의 `useEquipmentModels`(조회)만 해당. 등록/수정/삭제는 미구현.
+ */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   mockGetPermissionMatrix,

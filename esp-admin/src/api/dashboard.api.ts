@@ -1,3 +1,20 @@
+/**
+ * 대시보드 API (Phase 2 시 REST 설계서 §3 와 1:1 매핑 목표)
+ *
+ * | 훅 | REST (문서 기준) | 비고 |
+ * |----|------------------|------|
+ * | useDashboardSummary | GET /dashboard/summary | 응답 필드명이 타입과 다를 수 있음 → 어댑터 필요 |
+ * | useDashboardIssues | GET /dashboard/issues | 쿼리 severity/storeId |
+ * | useEmergencyAlarms / useRoleEmergencyAlarms | GET /dashboard/alarms | |
+ * | useStoreDashboard | GET /dashboard/stores/:storeId | IAQ·층별IAQ 등 복합 응답 |
+ * | useEquipmentDashboard | (문서 단일 엔드포인트 없음) | §3 조합 또는 장비 API와 합의 |
+ * | useStoreMapData / useRoleStoreList | 지도용 — §3.6 store-tree 또는 별도 API 합의 | |
+ * | useEsgSummary | (문서 §3에 없음) | 백엔드 스펙 확정 필요 |
+ * | useDashboardPendingAs 등 | /as-service/requests 조합 등 | |
+ *
+ * 미구현 독립 훅: GET /dashboard/iaq, GET /dashboard/outdoor-air → 현재는 store 대시보드 응답에 포함.
+ * 사이드바 트리: GET /dashboard/store-tree → 현재 Phase 1은 useEquipmentTree + common.mock.
+ */
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {

@@ -10,8 +10,7 @@ import {
   useRoleStoreList,
   useRoleDashboardPendingAs,
 } from '../../api/dashboard.api';
-import type { RoleDashboardSummary } from '../../api/mock/dashboard.mock';
-import type { StoreMapItem } from '../../types/dashboard.types';
+import type { RoleDashboardSummary, StoreMapItem } from '../../types/dashboard.types';
 import { STATUS_COLORS } from '../../utils/constants';
 import IssuePanel from './components/IssuePanel';
 import ASRequestPanel from './components/ASRequestPanel';

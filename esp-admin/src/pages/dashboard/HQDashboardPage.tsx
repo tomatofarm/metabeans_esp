@@ -11,8 +11,7 @@ import {
   useRoleDashboardPendingAs,
   useStoreDashboard,
 } from '../../api/dashboard.api';
-import type { RoleDashboardSummary } from '../../api/mock/dashboard.mock';
-import type { StoreMapItem } from '../../types/dashboard.types';
+import type { RoleDashboardSummary, StoreMapItem } from '../../types/dashboard.types';
 import { STATUS_COLORS } from '../../utils/constants';
 import { STORE_ID_MAP } from '../../api/mock/common.mock';
 import IssuePanel from './components/IssuePanel';

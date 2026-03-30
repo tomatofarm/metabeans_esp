@@ -1,3 +1,16 @@
+/**
+ * 고객 현황 API — REST 설계서 §8 (ADMIN 전용 라우트에서 사용)
+ *
+ * | 훅 | REST |
+ * |----|------|
+ * | useCustomerList | GET /customers/stores |
+ * | useCustomerDetail | GET /customers/stores/:storeId |
+ * | useUpdateCustomer | PUT /customers/stores/:storeId |
+ * | useCustomerMapData | GET /customers/stores/map |
+ * | useCustomerDealerOptions | (별도 경로) 대리점 목록 — §2 registration dealer-list 등과 통일 권장 |
+ *
+ * 미구현: POST /customers/stores, §8.6 floors CRUD — 필요 시 훅·화면 추가.
+ */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   mockGetCustomerList,

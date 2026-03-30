@@ -1,8 +1,5 @@
-import { useMemo } from 'react';
 import {
   Card,
-  Descriptions,
-  Table,
   Tag,
   Badge,
   Space,
@@ -21,7 +18,6 @@ import {
   CloseCircleOutlined,
   ApiOutlined,
 } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
 import { useUiStore } from '../../stores/uiStore';
 import { useEquipmentDetail, useDeleteEquipment } from '../../api/equipment.api';
@@ -54,16 +50,6 @@ const EQUIPMENT_STATUS_LABELS: Record<string, string> = {
   CLEANING: '청소',
   INACTIVE: '비활성',
 };
-
-// Controller status_flags 비트 해석
-const CONTROLLER_FLAG_LABELS = [
-  '파워팩 RS-485',
-  'SPS30 (PM2.5)',
-  'SDP810 (차압)',
-  '수위 센서',
-  'flo-OAC 댐퍼',
-  'M100 RS-485/Fault', // v3.2: RS-485 통신 정상 AND Fault Trip 없음 (복합 판정)
-];
 
 // Gateway status_flags 비트 해석
 const GATEWAY_FLAG_LABELS = [
@@ -116,52 +102,6 @@ export default function EquipmentInfoPage() {
   const deleteMutation = useDeleteEquipment();
 
   const equipment = data?.data;
-
-  const controllerColumns: ColumnsType<ControllerRow> = useMemo(
-    () => [
-      {
-        title: '컨트롤러 ID',
-        dataIndex: 'ctrlDeviceId',
-        key: 'ctrlDeviceId',
-        width: 140,
-      },
-      {
-        title: '연결 상태',
-        dataIndex: 'connectionStatus',
-        key: 'connectionStatus',
-        width: 120,
-        render: (status: string) => (
-          <Badge
-            status={status === 'ONLINE' ? 'success' : 'error'}
-            text={status === 'ONLINE' ? '연결' : '끊김'}
-          />
-        ),
-      },
-      {
-        title: '센서 상태',
-        dataIndex: 'statusFlags',
-        key: 'statusFlags',
-        render: (flags: number) => (
-          <StatusFlagsDisplay flags={flags} labels={CONTROLLER_FLAG_LABELS} />
-        ),
-      },
-      {
-        title: '마지막 수신',
-        dataIndex: 'lastSeenAt',
-        key: 'lastSeenAt',
-        width: 180,
-        render: (val: string | undefined) =>
-          val ? (
-            <Tooltip title={formatDateTime(val)}>
-              <span>{formatRelativeTime(val)}</span>
-            </Tooltip>
-          ) : (
-            '-'
-          ),
-      },
-    ],
-    [],
-  );
 
   const handleDelete = () => {
     if (!selectedEquipmentId) return;

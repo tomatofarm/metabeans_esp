@@ -17,13 +17,18 @@ type TableRow =
 
 const makeKey = (featureCode: FeatureCode, role: UserRole) => `${featureCode}:${role}`;
 
+const EMPTY_PERMISSION_MATRIX: PermissionMatrix[] = [];
+
 export default function SystemPermissionTab() {
   const { data: response, isLoading } = usePermissionMatrix();
   const updateMutation = useUpdatePermissions();
 
   const [changes, setChanges] = useState<Record<string, boolean>>({});
 
-  const matrix = response?.data ?? [];
+  const matrix = useMemo(
+    () => response?.data ?? EMPTY_PERMISSION_MATRIX,
+    [response?.data],
+  );
 
   const handleCheckboxChange = (featureCode: FeatureCode, role: UserRole, checked: boolean) => {
     const key = makeKey(featureCode, role);

@@ -27,7 +27,7 @@ import {
   useAssignDealer,
   useDealerOptions,
 } from '../../api/as-service.api';
-import { formatDateTime, formatDate, formatDateCompact } from '../../utils/formatters';
+import { formatDateTime, formatDateCompact } from '../../utils/formatters';
 import { AS_STATUS_LABELS, FAULT_TYPE_LABELS } from '../../utils/constants';
 import { useAuthStore } from '../../stores/authStore';
 import StatusBadge from '../../components/common/StatusBadge';

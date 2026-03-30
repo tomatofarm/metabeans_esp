@@ -1,5 +1,5 @@
 import type { StatusLevel } from '../utils/constants';
-import type { AlarmType, AlarmSeverity, AlarmStatus } from './system.types';
+import type { AlarmType, AlarmStatus } from './system.types';
 import type { ControllerSensorData, GatewaySensorData } from './sensor.types';
 import type { ASStatus, IssueType } from './as-service.types';
 
@@ -7,6 +7,15 @@ import type { ASStatus, IssueType } from './as-service.types';
 export interface DashboardSummary {
   totalStores: number;
   activeStores: number;
+  totalEquipments: number;
+  normalEquipments: number;
+  pendingAsRequests: number;
+  emergencyAlarms: number;
+}
+
+/** DEALER/HQ 등 역할 범위 요약 (Mock 집계 · Phase 2 시 REST summary 응답과 필드 매핑 합의) */
+export interface RoleDashboardSummary {
+  totalStores: number;
   totalEquipments: number;
   normalEquipments: number;
   pendingAsRequests: number;

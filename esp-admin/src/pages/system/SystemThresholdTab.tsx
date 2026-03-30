@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   InputNumber,
   Button,
@@ -23,16 +23,12 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useThresholdSettings, useUpdateThresholds } from '../../api/system.api';
-import type {
-  MonitoringThreshold,
-  DamperAutoSetting,
-  ThresholdSettings,
-} from '../../types/system.types';
+import type { DamperAutoSetting, ThresholdSettings } from '../../types/system.types';
 
 const { Text } = Typography;
 
 // Icon mapping for threshold metric names
-const METRIC_ICON_MAP: Record<string, { icon: React.ReactNode; className: string }> = {
+const METRIC_ICON_MAP: Record<string, { icon: ReactNode; className: string }> = {
   '스파크':       { icon: <ThunderboltOutlined />, className: 'spark' },
   '차압':         { icon: <DashboardOutlined />,   className: 'pressure' },
   '변화율':       { icon: <RiseOutlined />,        className: 'rate' },

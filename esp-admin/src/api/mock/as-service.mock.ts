@@ -7,7 +7,6 @@ import type {
   ASCreateRequest,
   ASCreateResponse,
   ASStatus,
-  FaultType,
   Urgency,
   EquipmentOption,
   ASDetail,

@@ -1,3 +1,15 @@
+/**
+ * 제어 API — REST 설계서 §6
+ *
+ * | 훅 | REST |
+ * |----|------|
+ * | useSendControlCommand | POST /control/command |
+ * | useControlHistory | GET /control/history (equipmentId 필터 — Phase 2에서 from/to 등 쿼리 확장) |
+ * | useFanAutoSettings / useUpdateFanAutoSettings | GET/PUT /control/equipment/:id/fan-auto-settings |
+ * | useSendGatewayConfig | POST /control/gateway/:gatewayId/config |
+ *
+ * 미구현: GET /control/command/:cmdId/status, GET/PUT damper-auto-settings, GET /control/gateway-config/:cmdId/status
+ */
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {

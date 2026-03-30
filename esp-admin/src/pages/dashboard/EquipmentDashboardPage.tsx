@@ -3,7 +3,7 @@ import ReactECharts from 'echarts-for-react';
 import { useEquipmentDashboard } from '../../api/dashboard.api';
 import StatusTag from '../../components/common/StatusTag';
 import StatusBadge from '../../components/common/StatusBadge';
-import type { ControllerStatus, SensorHistoryPoint, EquipmentDashboard } from '../../types/dashboard.types';
+import type { ControllerStatus, SensorHistoryPoint } from '../../types/dashboard.types';
 import {
   getInletTempLevel,
   getBoardTempLevel,

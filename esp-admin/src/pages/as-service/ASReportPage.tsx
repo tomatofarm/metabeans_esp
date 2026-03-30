@@ -22,7 +22,7 @@ import StatusBadge from '../../components/common/StatusBadge';
 import type { BadgeStatus } from '../../components/common/StatusBadge';
 import type { PartUsed, RepairType } from '../../types/as-service.types';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const REPAIR_TYPE_LABELS: Record<RepairType, string> = {
   FILTER_REPLACE: '필터 교체',

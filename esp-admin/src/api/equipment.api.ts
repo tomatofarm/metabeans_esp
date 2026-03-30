@@ -1,3 +1,16 @@
+/**
+ * 장비 API — REST 설계서 §4 와 매핑
+ *
+ * | 훅 | REST |
+ * |----|------|
+ * | useEquipments | GET /equipment |
+ * | useEquipmentDetail | GET /equipment/:equipmentId |
+ * | useCreateEquipment | POST /equipment |
+ * | useUpdateEquipment | PUT /equipment/:equipmentId |
+ * | useDeleteEquipment | DELETE /equipment/:equipmentId |
+ * | useEquipmentModels | GET /equipment/models |
+ * | useStoreOptions / useFloorOptions / useGatewayOptions / useDealerOptions | 등록·수정 폼용 — Phase 2에서 동일 스키마의 BFF 엔드포인트로 대체 가능 |
+ */
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {

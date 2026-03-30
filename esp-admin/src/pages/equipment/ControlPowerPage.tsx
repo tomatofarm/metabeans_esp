@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Card, Switch, Button, Table, Space, Alert, Spin, Empty, Typography, message } from 'antd';
+import { Button, Table, Space, Spin, Empty, Typography, message } from 'antd';
 import { PoweroffOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import StatusBadge from '../../components/common/StatusBadge';
 import type { ColumnsType } from 'antd/es/table';

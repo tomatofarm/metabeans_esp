@@ -6,7 +6,6 @@ import {
   useEsgSummary,
   useDashboardPendingAs,
 } from '../../api/dashboard.api';
-import { useUiStore } from '../../stores/uiStore';
 import SummaryCards from './components/SummaryCards';
 import IssuePanel from './components/IssuePanel';
 import ASRequestPanel from './components/ASRequestPanel';

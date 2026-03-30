@@ -1,3 +1,21 @@
+/**
+ * A/S API — REST 설계서 §7
+ *
+ * | 훅 | REST |
+ * |----|------|
+ * | useCreateASRequest | POST /as-service/requests |
+ * | useASRequests | GET /as-service/requests |
+ * | useASStatusList | 동일 (쿼리로 처리현황·완료보고서 탭 구분 — Phase 2에서 단일 엔드포인트 유지 권장) |
+ * | useASDetail | GET /as-service/requests/:requestId |
+ * | useUpdateASStatus | PATCH /as-service/requests/:requestId/status |
+ * | useAssignDealer | (설계서 전용 경로 없음) status PATCH 또는 별도 스펙 합의 |
+ * | useCreateASReport | POST /as-service/requests/:requestId/report |
+ * | useASReport | GET /as-service/requests/:requestId/report |
+ * | useASAlerts | GET /as-service/alerts |
+ * | useASStoreOptions / useASEquipmentOptions / useDealerOptions | 폼용 — §4·§8 등과 조합 |
+ *
+ * Phase 2: 첨부파일은 multipart/form-data (§7.1, §7.5).
+ */
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {

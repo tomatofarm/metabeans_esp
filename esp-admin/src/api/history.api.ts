@@ -1,3 +1,9 @@
+/**
+ * 이력 탭 API — 장비관리 > 이력 (Mock). REST와의 정합:
+ * - 센서 구간: §5.2 `GET /monitoring/equipment/:id/history` 와 중복 가능 → 백엔드 단일화 권장.
+ * - 제어: §6.3 `GET /control/history`
+ * - 알람·장비변경: DB 뷰 또는 §5.4 history-log 와 스펙 합의 후 연동.
+ */
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {

@@ -1,7 +1,6 @@
 import type { ControlCommand, ControlTarget, ControlResult } from '../../types/control.types';
 import type { EquipmentChangeHistory, AlarmEvent, AlarmType, AlarmSeverity } from '../../types/equipment.types';
 import type { SensorHistoryDataPoint } from '../../types/sensor.types';
-import { SENSOR_RANGES } from '../../utils/constants';
 import { mockDelay, mockStoreTree } from './common.mock';
 import { assertMockEquipmentStoreAccess, type AuthorizedStoresParam } from '../../utils/mockAccess';
 

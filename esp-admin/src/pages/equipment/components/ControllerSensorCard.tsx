@@ -1,7 +1,6 @@
 import { Card, Descriptions } from 'antd';
 import { ThunderboltOutlined } from '@ant-design/icons';
 import StatusBadge from '../../../components/common/StatusBadge';
-import type { BadgeStatus } from '../../../components/common/StatusBadge';
 import type { RealtimeControllerData } from '../../../types/sensor.types';
 import type { StatusLevel } from '../../../utils/constants';
 import { FAN_SPEED_LABELS, LEVEL_TO_BADGE } from '../../../utils/constants';
@@ -30,22 +29,6 @@ import {
 interface ControllerSensorCardProps {
   controller: RealtimeControllerData;
   previousFilterStatus?: StatusLevel;
-}
-
-function _StatusDot({ level }: { level: StatusLevel }) {
-  const config = getStatusConfig(level);
-  return (
-    <span
-      style={{
-        display: 'inline-block',
-        width: 8,
-        height: 8,
-        borderRadius: '50%',
-        backgroundColor: config.color,
-        marginRight: 6,
-      }}
-    />
-  );
 }
 
 function SensorItem({

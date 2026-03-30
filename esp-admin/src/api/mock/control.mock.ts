@@ -10,7 +10,6 @@ import type {
   ConfigAck,
 } from '../../types/control.types';
 import {
-  CONTROL_TARGET_LABELS,
   POWERPACK_ACTION_LABELS,
   DAMPER_ACTION_LABELS,
   FAN_ACTION_LABELS,
@@ -38,7 +37,7 @@ function getActionLabel(target: ControlTarget, action: number): string {
 }
 
 // --- Mock 제어 이력 데이터 생성 ---
-function generateMockControlHistory(equipmentId: number): ControlCommand[] {
+function generateMockControlHistory(_equipmentId: number): ControlCommand[] {
   const history: ControlCommand[] = [];
   const now = Date.now();
   const targets: ControlTarget[] = [0, 1, 2];
@@ -117,7 +116,7 @@ const mockFanAutoSettingsMap: Record<number, FanAutoSettings> = {
 /**
  * 제어 명령 전송 (ACK 시뮬레이션: 1~3초 딜레이)
  */
-export async function mockSendControlCommand(request: SendControlRequest): Promise<SendControlResponse> {
+export async function mockSendControlCommand(_request: SendControlRequest): Promise<SendControlResponse> {
   const cmdId = generateCmdId();
   const success = Math.random() > 0.1; // 90% 성공률
 

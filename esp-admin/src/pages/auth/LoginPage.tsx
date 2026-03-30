@@ -7,7 +7,7 @@ import { useAuthStore } from '../../stores/authStore';
 import type { UserRole } from '../../types/auth.types';
 import ForgotPasswordModal from './ForgotPasswordModal';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const ROLE_DASHBOARD_MAP: Record<UserRole, string> = {
   ADMIN: '/dashboard/admin',

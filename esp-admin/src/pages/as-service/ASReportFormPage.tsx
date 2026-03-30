@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import {
-  Card,
   Form,
   Input,
   DatePicker,
@@ -30,7 +29,7 @@ import type {
   ASRepairResult,
 } from '../../types/as-service.types';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { TextArea } = Input;
 
 const REPAIR_TYPE_OPTIONS: { value: RepairType; label: string }[] = [

@@ -1,3 +1,13 @@
+/**
+ * 모니터링 API — REST 설계서 §5
+ *
+ * | 훅 | REST |
+ * |----|------|
+ * | useRealtimeSensorData | GET /monitoring/equipment/:equipmentId/latest |
+ * | useSensorHistory | GET /monitoring/equipment/:equipmentId/history (Mock: 쿼리 생략 → Phase 2에서 controllerId, metrics, from, to, interval 반영) |
+ *
+ * 미구현: GET /monitoring/gateway/:gatewayId/iaq-history, GET .../history-log, GET .../esg
+ */
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { mockGetRealtimeSensorData, mockGetSensorHistory } from './mock/monitoring.mock';

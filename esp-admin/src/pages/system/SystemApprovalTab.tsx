@@ -10,7 +10,7 @@ import {
   usePasswordResetRequests,
   useApprovePasswordReset,
 } from '../../api/system.api';
-import type { PendingApproval, PasswordResetRequestItem } from '../../types/system.types';
+import type { PasswordResetRequestItem } from '../../types/system.types';
 import { ROLE_CONFIG } from '../../utils/constants';
 
 const { Text } = Typography;
