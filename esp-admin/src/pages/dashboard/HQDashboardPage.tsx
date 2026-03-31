@@ -18,6 +18,7 @@ import IssuePanel from './components/IssuePanel';
 import ASRequestPanel from './components/ASRequestPanel';
 import AirQualityCard from '../../components/common/AirQualityCard';
 import StatusTag from '../../components/common/StatusTag';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 
 interface HQDashboardPageProps {
   onNavigateToStore: (storeId: number) => void;
@@ -126,6 +127,7 @@ export default function HQDashboardPage({
   const { data: issues, isLoading: issuesLoading } = useRoleDashboardIssues(storeIds);
   const { data: stores, isLoading: storesLoading } = useRoleStoreList(storeIds);
   const { data: pendingAs, isLoading: asLoading } = useRoleDashboardPendingAs(storeIds);
+  const { isAllowed: canViewIndoorAir } = useFeaturePermission('dashboard.indoor_air');
 
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
@@ -141,10 +143,12 @@ export default function HQDashboardPage({
       <HQSummaryCards data={summary} loading={summaryLoading} />
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
-          <IAQOverview storeIds={storeIds} />
-        </Col>
-        <Col xs={24} lg={12}>
+        {canViewIndoorAir && (
+          <Col xs={24} lg={12}>
+            <IAQOverview storeIds={storeIds} />
+          </Col>
+        )}
+        <Col xs={24} lg={canViewIndoorAir ? 12 : 24}>
           <Card title="소속 매장 목록" size="small" loading={storesLoading}>
             {stores && stores.length > 0 ? (
               <Table

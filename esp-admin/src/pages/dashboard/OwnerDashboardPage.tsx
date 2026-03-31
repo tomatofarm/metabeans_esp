@@ -9,6 +9,7 @@ import {
 } from '../../api/dashboard.api';
 import type { StoreEquipmentStatus, DashboardIssueItem } from '../../types/dashboard.types';
 import AirQualityCard from '../../components/common/AirQualityCard';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import ASRequestPanel from './components/ASRequestPanel';
 import StatusTag from '../../components/common/StatusTag';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -132,6 +133,7 @@ export default function OwnerDashboardPage({ onNavigateToEquipment }: OwnerDashb
   const { data: storeData, isLoading: storeLoading } = useStoreDashboard(numericStoreId);
   const { data: issues, isLoading: issuesLoading } = useRoleDashboardIssues(storeIds);
   const { data: pendingAs, isLoading: asLoading } = useRoleDashboardPendingAs(storeIds);
+  const { isAllowed: canViewIndoorAir } = useFeaturePermission('dashboard.indoor_air');
 
   if (storeLoading) {
     return <Spin tip="매장 데이터 로딩 중..." style={{ display: 'block', marginTop: 100 }} />;
@@ -154,14 +156,16 @@ export default function OwnerDashboardPage({ onNavigateToEquipment }: OwnerDashb
       </div>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12} style={{ minWidth: 0 }}>
-          <AirQualityCard
-            data={storeData?.iaqData}
-            floorIaqList={storeData?.floorIaqList}
-            storeName={storeData?.storeName}
-          />
-        </Col>
-        <Col xs={24} lg={12} style={{ minWidth: 0 }}>
+        {canViewIndoorAir && (
+          <Col xs={24} lg={12} style={{ minWidth: 0 }}>
+            <AirQualityCard
+              data={storeData?.iaqData}
+              floorIaqList={storeData?.floorIaqList}
+              storeName={storeData?.storeName}
+            />
+          </Col>
+        )}
+        <Col xs={24} lg={canViewIndoorAir ? 12 : 24} style={{ minWidth: 0 }}>
           <Card title="장비 상태" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
             {storeData && storeData.equipments.length > 0 ? (
               <Table

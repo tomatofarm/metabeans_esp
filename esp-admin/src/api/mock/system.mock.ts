@@ -24,7 +24,6 @@ import { mockDelay, wrapResponse, type ApiResponse } from './common.mock';
 const defaultPermissions: Record<FeatureCode, Record<UserRole, boolean>> = {
   'dashboard.total_users': { ADMIN: true, DEALER: false, HQ: false, OWNER: false },
   'dashboard.total_stores': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
-  'dashboard.nearby_air': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
   'dashboard.indoor_air': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
   'equipment.view': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
   'equipment.create': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },

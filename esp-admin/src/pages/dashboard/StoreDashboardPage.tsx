@@ -1,6 +1,7 @@
 import { Typography, Space, Row, Col, Card, Table, List, Empty, Spin } from 'antd';
 import { DesktopOutlined } from '@ant-design/icons';
 import { useStoreDashboard } from '../../api/dashboard.api';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import AirQualityCard from '../../components/common/AirQualityCard';
 import StatusTag from '../../components/common/StatusTag';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -102,6 +103,7 @@ const issueColumns = [
 
 export default function StoreDashboardPage({ storeId, onEquipmentClick }: StoreDashboardPageProps) {
   const { data, isLoading } = useStoreDashboard(storeId);
+  const { isAllowed: canViewIndoorAir } = useFeaturePermission('dashboard.indoor_air');
 
   if (isLoading) {
     return <Spin tip="매장 데이터 로딩 중..." style={{ display: 'block', marginTop: 100 }} />;
@@ -127,14 +129,16 @@ export default function StoreDashboardPage({ storeId, onEquipmentClick }: StoreD
       </div>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12} style={{ minWidth: 0 }}>
-          <AirQualityCard
-            data={data.iaqData}
-            floorIaqList={data.floorIaqList}
-            storeName={data.storeName}
-          />
-        </Col>
-        <Col xs={24} lg={12} style={{ minWidth: 0 }}>
+        {canViewIndoorAir && (
+          <Col xs={24} lg={12} style={{ minWidth: 0 }}>
+            <AirQualityCard
+              data={data.iaqData}
+              floorIaqList={data.floorIaqList}
+              storeName={data.storeName}
+            />
+          </Col>
+        )}
+        <Col xs={24} lg={canViewIndoorAir ? 12 : 24} style={{ minWidth: 0 }}>
           <Card title="장비 현황" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
             <Table
               dataSource={data.equipments}
