@@ -1,9 +1,8 @@
 import type { UserRole, AccountStatus } from './auth.types';
 
-// 기능 코드 (24개 — 프롬프트 정의 + 피드백 추가 항목)
+// 기능 코드 (대시보드/장비관리/A/S/고객/시스템 권한 항목)
 export type FeatureCode =
   // 대시보드
-  | 'dashboard.view'
   | 'dashboard.total_users'
   | 'dashboard.total_stores'
   | 'dashboard.nearby_air'
@@ -48,7 +47,6 @@ export interface FeatureCodeInfo {
 
 // 전체 기능 코드 목록 (카테고리별 정렬)
 export const FEATURE_CODE_LIST: FeatureCodeInfo[] = [
-  { code: 'dashboard.view', label: '대시보드 조회', category: '대시보드' },
   { code: 'dashboard.total_users', label: '총 사용자 수', category: '대시보드' },
   { code: 'dashboard.total_stores', label: '전체 가맹점', category: '대시보드' },
   { code: 'dashboard.nearby_air', label: '근처 대기질 정보', category: '대시보드' },

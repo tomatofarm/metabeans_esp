@@ -6,6 +6,8 @@ import {
   useEsgSummary,
   useDashboardPendingAs,
 } from '../../api/dashboard.api';
+import { useSystemUsers } from '../../api/system.api';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import SummaryCards from './components/SummaryCards';
 import IssuePanel from './components/IssuePanel';
 import ASRequestPanel from './components/ASRequestPanel';
@@ -26,6 +28,10 @@ export default function AdminDashboardPage({
   const { data: storeMap, isLoading: mapLoading } = useStoreMapData();
   const { data: esg, isLoading: esgLoading } = useEsgSummary();
   const { data: pendingAs, isLoading: asLoading } = useDashboardPendingAs();
+  const { data: usersRes } = useSystemUsers({ page: 1, pageSize: 1 });
+  const totalUsers = usersRes?.meta?.totalCount ?? usersRes?.data?.length ?? 0;
+  const { isAllowed: canViewTotalUsers } = useFeaturePermission('dashboard.total_users');
+  const { isAllowed: canViewTotalStores } = useFeaturePermission('dashboard.total_stores');
 
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
@@ -33,7 +39,12 @@ export default function AdminDashboardPage({
         전체 현황 대시보드
       </Typography.Title>
 
-      <SummaryCards data={summary} loading={summaryLoading} />
+      <SummaryCards
+        data={summary}
+        loading={summaryLoading}
+        showTotalStores={canViewTotalStores}
+        totalUsers={canViewTotalUsers ? totalUsers : undefined}
+      />
 
       <IssuePanel
         categories={issues}

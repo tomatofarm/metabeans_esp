@@ -22,7 +22,6 @@ import { mockDelay, wrapResponse, type ApiResponse } from './common.mock';
 
 // 역할별 기본 권한 매트릭스
 const defaultPermissions: Record<FeatureCode, Record<UserRole, boolean>> = {
-  'dashboard.view': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
   'dashboard.total_users': { ADMIN: true, DEALER: false, HQ: false, OWNER: false },
   'dashboard.total_stores': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
   'dashboard.nearby_air': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
@@ -75,11 +74,20 @@ export async function mockUpdatePermissions(
   request: PermissionUpdateRequest,
 ): Promise<ApiResponse<{ success: boolean }>> {
   for (const change of request.changes) {
+    // ADMIN은 모든 기능을 항상 허용(변경 무시)
+    if (change.role === 'ADMIN') continue;
     const perms = permissionState[change.featureCode];
     if (perms) {
       perms[change.role] = change.isAllowed;
     }
   }
+
+  // 혹시라도 변경 상태가 남아있을 경우를 대비해 ADMIN은 항상 true로 고정
+  for (const featureCode of Object.keys(permissionState) as Array<keyof typeof permissionState>) {
+    const perms = permissionState[featureCode];
+    if (perms) perms.ADMIN = true;
+  }
+
   return mockDelay(wrapResponse({ success: true }), 500);
 }
 

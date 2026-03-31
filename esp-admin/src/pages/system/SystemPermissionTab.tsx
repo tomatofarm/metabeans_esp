@@ -31,6 +31,9 @@ export default function SystemPermissionTab() {
   );
 
   const handleCheckboxChange = (featureCode: FeatureCode, role: UserRole, checked: boolean) => {
+    // ADMIN은 모든 기능 접근 권한을 고정(변경 불가)
+    if (role === 'ADMIN') return;
+
     const key = makeKey(featureCode, role);
     const original = matrix.find((m) => m.featureCode === featureCode);
     if (original && original.permissions[role] === checked) {
@@ -45,6 +48,9 @@ export default function SystemPermissionTab() {
   };
 
   const getPermissionValue = (featureCode: FeatureCode, role: UserRole): boolean => {
+    // ADMIN은 항상 허용으로 고정
+    if (role === 'ADMIN') return true;
+
     const changed = changes[makeKey(featureCode, role)];
     if (changed !== undefined) return changed;
     return matrix.find((m) => m.featureCode === featureCode)?.permissions[role] ?? false;
@@ -56,7 +62,7 @@ export default function SystemPermissionTab() {
     const changeList = Object.entries(changes).map(([key, isAllowed]) => {
       const [featureCode, role] = key.split(':') as [FeatureCode, UserRole];
       return { featureCode, role, isAllowed };
-    });
+    }).filter((c) => c.role !== 'ADMIN'); // ADMIN 변경은 저장하지 않음
     try {
       await updateMutation.mutateAsync({ changes: changeList });
       setChanges({});
@@ -100,6 +106,9 @@ export default function SystemPermissionTab() {
   }, [categoryMap]);
 
   const handleCategoryToggle = (category: string, role: UserRole, checked: boolean) => {
+    // ADMIN은 그룹 토글도 변경 불가
+    if (role === 'ADMIN') return;
+
     const items = categoryMap.get(category) ?? [];
     setChanges((prev) => {
       const next = { ...prev };
@@ -137,22 +146,28 @@ export default function SystemPermissionTab() {
       align: 'center' as const,
       render: (_: unknown, record: TableRow) => {
         if (record.type === 'group') {
+          const isAdmin = role === 'ADMIN';
           const values = record.featureCodes.map((code) => getPermissionValue(code, role));
           const allChecked = values.length > 0 && values.every(Boolean);
           return (
             <Checkbox
-              checked={allChecked}
-              onChange={(e) => handleCategoryToggle(record.category, role, e.target.checked)}
+              checked={isAdmin ? true : allChecked}
+              disabled={isAdmin}
+              onChange={
+                isAdmin ? undefined : (e) => handleCategoryToggle(record.category, role, e.target.checked)
+              }
             />
           );
         }
 
         const checked = getPermissionValue(record.featureCode, role);
+        const isAdmin = role === 'ADMIN';
         return (
           <Checkbox
-            checked={checked}
-            onChange={(e) =>
-              handleCheckboxChange(record.featureCode, role, e.target.checked)
+            checked={isAdmin ? true : checked}
+            disabled={isAdmin}
+            onChange={
+              isAdmin ? undefined : (e) => handleCheckboxChange(record.featureCode, role, e.target.checked)
             }
           />
         );

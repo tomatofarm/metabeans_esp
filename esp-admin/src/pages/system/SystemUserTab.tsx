@@ -11,7 +11,7 @@ import {
   Typography,
   Descriptions,
 } from 'antd';
-import { EditOutlined, SearchOutlined, UserOutlined, TeamOutlined, UserAddOutlined } from '@ant-design/icons';
+import { EditOutlined, SearchOutlined, TeamOutlined, UserAddOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { formatDateTimeShort, formatDate } from '../../utils/formatters';
 import {
@@ -70,7 +70,6 @@ export default function SystemUserTab() {
     }));
 
     return {
-      totalUsers: summaryUsers.length,
       roleCounts,
       recentCount: recentUsers.length,
       recentByRole,
@@ -207,14 +206,6 @@ export default function SystemUserTab() {
   return (
     <div>
       <div className="system-user-summary-grid">
-        <div className="system-user-summary-card">
-          <div className="system-user-summary-header">
-            <span>총 사용자 수</span>
-            <UserOutlined />
-          </div>
-          <div className="system-user-summary-value">{summary.totalUsers}명</div>
-        </div>
-
         <div className="system-user-summary-card">
           <div className="system-user-summary-header">
             <span>역할별 사용자 수</span>
