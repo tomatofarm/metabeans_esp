@@ -67,7 +67,7 @@ export const FEATURE_CODE_LIST: FeatureCodeInfo[] = [
   { code: 'as.view', label: 'A/S 조회', category: 'A/S관리' },
   { code: 'as.create', label: 'A/S 신청', category: 'A/S관리' },
   { code: 'as.process', label: 'A/S 처리', category: 'A/S관리' },
-  { code: 'as.report', label: '보고서 작성', category: 'A/S관리' },
+  { code: 'as.report', label: '완료 보고서', category: 'A/S관리' },
   { code: 'customer.view', label: '고객 조회', category: '고객현황' },
   { code: 'customer.edit', label: '고객 수정', category: '고객현황' },
   { code: 'system.permission', label: '권한 관리', category: '시스템관리' },

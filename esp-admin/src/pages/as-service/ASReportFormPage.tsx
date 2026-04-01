@@ -138,7 +138,7 @@ export default function ASReportFormPage({ requestId, onBack, onSuccess }: ASRep
           subTitle={`A/S 요청 #${requestId}에 대한 완료 보고서가 성공적으로 제출되었습니다.`}
           extra={[
             <Button key="back" onClick={() => onSuccess?.()}>
-              처리 현황으로
+              A/S 처리로
             </Button>,
           ]}
         />

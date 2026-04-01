@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Tabs, Button, Typography } from 'antd';
+import { Tabs, Button, Typography, Empty } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import ASAlertListPage from './ASAlertListPage';
@@ -8,16 +8,15 @@ import ASStatusPage from './ASStatusPage';
 import ASDetailPage from './ASDetailPage';
 import ASReportPage from './ASReportPage';
 import ASReportFormPage from './ASReportFormPage';
-import { useAuth } from '../../hooks/useAuth';
-import { getVisibleAsServiceTabs, type AsServiceTabKey } from '../../utils/roleHelper';
+import type { AsServiceTabKey } from '../../utils/roleHelper';
 import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 
 const { Title } = Typography;
 
 const TAB_DEF: { key: AsServiceTabKey; label: string; path: string }[] = [
-  { key: 'alerts', label: '알림 현황', path: '/as-service' },
+  { key: 'alerts', label: 'A/S 조회', path: '/as-service' },
   { key: 'request', label: 'A/S 신청', path: '/as-service/request' },
-  { key: 'status', label: '처리 현황', path: '/as-service/status' },
+  { key: 'status', label: 'A/S 처리', path: '/as-service/status' },
   { key: 'report', label: '완료 보고서', path: '/as-service/report' },
 ];
 
@@ -30,20 +29,35 @@ type SubView =
 function ASServiceTabs() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { role } = useAuth();
-  const { isAllowed: canCreateAs } = useFeaturePermission('as.create');
-  const { isAllowed: canReportAs } = useFeaturePermission('as.report');
 
-  const visibleTabs = useMemo(
-    () =>
-      getVisibleAsServiceTabs(role).filter((tab) => {
-        if (tab === 'request') return canCreateAs;
-        if (tab === 'report') return canReportAs;
-        return true;
-      }),
-    [role, canCreateAs, canReportAs],
-  );
+  const { isAllowed: canViewAs, isLoading: viewLoading } = useFeaturePermission('as.view');
+  const { isAllowed: canCreateAs, isLoading: createLoading } = useFeaturePermission('as.create');
+  const { isAllowed: canProcessAs, isLoading: processLoading } = useFeaturePermission('as.process');
+  const { isAllowed: canReportAs, isLoading: reportLoading } = useFeaturePermission('as.report');
+
+  const showAlertsTab = viewLoading || canViewAs;
+  const showRequestTab = createLoading || canCreateAs;
+  const showStatusTab = processLoading || canProcessAs;
+  const showReportTab = reportLoading || canReportAs;
+
+  const asPermLoading = viewLoading || createLoading || processLoading || reportLoading;
+
+  const visibleTabs = useMemo(() => {
+    const t: AsServiceTabKey[] = [];
+    if (showAlertsTab) t.push('alerts');
+    if (showRequestTab) t.push('request');
+    if (showStatusTab) t.push('status');
+    if (showReportTab) t.push('report');
+    return t;
+  }, [showAlertsTab, showRequestTab, showStatusTab, showReportTab]);
+
   const visibleSet = useMemo(() => new Set(visibleTabs), [visibleTabs]);
+
+  const firstVisiblePath = useMemo(() => {
+    const first = visibleTabs[0];
+    if (!first) return '/as-service';
+    return TAB_DEF.find((d) => d.key === first)?.path ?? '/as-service';
+  }, [visibleTabs]);
 
   const tabItems = useMemo(
     () => TAB_DEF.filter((t) => visibleSet.has(t.key)).map(({ key, label }) => ({ key, label })),
@@ -55,21 +69,27 @@ function ASServiceTabs() {
   // 완료 보고서 탭의 서브 뷰 상태
   const [reportSubView, setReportSubView] = useState<SubView>({ type: 'list' });
 
-  /** 권한 없는 URL로 직접 진입 시 리다이렉트 */
+  /** 권한 없는 URL로 직접 진입 시 첫 허용 탭으로 이동 */
   useEffect(() => {
+    if (asPermLoading || visibleTabs.length === 0) return;
     const path = location.pathname;
+    const isAlertsPath = path === '/as-service' || path === '/as-service/';
+    if (isAlertsPath && !visibleSet.has('alerts')) {
+      navigate(firstVisiblePath, { replace: true });
+      return;
+    }
     if (path.includes('/as-service/request') && !visibleSet.has('request')) {
-      navigate('/as-service', { replace: true });
+      navigate(firstVisiblePath, { replace: true });
       return;
     }
     if (path.includes('/as-service/status') && !visibleSet.has('status')) {
-      navigate('/as-service', { replace: true });
+      navigate(firstVisiblePath, { replace: true });
       return;
     }
     if (path.includes('/as-service/report') && !visibleSet.has('report')) {
-      navigate('/as-service', { replace: true });
+      navigate(firstVisiblePath, { replace: true });
     }
-  }, [location.pathname, navigate, visibleSet]);
+  }, [asPermLoading, visibleTabs.length, location.pathname, navigate, visibleSet, firstVisiblePath]);
 
   const getActiveTab = (): AsServiceTabKey => {
     if (location.pathname.includes('/as-service/request')) return 'request';
@@ -79,7 +99,9 @@ function ASServiceTabs() {
   };
 
   const activeTab = getActiveTab();
-  const safeActiveKey = visibleSet.has(activeTab) ? activeTab : visibleTabs[0] ?? 'alerts';
+  const safeActiveKey = visibleSet.has(activeTab)
+    ? activeTab
+    : (visibleTabs[0] ?? 'alerts');
 
   const handleTabChange = (key: string) => {
     const k = key as AsServiceTabKey;
@@ -92,7 +114,8 @@ function ASServiceTabs() {
     navigate(def.path);
   };
 
-  const showRequestButton = canCreateAs && visibleSet.has('request') && safeActiveKey !== 'request';
+  const showRequestButton =
+    (createLoading || canCreateAs) && visibleSet.has('request') && safeActiveKey !== 'request';
 
   // 처리 현황 탭 내 서브 뷰 렌더링
   const renderStatusContent = () => {
@@ -166,6 +189,17 @@ function ASServiceTabs() {
         );
     }
   };
+
+  if (!asPermLoading && visibleTabs.length === 0) {
+    return (
+      <div>
+        <Title level={4} style={{ margin: '0 0 16px' }}>
+          A/S 관리
+        </Title>
+        <Empty description="이용 가능한 A/S 메뉴가 없습니다." />
+      </div>
+    );
+  }
 
   return (
     <div>
