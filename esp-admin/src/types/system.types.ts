@@ -49,7 +49,7 @@ export const FEATURE_CODE_LIST: FeatureCodeInfo[] = [
   { code: 'dashboard.total_users', label: '총 사용자 수', category: '대시보드' },
   { code: 'dashboard.total_stores', label: '전체 가맹점', category: '대시보드' },
   { code: 'dashboard.indoor_air', label: '실내 공기질 현황', category: '대시보드' },
-  { code: 'equipment.view', label: '장비 정보 조회', category: '장비관리' },
+  { code: 'equipment.view', label: '장비 정보 (탭)', category: '장비관리' },
   { code: 'equipment.create', label: '장비 등록', category: '장비관리' },
   { code: 'equipment.edit', label: '장비 수정', category: '장비관리' },
   { code: 'equipment.delete', label: '장비 삭제', category: '장비관리' },

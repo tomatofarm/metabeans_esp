@@ -135,6 +135,13 @@ export interface RealtimeControllerData {
   sensorData: ControllerSensorData;
 }
 
+// ESG 지표 (장비 단위, 임시 랜덤 데이터)
+export interface EquipmentEsgData {
+  oilCollectedKg: number;      // 유증 포집량 (kg)
+  wasteOilCollectedKg: number; // 폐유 수집량 = 유증 × 2 (kg)
+  totalCollectedKg: number;    // 총 포집량 (kg)
+}
+
 // 실시간 모니터링 장비 데이터 (equipment 단위)
 export interface RealtimeMonitoringData {
   equipmentId: number;
@@ -143,6 +150,7 @@ export interface RealtimeMonitoringData {
   storeName: string;
   connectionStatus: 'ONLINE' | 'OFFLINE';
   controllers: RealtimeControllerData[];
+  esgData: EquipmentEsgData;
 }
 
 // 센서 이력 차트 데이터 포인트 (확장)

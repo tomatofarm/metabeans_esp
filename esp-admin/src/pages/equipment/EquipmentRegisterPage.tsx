@@ -12,7 +12,8 @@ import {
   Divider,
 } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import { STATUS_COLORS } from '../../utils/constants';
 import dayjs from 'dayjs';
 import {
@@ -30,6 +31,7 @@ const MAX_CONTROLLERS = 4;
 
 export default function EquipmentRegisterPage() {
   const navigate = useNavigate();
+  const { isAllowed: canCreate, isLoading: createPermLoading } = useFeaturePermission('equipment.create');
   const [form] = Form.useForm();
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
   const [selectedFloorId, setSelectedFloorId] = useState<number | null>(null);
@@ -96,6 +98,10 @@ export default function EquipmentRegisterPage() {
       message.error('장비 등록에 실패했습니다.');
     }
   };
+
+  if (!createPermLoading && !canCreate) {
+    return <Navigate to="/equipment" replace />;
+  }
 
   return (
     <div>

@@ -21,12 +21,10 @@ export default function Header() {
   const role = user?.role;
   const accessibleMenus = role ? getAccessibleMenus(role) : [];
 
-  const menuItems = MENU_ITEMS.filter((item) => accessibleMenus.includes(item.key)).map(
-    (item) => ({
-      key: item.key,
-      label: item.label,
-    }),
-  );
+  const menuItems = MENU_ITEMS.filter((item) => accessibleMenus.includes(item.key)).map((item) => ({
+    key: item.key,
+    label: item.label,
+  }));
 
   const currentMenuKey =
     MENU_ITEMS.find((item) => location.pathname.startsWith(item.path))?.key ?? 'dashboard';

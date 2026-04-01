@@ -21,7 +21,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useUiStore } from '../../stores/uiStore';
 import { useEquipmentDetail, useDeleteEquipment } from '../../api/equipment.api';
-import { useRole } from '../../hooks/useRole';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import StatusTag from '../../components/common/StatusTag';
 import StatusBadge from '../../components/common/StatusBadge';
 import { formatDateTime, formatDate, formatRelativeTime } from '../../utils/formatters';
@@ -95,8 +95,10 @@ export default function EquipmentInfoPage() {
   const navigate = useNavigate();
   const selectedEquipmentId = useUiStore((s) => s.selectedEquipmentId);
   const selectedControllerId = useUiStore((s) => s.selectedControllerId);
-  const { isAdmin, isDealer } = useRole();
-  const canEdit = isAdmin || isDealer;
+  const { isAllowed: canEditEquip, isLoading: editPermLoading } = useFeaturePermission('equipment.edit');
+  const { isAllowed: canDeleteEquip, isLoading: deletePermLoading } = useFeaturePermission('equipment.delete');
+  const showEditActions = editPermLoading || canEditEquip;
+  const showDeleteAction = deletePermLoading || canDeleteEquip;
 
   const { data, isLoading } = useEquipmentDetail(selectedEquipmentId);
   const deleteMutation = useDeleteEquipment();
@@ -146,27 +148,31 @@ export default function EquipmentInfoPage() {
         <Title level={4} style={{ margin: 0 }}>
           장비 정보
         </Title>
-        {canEdit && (
+        {(showEditActions || showDeleteAction) && (
           <Space>
-            <Button
-              type="primary"
-              icon={<EditOutlined />}
-              onClick={() => navigate(`/equipment/edit/${equipment.equipmentId}`)}
-            >
-              수정
-            </Button>
-            <Popconfirm
-              title="장비 삭제"
-              description="이 장비를 삭제하시겠습니까?"
-              onConfirm={handleDelete}
-              okText="삭제"
-              cancelText="취소"
-              okButtonProps={{ danger: true }}
-            >
-              <Button danger icon={<DeleteOutlined />} loading={deleteMutation.isPending}>
-                삭제
+            {showEditActions && (
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={() => navigate(`/equipment/edit/${equipment.equipmentId}`)}
+              >
+                수정
               </Button>
-            </Popconfirm>
+            )}
+            {showDeleteAction && (
+              <Popconfirm
+                title="장비 삭제"
+                description="이 장비를 삭제하시겠습니까?"
+                onConfirm={handleDelete}
+                okText="삭제"
+                cancelText="취소"
+                okButtonProps={{ danger: true }}
+              >
+                <Button danger icon={<DeleteOutlined />} loading={deleteMutation.isPending}>
+                  삭제
+                </Button>
+              </Popconfirm>
+            )}
           </Space>
         )}
       </div>

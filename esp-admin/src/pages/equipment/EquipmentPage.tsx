@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Tabs, Button, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { useRole } from '../../hooks/useRole';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import { useUiStore } from '../../stores/uiStore';
 import EquipmentInfoPage from './EquipmentInfoPage';
 import RealtimeMonitorPage from './RealtimeMonitorPage';
@@ -15,8 +17,12 @@ const { Title } = Typography;
 function EquipmentTabs() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin, isDealer, isOwner } = useRole();
-  const canRegister = isAdmin || isDealer;
+  const { isOwner } = useRole();
+  const { isAllowed: canViewEquipmentInfo, isLoading: infoPermLoading } =
+    useFeaturePermission('equipment.view');
+  const showEquipmentInfoTab = infoPermLoading || canViewEquipmentInfo;
+  const { isAllowed: canCreate, isLoading: createPermLoading } = useFeaturePermission('equipment.create');
+  const canRegister = createPermLoading || canCreate;
   const canControl = !isOwner;
   const selectedEquipmentId = useUiStore((s) => s.selectedEquipmentId);
 
@@ -27,6 +33,17 @@ function EquipmentTabs() {
     if (location.pathname.includes('/equipment/history')) return 'history';
     return 'info';
   };
+
+  const rawActiveTab = getActiveTab();
+  const activeTab =
+    rawActiveTab === 'info' && !showEquipmentInfoTab ? 'monitoring' : rawActiveTab;
+
+  useEffect(() => {
+    if (infoPermLoading) return;
+    if (!showEquipmentInfoTab && location.pathname === '/equipment') {
+      navigate('/equipment/monitoring', { replace: true });
+    }
+  }, [infoPermLoading, showEquipmentInfoTab, location.pathname, navigate]);
 
   const handleTabChange = (key: string) => {
     switch (key) {
@@ -46,10 +63,7 @@ function EquipmentTabs() {
   };
 
   const tabItems = [
-    {
-      key: 'info',
-      label: '장비 정보',
-    },
+    ...(showEquipmentInfoTab ? [{ key: 'info' as const, label: '장비 정보' }] : []),
     {
       key: 'monitoring',
       label: '실시간 모니터링',
@@ -84,15 +98,15 @@ function EquipmentTabs() {
         )}
       </div>
       <Tabs
-        activeKey={getActiveTab()}
+        activeKey={activeTab}
         onChange={handleTabChange}
         items={tabItems}
         className="equip-tabs"
       />
-      {getActiveTab() === 'info' && <EquipmentInfoPage />}
-      {getActiveTab() === 'monitoring' && <RealtimeMonitorPage />}
-      {getActiveTab() === 'control' && <DeviceControlPage />}
-      {getActiveTab() === 'history' && <HistoryPage />}
+      {activeTab === 'info' && <EquipmentInfoPage />}
+      {activeTab === 'monitoring' && <RealtimeMonitorPage />}
+      {activeTab === 'control' && <DeviceControlPage />}
+      {activeTab === 'history' && <HistoryPage />}
     </div>
   );
 }

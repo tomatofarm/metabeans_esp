@@ -24,6 +24,15 @@ export const INLET_TEMP_THRESHOLDS = {
   redMin: 100,
 } as const;
 
+// 필터 점검 판단 파라미터 (AND 조건: 스파크 + 차압 동시 충족 시 청소 필요)
+// 관리자 설정 화면 구축 후 DB 저장값으로 교체 예정
+export const FILTER_CHECK_PARAMS = {
+  sparkWindowMin: 120,          // 스파크 관측 시간 창 (분)
+  sparkThreshold: 3000,         // 스파크 기준값 (0~9999 스케일; 표시값 30/99에 해당)
+  pressureBaseline: 20,         // 차압 기준값 (Pa)
+  pressureIncreaseRate: 0.10,   // 차압 증가율 임계값 (10%)
+} as const;
+
 // 통신 오류 판정 기준 (초)
 export const COMM_TIMEOUT_SEC = 30;
 export const COMM_ISSUE_YELLOW_SEC = 3600; // 1시간

@@ -13,7 +13,8 @@ import {
   Empty,
 } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Navigate } from 'react-router-dom';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import { STATUS_COLORS } from '../../utils/constants';
 import {
   useEquipmentDetail,
@@ -30,6 +31,7 @@ const MAX_CONTROLLERS = 4;
 export default function EquipmentEditPage() {
   const navigate = useNavigate();
   const { equipmentId } = useParams<{ equipmentId: string }>();
+  const { isAllowed: canEdit, isLoading: editPermLoading } = useFeaturePermission('equipment.edit');
   const numId = equipmentId ? parseInt(equipmentId, 10) : null;
 
   const [form] = Form.useForm();
@@ -85,6 +87,10 @@ export default function EquipmentEditPage() {
       message.error('장비 수정에 실패했습니다.');
     }
   };
+
+  if (!editPermLoading && !canEdit) {
+    return <Navigate to="/equipment" replace />;
+  }
 
   if (isLoading) {
     return (
