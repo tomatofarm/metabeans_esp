@@ -20,34 +20,39 @@ import { mockDelay, wrapResponse, type ApiResponse } from './common.mock';
 
 // ========== 1. 권한 관리 Mock 데이터 ==========
 
-// 역할별 기본 권한 매트릭스
+/** ADMIN 외 역할(DEALER/HQ/OWNER)은 동일한 기본값 — 실제 허용은 매트릭스만 따름 */
+function nonAdminRow(allowed: boolean): Record<UserRole, boolean> {
+  return { ADMIN: true, DEALER: allowed, HQ: allowed, OWNER: allowed };
+}
+
+// 역할별 기본 권한 매트릭스 (ADMIN은 UI에서 항상 true·변경 불가, 런타임은 useFeaturePermission에서 항상 허용)
 const defaultPermissions: Record<FeatureCode, Record<UserRole, boolean>> = {
-  'dashboard.total_users': { ADMIN: true, DEALER: false, HQ: false, OWNER: false },
-  'dashboard.total_stores': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
-  'dashboard.indoor_air': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'equipment.view': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'equipment.create': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
-  'equipment.edit': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
-  'equipment.delete': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
-  'monitoring.view': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'monitoring.board_temp': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'monitoring.spark': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'monitoring.filter_status': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'monitoring.fire_detection': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'monitoring.esg': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'monitoring.equipment_status': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'control.power': { ADMIN: true, DEALER: true, HQ: false, OWNER: true },
-  'control.damper': { ADMIN: true, DEALER: true, HQ: false, OWNER: true },
-  'control.fan': { ADMIN: true, DEALER: true, HQ: false, OWNER: true },
-  'history.view': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'as.view': { ADMIN: true, DEALER: true, HQ: true, OWNER: true },
-  'as.create': { ADMIN: true, DEALER: false, HQ: false, OWNER: true },
-  'as.process': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
-  'as.report': { ADMIN: true, DEALER: true, HQ: false, OWNER: false },
-  'customer.view': { ADMIN: true, DEALER: false, HQ: false, OWNER: false },
-  'customer.edit': { ADMIN: true, DEALER: false, HQ: false, OWNER: false },
-  'system.permission': { ADMIN: true, DEALER: false, HQ: false, OWNER: false },
-  'system.user': { ADMIN: true, DEALER: false, HQ: false, OWNER: false },
+  'dashboard.total_users': nonAdminRow(false),
+  'dashboard.total_stores': nonAdminRow(true),
+  'dashboard.indoor_air': nonAdminRow(true),
+  'equipment.view': nonAdminRow(true),
+  'equipment.create': nonAdminRow(true),
+  'equipment.edit': nonAdminRow(true),
+  'equipment.delete': nonAdminRow(true),
+  'monitoring.view': nonAdminRow(true),
+  'monitoring.board_temp': nonAdminRow(true),
+  'monitoring.spark': nonAdminRow(true),
+  'monitoring.filter_status': nonAdminRow(true),
+  'monitoring.fire_detection': nonAdminRow(true),
+  'monitoring.esg': nonAdminRow(true),
+  'monitoring.equipment_status': nonAdminRow(true),
+  'control.power': nonAdminRow(true),
+  'control.damper': nonAdminRow(true),
+  'control.fan': nonAdminRow(true),
+  'history.view': nonAdminRow(true),
+  'as.view': nonAdminRow(true),
+  'as.create': nonAdminRow(true),
+  'as.process': nonAdminRow(true),
+  'as.report': nonAdminRow(true),
+  'customer.view': nonAdminRow(false),
+  'customer.edit': nonAdminRow(false),
+  'system.permission': nonAdminRow(false),
+  'system.user': nonAdminRow(false),
 };
 
 // 권한 매트릭스를 mutable copy로 관리

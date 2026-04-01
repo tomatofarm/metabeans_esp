@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Tabs, Button, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
-import { useRole } from '../../hooks/useRole';
 import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import { useUiStore } from '../../stores/uiStore';
 import EquipmentInfoPage from './EquipmentInfoPage';
@@ -17,7 +16,6 @@ const { Title } = Typography;
 function EquipmentTabs() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isOwner } = useRole();
   const { isAllowed: canViewEquipmentInfo, isLoading: infoPermLoading } =
     useFeaturePermission('equipment.view');
   const showEquipmentInfoTab = infoPermLoading || canViewEquipmentInfo;
@@ -26,13 +24,23 @@ function EquipmentTabs() {
   const showMonitoringTab = monitoringPermLoading || canViewMonitoring;
   const { isAllowed: canCreate, isLoading: createPermLoading } = useFeaturePermission('equipment.create');
   const canRegister = createPermLoading || canCreate;
-  const canControl = !isOwner;
+  const { isAllowed: canPower, isLoading: powerPermLoading } = useFeaturePermission('control.power');
+  const { isAllowed: canDamper, isLoading: damperPermLoading } = useFeaturePermission('control.damper');
+  const { isAllowed: canFan, isLoading: fanPermLoading } = useFeaturePermission('control.fan');
+  const showControlTab =
+    powerPermLoading ||
+    damperPermLoading ||
+    fanPermLoading ||
+    canPower ||
+    canDamper ||
+    canFan;
+  const controlPermLoading = powerPermLoading || damperPermLoading || fanPermLoading;
   const selectedEquipmentId = useUiStore((s) => s.selectedEquipmentId);
 
   const firstAvailableTab = (): 'info' | 'monitoring' | 'control' | 'history' => {
     if (showEquipmentInfoTab) return 'info';
     if (showMonitoringTab) return 'monitoring';
-    if (canControl) return 'control';
+    if (showControlTab) return 'control';
     return 'history';
   };
 
@@ -48,6 +56,7 @@ function EquipmentTabs() {
   let activeTab = rawActiveTab;
   if (activeTab === 'info' && !showEquipmentInfoTab) activeTab = firstAvailableTab();
   if (activeTab === 'monitoring' && !showMonitoringTab) activeTab = firstAvailableTab();
+  if (activeTab === 'control' && !showControlTab) activeTab = firstAvailableTab();
 
   const resolvedFallbackTab = firstAvailableTab();
   const fallbackPath =
@@ -69,6 +78,21 @@ function EquipmentTabs() {
     infoPermLoading,
     monitoringPermLoading,
     showMonitoringTab,
+    location.pathname,
+    navigate,
+    fallbackPath,
+  ]);
+
+  useEffect(() => {
+    if (infoPermLoading || monitoringPermLoading || controlPermLoading) return;
+    if (!showControlTab && location.pathname.includes('/equipment/control')) {
+      navigate(fallbackPath, { replace: true });
+    }
+  }, [
+    infoPermLoading,
+    monitoringPermLoading,
+    controlPermLoading,
+    showControlTab,
     location.pathname,
     navigate,
     fallbackPath,
@@ -96,11 +120,9 @@ function EquipmentTabs() {
     ...(showMonitoringTab
       ? [{ key: 'monitoring' as const, label: '실시간 모니터링', disabled: !selectedEquipmentId }]
       : []),
-    {
-      key: 'control',
-      label: '장치 제어',
-      disabled: !selectedEquipmentId || !canControl,
-    },
+    ...(showControlTab
+      ? [{ key: 'control' as const, label: '장치 제어', disabled: !selectedEquipmentId }]
+      : []),
     {
       key: 'history',
       label: '이력 조회',
@@ -132,7 +154,7 @@ function EquipmentTabs() {
       />
       {activeTab === 'info' && <EquipmentInfoPage />}
       {activeTab === 'monitoring' && showMonitoringTab && <RealtimeMonitorPage />}
-      {activeTab === 'control' && <DeviceControlPage />}
+      {activeTab === 'control' && showControlTab && <DeviceControlPage />}
       {activeTab === 'history' && <HistoryPage />}
     </div>
   );
