@@ -21,10 +21,20 @@ function EquipmentTabs() {
   const { isAllowed: canViewEquipmentInfo, isLoading: infoPermLoading } =
     useFeaturePermission('equipment.view');
   const showEquipmentInfoTab = infoPermLoading || canViewEquipmentInfo;
+  const { isAllowed: canViewMonitoring, isLoading: monitoringPermLoading } =
+    useFeaturePermission('monitoring.view');
+  const showMonitoringTab = monitoringPermLoading || canViewMonitoring;
   const { isAllowed: canCreate, isLoading: createPermLoading } = useFeaturePermission('equipment.create');
   const canRegister = createPermLoading || canCreate;
   const canControl = !isOwner;
   const selectedEquipmentId = useUiStore((s) => s.selectedEquipmentId);
+
+  const firstAvailableTab = (): 'info' | 'monitoring' | 'control' | 'history' => {
+    if (showEquipmentInfoTab) return 'info';
+    if (showMonitoringTab) return 'monitoring';
+    if (canControl) return 'control';
+    return 'history';
+  };
 
   // 현재 활성 탭 결정
   const getActiveTab = () => {
@@ -35,15 +45,34 @@ function EquipmentTabs() {
   };
 
   const rawActiveTab = getActiveTab();
-  const activeTab =
-    rawActiveTab === 'info' && !showEquipmentInfoTab ? 'monitoring' : rawActiveTab;
+  let activeTab = rawActiveTab;
+  if (activeTab === 'info' && !showEquipmentInfoTab) activeTab = firstAvailableTab();
+  if (activeTab === 'monitoring' && !showMonitoringTab) activeTab = firstAvailableTab();
+
+  const resolvedFallbackTab = firstAvailableTab();
+  const fallbackPath =
+    resolvedFallbackTab === 'info' ? '/equipment' : `/equipment/${resolvedFallbackTab}`;
 
   useEffect(() => {
-    if (infoPermLoading) return;
+    if (infoPermLoading || monitoringPermLoading) return;
     if (!showEquipmentInfoTab && location.pathname === '/equipment') {
-      navigate('/equipment/monitoring', { replace: true });
+      navigate(fallbackPath, { replace: true });
     }
-  }, [infoPermLoading, showEquipmentInfoTab, location.pathname, navigate]);
+  }, [infoPermLoading, monitoringPermLoading, showEquipmentInfoTab, location.pathname, navigate, fallbackPath]);
+
+  useEffect(() => {
+    if (infoPermLoading || monitoringPermLoading) return;
+    if (!showMonitoringTab && location.pathname.includes('/equipment/monitoring')) {
+      navigate(fallbackPath, { replace: true });
+    }
+  }, [
+    infoPermLoading,
+    monitoringPermLoading,
+    showMonitoringTab,
+    location.pathname,
+    navigate,
+    fallbackPath,
+  ]);
 
   const handleTabChange = (key: string) => {
     switch (key) {
@@ -64,11 +93,9 @@ function EquipmentTabs() {
 
   const tabItems = [
     ...(showEquipmentInfoTab ? [{ key: 'info' as const, label: '장비 정보' }] : []),
-    {
-      key: 'monitoring',
-      label: '실시간 모니터링',
-      disabled: !selectedEquipmentId,
-    },
+    ...(showMonitoringTab
+      ? [{ key: 'monitoring' as const, label: '실시간 모니터링', disabled: !selectedEquipmentId }]
+      : []),
     {
       key: 'control',
       label: '장치 제어',
@@ -104,7 +131,7 @@ function EquipmentTabs() {
         className="equip-tabs"
       />
       {activeTab === 'info' && <EquipmentInfoPage />}
-      {activeTab === 'monitoring' && <RealtimeMonitorPage />}
+      {activeTab === 'monitoring' && showMonitoringTab && <RealtimeMonitorPage />}
       {activeTab === 'control' && <DeviceControlPage />}
       {activeTab === 'history' && <HistoryPage />}
     </div>

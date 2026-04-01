@@ -1,4 +1,4 @@
-import type { ControllerSensorData, EquipmentEsgData, RealtimeMonitoringData, RealtimeControllerData, SensorHistoryDataPoint } from '../../types/sensor.types';
+import type { ControllerSensorData, RealtimeMonitoringData, RealtimeControllerData, SensorHistoryDataPoint } from '../../types/sensor.types';
 import { mockDelay, mockStoreTree } from './common.mock';
 import { assertMockEquipmentStoreAccess, type AuthorizedStoresParam } from '../../utils/mockAccess';
 import { SENSOR_RANGES } from '../../utils/constants';
@@ -89,14 +89,6 @@ function getEquipmentMeta(equipmentId: number): { equipmentName: string; storeNa
   return null;
 }
 
-// ESG 데이터 생성 (장비별 임시 랜덤, 유증 포집량 기준)
-function generateEquipmentEsg(): EquipmentEsgData {
-  const oilCollectedKg = randomFloat(30, 80, 1);
-  const wasteOilCollectedKg = parseFloat((oilCollectedKg * 2).toFixed(1));
-  const totalCollectedKg = parseFloat((oilCollectedKg + wasteOilCollectedKg).toFixed(1));
-  return { oilCollectedKg, wasteOilCollectedKg, totalCollectedKg };
-}
-
 // 이상치 시나리오 적용 (일부 장비에 문제 상황을 시뮬레이션)
 const ABNORMAL_SCENARIOS: Record<number, Partial<ControllerSensorData>> = {
   1: { inletTemp: 105.3, ppTemp: 62, ppPower: 1, ppAlarm: 0 },
@@ -141,7 +133,6 @@ export async function mockGetRealtimeSensorData(
     storeName: meta?.storeName ?? '알 수 없음',
     connectionStatus: meta?.connectionStatus ?? 'OFFLINE',
     controllers: controllerData,
-    esgData: generateEquipmentEsg(),
   };
 
   return mockDelay(data, 200);
