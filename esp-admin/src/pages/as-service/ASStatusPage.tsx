@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Table, Select, DatePicker } from 'antd';
+import { Table, Select, DatePicker, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useASStatusList, useASStoreOptions } from '../../api/as-service.api';
@@ -120,6 +120,22 @@ export default function ASStatusPage({ onRowClick, mode = 'status' }: ASStatusPa
       width: 160,
       render: (val: string) => (val ? formatDateTime(val) : '-'),
     },
+    ...(onRowClick
+      ? [
+          {
+            title: ' ',
+            key: 'actions',
+            width: 96,
+            fixed: 'right' as const,
+            align: 'right' as const,
+            render: (_: unknown, record: ASRequestListItem) => (
+              <Button type="primary" size="small" onClick={() => onRowClick(record.requestId)}>
+                수정
+              </Button>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -172,10 +188,7 @@ export default function ASStatusPage({ onRowClick, mode = 'status' }: ASStatusPa
             showSizeChanger: false,
           }}
           size="middle"
-          onRow={(record) => ({
-            onClick: () => onRowClick?.(record.requestId),
-            style: { cursor: onRowClick ? 'pointer' : 'default' },
-          })}
+          scroll={{ x: onRowClick ? 1200 : undefined }}
         />
       </div>
     </div>
