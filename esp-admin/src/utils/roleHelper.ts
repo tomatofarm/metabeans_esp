@@ -4,11 +4,12 @@ import type { UserRole } from '../types/auth.types';
 export type AsServiceTabKey = 'alerts' | 'request' | 'status' | 'report';
 
 // 역할별 메뉴 접근 맵
+/** 상단 메뉴 후보 키. `customer`는 `customer.access` 권한으로 Header에서 추가 필터 */
 export const roleMenuMap: Record<UserRole, string[]> = {
   ADMIN: ['dashboard', 'equipment', 'as-service', 'customer', 'system'],
-  DEALER: ['dashboard', 'equipment', 'as-service'],
-  HQ: ['dashboard', 'equipment', 'as-service'],
-  OWNER: ['dashboard', 'equipment', 'as-service'],
+  DEALER: ['dashboard', 'equipment', 'as-service', 'customer'],
+  HQ: ['dashboard', 'equipment', 'as-service', 'customer'],
+  OWNER: ['dashboard', 'equipment', 'as-service', 'customer'],
 };
 
 /**
@@ -29,7 +30,7 @@ export function hasMenuAccess(role: UserRole, menu: string): boolean {
  * ADMIN 전용 메뉴인지 확인
  */
 export function isAdminOnlyMenu(menu: string): boolean {
-  return menu === 'customer' || menu === 'system';
+  return menu === 'system';
 }
 
 // 메뉴 정의

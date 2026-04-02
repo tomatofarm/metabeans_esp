@@ -92,14 +92,17 @@ export default function SystemPermissionTab() {
         category,
         featureCodes,
       });
-      for (const item of items) {
-        rows.push({
-          key: item.featureCode,
-          type: 'feature',
-          category,
-          featureCode: item.featureCode,
-          label: item.label,
-        });
+      // 기능이 1개뿐인 카테고리는 그룹 행만 표시 (예: 고객현황 — 제목·하위 행 중복 방지)
+      if (items.length > 1) {
+        for (const item of items) {
+          rows.push({
+            key: item.featureCode,
+            type: 'feature',
+            category,
+            featureCode: item.featureCode,
+            label: item.label,
+          });
+        }
       }
     }
     return rows;

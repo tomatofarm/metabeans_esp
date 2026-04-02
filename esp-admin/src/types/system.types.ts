@@ -32,8 +32,7 @@ export type FeatureCode =
   | 'as.process_edit'
   | 'as.report'
   // 고객
-  | 'customer.view'
-  | 'customer.edit'
+  | 'customer.access'
   // 시스템
   | 'system.permission'
   | 'system.user';
@@ -70,8 +69,7 @@ export const FEATURE_CODE_LIST: FeatureCodeInfo[] = [
   { code: 'as.process', label: 'A/S 처리', category: 'A/S관리' },
   { code: 'as.process_edit', label: 'A/S 처리 수정', category: 'A/S관리' },
   { code: 'as.report', label: '완료 보고서', category: 'A/S관리' },
-  { code: 'customer.view', label: '고객 조회', category: '고객현황' },
-  { code: 'customer.edit', label: '고객 수정', category: '고객현황' },
+  { code: 'customer.access', label: '고객현황', category: '고객현황' },
   { code: 'system.permission', label: '권한 관리', category: '시스템관리' },
   { code: 'system.user', label: '사용자 관리', category: '시스템관리' },
 ];
