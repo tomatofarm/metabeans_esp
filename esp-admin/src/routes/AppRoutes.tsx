@@ -67,12 +67,8 @@ export default function AppRoutes() {
 
           <Route path="/equipment/*" element={<EquipmentPage />} />
           <Route path="/as-service/*" element={<ASServicePage />} />
-
-          {/* ADMIN only routes */}
-          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
-            <Route path="/customer/*" element={<CustomerPage />} />
-            <Route path="/system/*" element={<SystemPage />} />
-          </Route>
+          <Route path="/customer/*" element={<CustomerPage />} />
+          <Route path="/system/*" element={<SystemPage />} />
         </Route>
       </Route>
 

@@ -7,8 +7,8 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useUiStore } from '../../stores/uiStore';
-import { getAccessibleMenus, MENU_ITEMS } from '../../utils/roleHelper';
-import { useFeaturePermission } from '../../hooks/useFeaturePermission';
+import { MENU_ITEMS } from '../../utils/roleHelper';
+import { useTopMenuSectionVisibility } from '../../hooks/useTopMenuSectionVisibility';
 import RoleBadge from './RoleBadge';
 import EmergencyAlarmPanel from '../../pages/dashboard/components/EmergencyAlarmPanel';
 
@@ -20,15 +20,9 @@ export default function Header() {
   const clearSelection = useUiStore((s) => s.clearSelection);
 
   const role = user?.role;
-  const accessibleMenus = role ? getAccessibleMenus(role) : [];
-  const { isAllowed: canCustomerAccess, isLoading: customerAccessLoading } =
-    useFeaturePermission('customer.access');
+  const { showMenuKey } = useTopMenuSectionVisibility();
 
-  const menuItems = MENU_ITEMS.filter((item) => {
-    if (!accessibleMenus.includes(item.key)) return false;
-    if (item.key === 'customer') return customerAccessLoading || canCustomerAccess;
-    return true;
-  }).map((item) => ({
+  const menuItems = MENU_ITEMS.filter((item) => showMenuKey(item.key)).map((item) => ({
     key: item.key,
     label: item.label,
   }));

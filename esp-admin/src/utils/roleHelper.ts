@@ -4,12 +4,14 @@ import type { UserRole } from '../types/auth.types';
 export type AsServiceTabKey = 'alerts' | 'request' | 'status' | 'report';
 
 // 역할별 메뉴 접근 맵
-/** 상단 메뉴 후보 키. `customer`는 `customer.access` 권한으로 Header에서 추가 필터 */
+/** 상단 메뉴 후보(전 역할 동일). 실제 노출은 `useTopMenuSectionVisibility`로 카테고리별 집계 */
+const ALL_TOP_MENU_KEYS = ['dashboard', 'equipment', 'as-service', 'customer', 'system'] as const;
+
 export const roleMenuMap: Record<UserRole, string[]> = {
-  ADMIN: ['dashboard', 'equipment', 'as-service', 'customer', 'system'],
-  DEALER: ['dashboard', 'equipment', 'as-service', 'customer'],
-  HQ: ['dashboard', 'equipment', 'as-service', 'customer'],
-  OWNER: ['dashboard', 'equipment', 'as-service', 'customer'],
+  ADMIN: [...ALL_TOP_MENU_KEYS],
+  DEALER: [...ALL_TOP_MENU_KEYS],
+  HQ: [...ALL_TOP_MENU_KEYS],
+  OWNER: [...ALL_TOP_MENU_KEYS],
 };
 
 /**
@@ -24,13 +26,6 @@ export function getAccessibleMenus(role: UserRole): string[] {
  */
 export function hasMenuAccess(role: UserRole, menu: string): boolean {
   return roleMenuMap[role]?.includes(menu) ?? false;
-}
-
-/**
- * ADMIN 전용 메뉴인지 확인
- */
-export function isAdminOnlyMenu(menu: string): boolean {
-  return menu === 'system';
 }
 
 // 메뉴 정의

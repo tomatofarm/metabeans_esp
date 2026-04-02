@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { Tabs, Empty, Spin } from 'antd';
-import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
+import { Tabs, Spin } from 'antd';
+import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import SystemPermissionTab from './SystemPermissionTab';
 import SystemApprovalTab from './SystemApprovalTab';
 import SystemUserTab from './SystemUserTab';
@@ -110,12 +110,7 @@ function SystemTabs() {
   }
 
   if (visibleTabKeys.length === 0) {
-    return (
-      <div>
-        <h2 style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 700 }}>시스템 관리</h2>
-        <Empty description="이용 가능한 시스템 관리 메뉴가 없습니다." />
-      </div>
-    );
+    return <Navigate to="/dashboard" replace />;
   }
 
   const safeKey = visibleSet.has(activeTab) ? activeTab : visibleTabKeys[0]!;
