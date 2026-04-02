@@ -1,6 +1,6 @@
 import type { UserRole } from '../types/auth.types';
 
-/** A/S 관리 탭 키 — `ASServicePage`에서 권한(as.view / as.create / as.process / as.report)과 1:1 매핑 */
+/** A/S 관리 탭 키 — `ASServicePage`에서 권한(as.view / as.create / as.process / as.report)과 1:1 매핑. 처리 목록 수정 버튼은 `as.process_edit`. */
 export type AsServiceTabKey = 'alerts' | 'request' | 'status' | 'report';
 
 // 역할별 메뉴 접근 맵

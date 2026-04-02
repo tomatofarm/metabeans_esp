@@ -48,6 +48,7 @@ const defaultPermissions: Record<FeatureCode, Record<UserRole, boolean>> = {
   'as.view': nonAdminRow(true),
   'as.create': nonAdminRow(true),
   'as.process': nonAdminRow(true),
+  'as.process_edit': nonAdminRow(true),
   'as.report': nonAdminRow(true),
   'customer.view': nonAdminRow(false),
   'customer.edit': nonAdminRow(false),

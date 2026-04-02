@@ -9,6 +9,7 @@ import StatusBadge from '../../components/common/StatusBadge';
 import type { BadgeStatus } from '../../components/common/StatusBadge';
 import type { ASRequestListItem, ASStatus, FaultType } from '../../types/as-service.types';
 import { useRole } from '../../hooks/useRole';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 
 const { RangePicker } = DatePicker;
 
@@ -35,7 +36,13 @@ interface ASStatusPageProps {
 
 export default function ASStatusPage({ onRowClick, mode = 'status' }: ASStatusPageProps) {
   const { isAdmin, isDealer } = useRole();
+  const { isAllowed: canProcessEdit, isLoading: processEditLoading } =
+    useFeaturePermission('as.process_edit');
   const showDealerFilter = isAdmin || isDealer;
+
+  /** A/S 처리 탭 목록의 수정 버튼 — as.process_edit (로딩 중에는 낙관적으로 활성) */
+  const processEditDisabled =
+    mode === 'status' && !processEditLoading && !canProcessEdit;
 
   const { data: storeOptions = [] } = useASStoreOptions();
   const storeSelectOptions = storeOptions.map((s) => ({ value: s.storeId, label: s.storeName }));
@@ -129,7 +136,12 @@ export default function ASStatusPage({ onRowClick, mode = 'status' }: ASStatusPa
             fixed: 'right' as const,
             align: 'right' as const,
             render: (_: unknown, record: ASRequestListItem) => (
-              <Button type="primary" size="small" onClick={() => onRowClick(record.requestId)}>
+              <Button
+                type="primary"
+                size="small"
+                disabled={processEditDisabled}
+                onClick={() => onRowClick(record.requestId)}
+              >
                 수정
               </Button>
             ),
