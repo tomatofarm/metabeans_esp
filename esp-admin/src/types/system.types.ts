@@ -35,7 +35,9 @@ export type FeatureCode =
   | 'customer.access'
   // 시스템
   | 'system.permission'
-  | 'system.user';
+  | 'system.approval'
+  | 'system.user'
+  | 'system.threshold';
 
 // 기능 코드 카테고리 정의
 export interface FeatureCodeInfo {
@@ -71,7 +73,9 @@ export const FEATURE_CODE_LIST: FeatureCodeInfo[] = [
   { code: 'as.report', label: '완료 보고서', category: 'A/S관리' },
   { code: 'customer.access', label: '고객현황', category: '고객현황' },
   { code: 'system.permission', label: '권한 관리', category: '시스템관리' },
+  { code: 'system.approval', label: '가입 승인', category: '시스템관리' },
   { code: 'system.user', label: '사용자 관리', category: '시스템관리' },
+  { code: 'system.threshold', label: '기준수치 관리', category: '시스템관리' },
 ];
 
 // 역할별 기본 권한 (role_permissions 테이블)
