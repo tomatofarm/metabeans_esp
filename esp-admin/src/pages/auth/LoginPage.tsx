@@ -30,8 +30,9 @@ export default function LoginPage() {
       message.success(`${response.user.name}님 환영합니다.`);
       const dashboardPath = ROLE_DASHBOARD_MAP[response.user.role];
       navigate(dashboardPath);
-    } catch {
-      message.error('아이디 또는 비밀번호가 올바르지 않습니다.');
+    } catch (e) {
+      const text = e instanceof Error ? e.message : '아이디 또는 비밀번호가 올바르지 않습니다.';
+      message.error(text);
     } finally {
       setLoading(false);
     }

@@ -20,7 +20,12 @@ export function resolveAuthorizedNumericStoreIds(
   if (!storeIds?.length) return null;
   if (storeIds.includes('*')) return null;
   const nums = storeIds
-    .map((sid) => STORE_ID_MAP[sid])
+    .map((sid) => {
+      const mapped = STORE_ID_MAP[sid];
+      if (mapped !== undefined) return mapped;
+      const n = Number(sid);
+      return Number.isInteger(n) && n > 0 ? n : undefined;
+    })
     .filter((id): id is number => id !== undefined);
   return nums.length ? nums : [];
 }
