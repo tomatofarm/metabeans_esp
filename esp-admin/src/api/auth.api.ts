@@ -1,3 +1,20 @@
+/**
+ * 인증·회원가입 — `VITE_API_BASE_URL` 설정 + `VITE_USE_MOCK_API !== 'true'` 이면 백엔드 연동 (`auth.real.ts`).
+ * Base: `{VITE_API_BASE_URL}` (= API_BASE_PATH `/api/v1` 포함)
+ *
+ * | 함수 | Method | 백엔드 경로 |
+ * |------|--------|-------------|
+ * | login | POST | /auth/login |
+ * | logout | POST | /auth/logout |
+ * | passwordResetRequest | POST | /auth/password-reset-request |
+ * | changePassword | PUT | /auth/password (Bearer) |
+ * | checkLoginId | GET | /auth/check-login-id?loginId= |
+ * | checkBusinessNumber | GET | /registration/check-business-number?number= |
+ * | getDealerList | GET | /registration/dealer-list?region= |
+ * | registerOwner/HQ/Admin/Dealer | POST | /registration/owner, /hq, /admin, /dealer |
+ *
+ * 백엔드에만 있고 프론트 미연동: POST /auth/refresh (쿠키 refresh — 추후 axios 인터셉터 등)
+ */
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   LoginRequest,

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Form, Input, Button, Card, Typography, message, Space } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { changePassword } from '../../api/auth.api';
+import { changePassword, logout as apiLogout } from '../../api/auth.api';
 import { useAuthStore } from '../../stores/authStore';
 
 const { Title, Text } = Typography;
@@ -26,6 +26,11 @@ export default function ChangePasswordPage() {
         newPassword: values.newPassword,
       });
       message.success('비밀번호가 변경되었습니다. 다시 로그인해 주세요.');
+      try {
+        await apiLogout();
+      } catch {
+        /* ignore */
+      }
       logout();
       navigate('/login');
     } catch (err) {
