@@ -1,6 +1,8 @@
 /**
  * 시스템 관리 API — REST 설계서 §9 (ADMIN 전용)
  *
+ * `VITE_API_BASE_URL` + `VITE_USE_MOCK_API !== 'true'` 이면 `real/system.real.ts`로 백엔드 호출.
+ *
  * | 구역 | 훅 | REST |
  * |------|-----|------|
  * | 권한 | usePermissionMatrix, useUpdatePermissions | GET/PUT /system/permissions |
@@ -14,6 +16,7 @@
  * 장비 모델 CRUD: §9.4.3 — 현재 `equipment.api`의 `useEquipmentModels`(조회)만 해당. 등록/수정/삭제는 미구현.
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import * as systemReal from './real/system.real';
 import {
   mockGetPermissionMatrix,
   mockUpdatePermissions,
@@ -38,6 +41,9 @@ import type {
   FeatureCode,
   ThresholdSettings,
 } from '../types/system.types';
+
+const useRealApi =
+  import.meta.env.VITE_USE_MOCK_API !== 'true' && Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
 
 // ===== 권한 관리 =====
 
@@ -114,7 +120,7 @@ export function useApprovePasswordReset() {
 export function useSystemUsers(params?: UserListParams) {
   return useQuery({
     queryKey: ['system-users', params],
-    queryFn: () => mockGetUsers(params),
+    queryFn: () => (useRealApi ? systemReal.fetchSystemUsers(params) : mockGetUsers(params)),
     staleTime: 30 * 1000,
   });
 }
@@ -122,7 +128,7 @@ export function useSystemUsers(params?: UserListParams) {
 export function useSystemUserDetail(userId: number | null) {
   return useQuery({
     queryKey: ['system-user-detail', userId],
-    queryFn: () => mockGetUserDetail(userId!),
+    queryFn: () => (useRealApi ? systemReal.fetchSystemUserDetail(userId!) : mockGetUserDetail(userId!)),
     enabled: userId !== null,
     staleTime: 30 * 1000,
   });
@@ -132,7 +138,7 @@ export function useUpdateSystemUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, data }: { userId: number; data: SystemUserUpdateRequest }) =>
-      mockUpdateUser(userId, data),
+      useRealApi ? systemReal.updateSystemUser(userId, data) : mockUpdateUser(userId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-users'] });
       queryClient.invalidateQueries({ queryKey: ['system-user-detail'] });
