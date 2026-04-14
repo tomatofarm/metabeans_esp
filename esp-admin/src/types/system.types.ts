@@ -215,6 +215,10 @@ export interface DamperAutoSetting {
   updatedAt: string;
 }
 
+/** 신규 장비 초기값·「기본값으로」복원·Mock 시드 — UI와 API Mock이 동일 값 사용 */
+export const DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH = 850;
+export const DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS = 3.5;
+
 // 전체 기준수치 묶음
 export interface ThresholdSettings {
   monitoringThresholds: MonitoringThreshold[];

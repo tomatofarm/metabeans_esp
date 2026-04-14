@@ -117,7 +117,7 @@
 | `POST /control/command` | `useSendControlCommand` | ✅ |
 | `GET /control/command/:cmdId/status` | 없음 | ❌ ACK 폴링용 훅 미구현 |
 | `GET /control/history` | `useControlHistory`, `useControlHistoryRange` | ⚠️ REST는 쿼리 스트링 다수 — Mock은 `equipmentId` 중심 |
-| `GET/PUT .../damper-auto-settings` | 없음 (댐퍼 UI는 MQTT 명령 + `FanAutoSettings` 등만 사용) | ⚠️ 설계서 §6.4와 UI 정렬 필요. 시스템 `SystemThresholdTab`의 `damperAutoSettings`와 역할 구분 합의 |
+| `GET/PUT .../damper-auto-settings` | 없음 (장치제어 댐퍼 카드 전용으로 §6.4 유지) | ⚠️ §6.4 vs §9.4.3 역할 구분은 REST 설계서 v1.14에 반영됨. 시스템 기준수치 `damperAutoSettings`는 `GET/PUT /system/thresholds`(§9.4.3) 연동 시 `useThresholdSettings`로 흡수 |
 | `GET/PUT .../fan-auto-settings` | `useFanAutoSettings`, `useUpdateFanAutoSettings` | ✅ |
 | `POST /control/gateway/:id/config` | `useSendGatewayConfig` | ✅ |
 | `GET /control/gateway-config/:cmdId/status` | 없음 | ❌ config ACK 확인 훅 미구현 |

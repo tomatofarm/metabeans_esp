@@ -15,8 +15,12 @@ import type {
   CleaningThreshold,
   DamperAutoSetting,
 } from '../../types/system.types';
-import { FEATURE_CODE_LIST } from '../../types/system.types';
-import { mockDelay, wrapResponse, type ApiResponse } from './common.mock';
+import {
+  FEATURE_CODE_LIST,
+  DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
+  DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
+} from '../../types/system.types';
+import { mockDelay, mockStoreTree, wrapResponse, type ApiResponse } from './common.mock';
 
 // ========== 1. 권한 관리 Mock 데이터 ==========
 
@@ -526,32 +530,45 @@ const mockCleaningThresholds: CleaningThreshold[] = [
   },
 ];
 
-const mockDamperAutoSettings: DamperAutoSetting[] = [
-  {
-    settingId: 1,
-    equipmentId: 0,
-    equipmentName: '기본값 (전체 장비)',
-    targetFlowCmh: 850,
-    targetVelocity: 3.5,
-    updatedAt: '2026-01-01T00:00:00Z',
-  },
-  {
-    settingId: 2,
-    equipmentId: 1,
-    equipmentName: '강남점 ESP 집진기 #1',
-    targetFlowCmh: 900,
-    targetVelocity: 4.0,
-    updatedAt: '2026-01-15T00:00:00Z',
-  },
-  {
-    settingId: 3,
-    equipmentId: 3,
-    equipmentName: '홍대점 ESP 집진기 #1',
-    targetFlowCmh: 800,
-    targetVelocity: 3.2,
-    updatedAt: '2026-02-01T00:00:00Z',
-  },
-];
+/** 댐퍼/팬 자동제어 — 집진기(장비)별 기본값. mockStoreTree 기준 전 매장·전 장비 행 생성 */
+function buildDamperAutoSettingsFromStoreTree(): DamperAutoSetting[] {
+  const rows: DamperAutoSetting[] = [];
+  for (const store of mockStoreTree) {
+    for (const floor of store.floors) {
+      for (const gw of floor.gateways) {
+        for (const eq of gw.equipments) {
+          rows.push({
+            settingId: eq.equipmentId,
+            equipmentId: eq.equipmentId,
+            equipmentName: `${store.storeName} · ${eq.equipmentName}`,
+            targetFlowCmh: DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
+            targetVelocity: DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
+  }
+  return rows.sort((a, b) => a.equipmentId - b.equipmentId);
+}
+
+/** 저장된 집진기별 값과 트리(신규 장비) 병합 */
+function getDamperAutoSettingsSnapshot(): DamperAutoSetting[] {
+  const fresh = buildDamperAutoSettingsFromStoreTree();
+  const prevByEquipmentId = new Map(mockDamperAutoSettings.map((s) => [s.equipmentId, s]));
+  return fresh.map((row) => {
+    const prev = prevByEquipmentId.get(row.equipmentId);
+    if (!prev) return row;
+    return {
+      ...row,
+      targetFlowCmh: prev.targetFlowCmh,
+      targetVelocity: prev.targetVelocity,
+      updatedAt: prev.updatedAt,
+    };
+  });
+}
+
+let mockDamperAutoSettings: DamperAutoSetting[] = [];
 
 let mockSparkBaseTime = 600; // 기본 10분 (초)
 
@@ -560,7 +577,7 @@ export async function mockGetThresholds(): Promise<ApiResponse<ThresholdSettings
     wrapResponse({
       monitoringThresholds: [...mockMonitoringThresholds],
       cleaningThresholds: [...mockCleaningThresholds],
-      damperAutoSettings: [...mockDamperAutoSettings],
+      damperAutoSettings: getDamperAutoSettingsSnapshot(),
       sparkBaseTime: mockSparkBaseTime,
     }),
     400,
@@ -591,14 +608,10 @@ export async function mockUpdateThresholds(
     }
   }
   if (data.damperAutoSettings) {
-    for (const updated of data.damperAutoSettings) {
-      const idx = mockDamperAutoSettings.findIndex(
-        (s) => s.settingId === updated.settingId,
-      );
-      if (idx !== -1) {
-        mockDamperAutoSettings[idx] = { ...updated, updatedAt: new Date().toISOString() };
-      }
-    }
+    mockDamperAutoSettings = data.damperAutoSettings.map((s) => ({
+      ...s,
+      updatedAt: new Date().toISOString(),
+    }));
   }
   if (data.sparkBaseTime !== undefined) {
     mockSparkBaseTime = data.sparkBaseTime;

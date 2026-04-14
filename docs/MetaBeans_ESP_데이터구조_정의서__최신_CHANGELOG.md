@@ -2,9 +2,9 @@
 
 **원본 문서**: [MetaBeans_ESP_데이터구조_정의서__최신.md](MetaBeans_ESP_데이터구조_정의서__최신.md)
 
-**버전**: v3.2  
+**버전**: v3.3  
 **작성일**: 2025-02-04  
-**최종 수정일**: 2026-02-27  
+**최종 수정일**: 2026-04-14  
 **작성자**: 한재혁 (MetaBeans)  
 **대상**: 고블린게임즈 개발팀, 내부 기획팀
 
@@ -26,5 +26,8 @@
 > - MQTT 규격 260227_v2 반영 — oil_level float→int, pp_spark 0-9999  
 > - fan_running/fan_freq/fan_target_pct/damper_ctrl 신규 필드  
 > - status 토픽 wifi 추가, status_flags bit5 복합 판정
+
+> **v3.3 변경 이력 (2026-04-14)**:  
+> - §8.4 `damper_auto_settings`: 시스템관리 기준수치 탭·REST §9.4.3과의 매핑·신규 장비 시드 정책 비고 추가 (스키마 변경 없음)
 
 ---

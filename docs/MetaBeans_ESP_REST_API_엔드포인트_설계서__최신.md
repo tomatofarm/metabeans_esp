@@ -2,9 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신_CHANGELOG.md)
 
-**문서 버전**: v1.13  
+**문서 버전**: v1.14  
 **작성일**: 2026-02-13  
-**최종 수정일**: 2026-03-23  
+**최종 수정일**: 2026-04-14  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13)
@@ -1292,6 +1292,8 @@ PUT /control/equipment/:equipmentId/damper-auto-settings
 - 8단계(0~7) 개도율 매핑 (피드백 p.44~45)
 - `targetFlowCmh`: 목표 풍량 (ADMIN만 설정 가능, `CONTROL_FLOW_TARGET` 권한)
 
+> **§9.4.3과 구분**: 본 엔드포인트는 **장비관리 — 장치제어** 화면에서 **해당 장비 1대**의 댐퍼 자동 설정(8단계 개도 매핑 등)을 다루는 맥락입니다. **관리자 전역에서 매장·집진기별 목표 풍량/풍속 기본값**을 한 화면에서 관리하는 API는 **§9.4.3**을 참고합니다. 구현 시 동일 `damper_auto_settings`(또는 이에 준하는 저장소)와 정합할지 백엔드에서 결정합니다.
+
 ### 6.5 팬 자동제어 설정 조회/수정
 
 ```
@@ -1910,7 +1912,78 @@ PUT /system/thresholds/iaq
 }
 ```
 
-#### 9.4.3 장비 모델 관리
+#### 9.4.3 댐퍼/팬 자동제어 기본값 (기준수치 탭)
+
+시스템관리 **기준수치** 화면(`SystemThresholdTab`)에서 **매장·집진기(ESP)마다** 자동 제어에 사용할 **목표 풍량(CMH)**·**목표 풍속(m/s)** 를 저장한다. 장비 트리(매장 → 층 → 게이트웨이 → 집진기)에 등록된 **모든 집진기**에 대해 목록이 1행씩 존재해야 하며, 신규 집진기 추가 시 서버는 **시스템 기본값**으로 행을 생성한다.
+
+**시스템 기본값 (시드·「기본값으로」복원 시)** — 프론트 타입 상수와 동일 권장:
+
+| 항목 | 값 | 비고 |
+|------|-----|------|
+| 목표 풍량 | `850` | CMH |
+| 목표 풍속 | `3.5` | m/s |
+
+**권장 API (프론트 Mock과 정합)**
+
+단일 묶음으로 모니터링 임계·청소 임계·스파크 기준 시간·본 절의 배열을 함께 주고받는 방식을 권장한다.
+
+```
+GET /system/thresholds
+PUT /system/thresholds
+🔒 인증 필요 | 역할: ADMIN
+```
+
+**GET 응답 `data` 일부** (`damperAutoSettings`)
+
+```json
+{
+  "monitoringThresholds": [ "..." ],
+  "cleaningThresholds": [ "..." ],
+  "sparkBaseTime": 600,
+  "damperAutoSettings": [
+    {
+      "settingId": 1,
+      "equipmentId": 1,
+      "equipmentName": "바삭치킨 강남점 · ESP 집진기 #1",
+      "targetFlowCmh": 850,
+      "targetVelocity": 3.5,
+      "updatedAt": "2026-04-14T09:00:00.000Z"
+    }
+  ]
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `settingId` | number | ✅ | 행 식별. **`equipmentId`와 동일**하게 두어도 됨(프론트 `rowKey`·저장 매칭 단순화). |
+| `equipmentId` | number | ✅ | 집진기(장비) PK. 트리의 `equipment`와 FK 정합. |
+| `equipmentName` | string | ✅ | 표시용. 서버에서 `{매장명} · {집진기명}` 조합 권장. |
+| `targetFlowCmh` | number | ✅ | 댐퍼 자동 모드 목표 풍량 (CMH). |
+| `targetVelocity` | number | ✅ | 시로코팬 자동 모드 목표 풍속 (m/s). |
+| `updatedAt` | string (ISO-8601) | ✅ | 마지막 수정 시각. |
+
+**PUT `data`**
+
+- `damperAutoSettings`에 **현재 트리에 존재하는 집진기 전체** 배열을 보낸다(프론트는 조회 결과를 편집 후 그대로 제출).
+- 서버는 `equipmentId` 기준으로 **upsert** 하거나, 유효한 `equipmentId`만 필터한 뒤 **일괄 저장**한다.
+- **일괄 적용·전체 기본값·행별 기본값**은 UI에서 배열 값을 조작한 결과이므로 **별도 API 불필요**; 본 `PUT` 한 번으로 반영된다.
+
+**대안 (분리 엔드포인트)**
+
+운영 정책상 기준수치를 쪼개 저장할 경우:
+
+```
+GET /system/thresholds/damper-auto-defaults
+PUT /system/thresholds/damper-auto-defaults
+```
+
+응답/요청 Body는 `{ "damperAutoSettings": [ ... ] }` 형태만 두어도 된다.
+
+**데이터 모델**: [데이터구조 정의서 §8.4 `damper_auto_settings`](MetaBeans_ESP_데이터구조_정의서__최신.md) — `target_flow`, `target_velocity` 등과 매핑. UI가 보내지 않는 컬럼(`control_mode` 등)은 서버 기본값 유지.
+
+**§6.4와의 역할**: §6.4는 **장치제어** 화면에서 장비 1대 단위 설정; 본 절은 **시스템관리**에서 전 집진기 **기본 목표값** 일괄 관리. MQTT `target=1` action=3(목표 풍량)·`target=2` action=5(목표 풍속) 등 **현장 반영 시점**(저장 직후 / 다음 제어 시)은 백엔드·현장 협의.
+
+#### 9.4.4 장비 모델 관리
 
 ```
 GET    /system/equipment-models
@@ -2061,7 +2134,7 @@ GET /files/:fileId
 | 17 | 시스템관리 — 권한관리 | `GET/PUT /system/permissions`, `GET/POST/DELETE /system/permissions/overrides/:userId` |
 | 18 | 시스템관리 — 가입승인 | `GET /system/approvals`, `PATCH /system/approvals/:userId` |
 | 19 | 시스템관리 — 사용자관리 | `GET /system/users`, `GET/PUT/DELETE /system/users/:id`, `PATCH /system/users/:id/status` |
-| 20 | 시스템관리 — 기준수치 | `GET/PUT /system/thresholds/cleaning`, `GET/PUT /system/thresholds/iaq`, `CRUD /system/equipment-models` |
+| 20 | 시스템관리 — 기준수치 | `GET/PUT /system/thresholds` (권장: 모니터링·청소·스파크 시간·**댐퍼/팬 자동제어 기본값** 묶음), 또는 기존 `GET/PUT /system/thresholds/cleaning`, `GET/PUT /system/thresholds/iaq` 분리 유지 시 **§9.4.3** 분리 엔드포인트 추가, `CRUD /system/equipment-models` |
 
 ### 전체 엔드포인트 수
 

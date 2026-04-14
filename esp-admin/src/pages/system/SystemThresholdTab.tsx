@@ -24,6 +24,10 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { useThresholdSettings, useUpdateThresholds } from '../../api/system.api';
 import type { DamperAutoSetting, ThresholdSettings } from '../../types/system.types';
+import {
+  DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
+  DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
+} from '../../types/system.types';
 
 const { Text } = Typography;
 
@@ -49,6 +53,12 @@ export default function SystemThresholdTab() {
   const updateMutation = useUpdateThresholds();
 
   const [localData, setLocalData] = useState<ThresholdSettings | null>(null);
+  const [bulkDamperFlow, setBulkDamperFlow] = useState<number>(
+    DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
+  );
+  const [bulkDamperVelocity, setBulkDamperVelocity] = useState<number>(
+    DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
+  );
 
   useEffect(() => {
     if (response?.data) {
@@ -105,6 +115,58 @@ export default function SystemThresholdTab() {
     });
   };
 
+  const applyBulkDamperToAll = () => {
+    const flow = bulkDamperFlow ?? DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH;
+    const vel = bulkDamperVelocity ?? DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS;
+    setLocalData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        damperAutoSettings: prev.damperAutoSettings.map((s) => ({
+          ...s,
+          targetFlowCmh: flow,
+          targetVelocity: vel,
+        })),
+      };
+    });
+    message.success('입력한 값을 모든 집진기에 적용했습니다.');
+  };
+
+  const resetAllDamperToSystemDefault = () => {
+    setLocalData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        damperAutoSettings: prev.damperAutoSettings.map((s) => ({
+          ...s,
+          targetFlowCmh: DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
+          targetVelocity: DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
+        })),
+      };
+    });
+    message.info(
+      '모든 집진기를 시스템 기본값으로 되돌렸습니다. 저장 시 서버에 반영됩니다.',
+    );
+  };
+
+  const resetOneDamperToSystemDefault = (settingId: number) => {
+    setLocalData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        damperAutoSettings: prev.damperAutoSettings.map((s) =>
+          s.settingId === settingId
+            ? {
+                ...s,
+                targetFlowCmh: DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
+                targetVelocity: DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
+              }
+            : s,
+        ),
+      };
+    });
+  };
+
   const handleSave = async () => {
     try {
       await updateMutation.mutateAsync(localData);
@@ -123,13 +185,11 @@ export default function SystemThresholdTab() {
 
   const damperColumns: ColumnsType<DamperAutoSetting> = [
     {
-      title: '장비',
+      title: '매장 · 집진기',
       dataIndex: 'equipmentName',
       key: 'equipmentName',
-      width: 200,
-      render: (text: string, record) => (
-        <Text strong={record.equipmentId === 0}>{text}</Text>
-      ),
+      width: 280,
+      render: (text: string) => <Text>{text}</Text>,
     },
     {
       title: '목표 풍량 (CMH)',
@@ -161,6 +221,23 @@ export default function SystemThresholdTab() {
           style={{ width: 150 }}
           addonAfter="m/s"
         />
+      ),
+    },
+    {
+      title: '작업',
+      key: 'resetRow',
+      width: 120,
+      render: (_, record) => (
+        <Button
+          type="link"
+          size="small"
+          onClick={() => {
+            resetOneDamperToSystemDefault(record.settingId);
+            message.success('이 집진기만 시스템 기본값으로 맞췄습니다.');
+          }}
+        >
+          기본값으로
+        </Button>
       ),
     },
   ];
@@ -291,9 +368,50 @@ export default function SystemThresholdTab() {
           <div>
             <div className="threshold-card-name">댐퍼/팬 자동제어 기본값</div>
             <div className="threshold-card-desc">
-              자동 제어 모드에서 사용되는 목표 풍량(CMH)과 목표 풍속(m/s) 기본값입니다.
+              집진기별로 값을 바꿀 수 있고, 위 일괄 입력으로 전체에 동일 값을 한 번에 넣을 수 있습니다. 행의 「기본값으로」는 해당 집진기만 시스템 기본(
+              {DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH} CMH / {DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS}{' '}
+              m/s)으로 되돌립니다.
             </div>
           </div>
+        </div>
+        <div
+          style={{
+            marginBottom: 16,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 12,
+            alignItems: 'center',
+          }}
+        >
+          <Text strong>일괄 적용</Text>
+          <Space size={8} wrap>
+            <InputNumber
+              value={bulkDamperFlow}
+              onChange={(v) => setBulkDamperFlow(v ?? DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH)}
+              min={0}
+              max={2000}
+              step={10}
+              style={{ width: 150 }}
+              addonBefore="풍량"
+              addonAfter="CMH"
+            />
+            <InputNumber
+              value={bulkDamperVelocity}
+              onChange={(v) =>
+                setBulkDamperVelocity(v ?? DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS)
+              }
+              min={0}
+              max={20}
+              step={0.1}
+              style={{ width: 150 }}
+              addonBefore="풍속"
+              addonAfter="m/s"
+            />
+            <Button type="primary" onClick={applyBulkDamperToAll}>
+              모든 집진기에 적용
+            </Button>
+            <Button onClick={resetAllDamperToSystemDefault}>전체 시스템 기본값</Button>
+          </Space>
         </div>
         <Table
           className="system-table"

@@ -9,7 +9,7 @@
  * | 비번 재설정 대기 | usePasswordResetRequests, useApprovePasswordReset | §9 본문에 없을 수 있음 — 백엔드 스펙 확인 |
  * | 사용자 | useSystemUsers, useSystemUserDetail, useUpdateSystemUser | GET 목록·상세, PUT 수정 |
  * | 사용자 | (미구현) | POST /system/users, PATCH .../status, DELETE ... |
- * | 기준수치 | useThresholdSettings, useUpdateThresholds | §9.4 cleaning/iaq 분리 vs 단일 Mock — 연동 시 합의 |
+ * | 기준수치 | useThresholdSettings, useUpdateThresholds | §9.4.3 댐퍼/팬 자동제어 기본값 + 권장 `GET/PUT /system/thresholds` 묶음. Mock은 단일 `ThresholdSettings` — 백엔드는 cleaning/iaq 분리 유지 시 §9.4.3 분리 엔드포인트 병행 가능 |
  *
  * 장비 모델 CRUD: §9.4.3 — 현재 `equipment.api`의 `useEquipmentModels`(조회)만 해당. 등록/수정/삭제는 미구현.
  */

@@ -2,8 +2,9 @@
 
 > 📋 [수정 이력](MetaBeans_ESP_데이터구조_정의서__최신_CHANGELOG.md)
 
-**문서 버전**: v3.2  
+**문서 버전**: v3.3  
 **작성일**: 2026-02-27  
+**최종 수정일**: 2026-04-14  
 **근거 문서** (우선순위순):
 1. MQTT Payload 규격_260227_v2.pdf (2026-02-27, **최우선**)
 2. MQTT 토픽 구조 변경 및 협의 사항.pdf (2026-02-13, **최우선**)
@@ -876,6 +877,8 @@ sensor 메시지의 equipments[].controllers[] 필드를 저장합니다.
 
 > **v3.0 신규** (피드백 p.44): 방화셔터 자동 제어 시 목표 풍량(CMH) 입력. 풍량 입력 권한은 `CONTROL_FLOW_TARGET`으로 관리.
 > **v3.1 추가**: `target_velocity` 컬럼 추가 (시로코팬 자동 제어 목표 풍속). `fan_control_mode`, `damper_control_mode` 컬럼 추가.
+
+**시스템관리 — 기준수치 탭과의 관계 (2026-04-14)**: 관리자 UI는 매장·집진기 트리 기준으로 **장비 1대당 1행**의 목표 풍량·풍속을 편집한다. REST API는 [REST 설계서 §9.4.3](MetaBeans_ESP_REST_API_엔드포인트_설계서__최신.md)에 정리된 `damperAutoSettings` 배열과 본 테이블의 `equipment_id`, `target_flow`, `target_velocity` 등을 매핑하면 된다. 신규 `equipment` 등록 시 `target_flow`/`target_velocity`를 시스템 기본(예: 850 CMH, 3.5 m/s)으로 초기화하는 정책을 권장한다.
 
 ---
 
