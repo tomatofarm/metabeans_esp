@@ -1,6 +1,9 @@
 /**
  * 장비 API — REST 설계서 §4 와 매핑
  *
+ * `VITE_API_BASE_URL` + `VITE_USE_MOCK_API !== 'true'` 이면 `real/equipment.real.ts`로 백엔드 호출.
+ * 매장/층 옵션은 `GET /dashboard/store-tree`, 게이트웨이는 `GET /gateways`, 대리점은 `GET /registration/dealer-list` 사용.
+ *
  * | 훅 | REST |
  * |----|------|
  * | useEquipments | GET /equipment |
@@ -13,6 +16,7 @@
  */
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import * as equipmentReal from './real/equipment.real';
 import {
   mockGetEquipments,
   mockGetEquipmentDetail,
@@ -34,6 +38,9 @@ import type { ApiResponse } from './mock/common.mock';
 import { useAuthStore } from '../stores/authStore';
 import { resolveAuthorizedNumericStoreIds } from '../utils/mockAccess';
 
+const useRealApi =
+  import.meta.env.VITE_USE_MOCK_API !== 'true' && Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
+
 function useMockAuthorizedStores() {
   const storeIds = useAuthStore((s) => s.user?.storeIds);
   return useMemo(() => resolveAuthorizedNumericStoreIds(storeIds), [storeIds]);
@@ -51,7 +58,10 @@ export function useEquipments(params?: {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['equipments', user?.userId, authorizedStoreIds, params],
-    queryFn: () => mockGetEquipments({ ...params, authorizedStoreIds }),
+    queryFn: () =>
+      useRealApi
+        ? equipmentReal.fetchEquipments({ ...params, authorizedStoreIds })
+        : mockGetEquipments({ ...params, authorizedStoreIds }),
     staleTime: 30 * 1000,
   });
 }
@@ -62,7 +72,10 @@ export function useEquipmentDetail(equipmentId: number | null) {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['equipment', user?.userId, authorizedStoreIds, equipmentId],
-    queryFn: () => mockGetEquipmentDetail(equipmentId!, authorizedStoreIds),
+    queryFn: () =>
+      useRealApi
+        ? equipmentReal.fetchEquipmentDetail(equipmentId!, authorizedStoreIds)
+        : mockGetEquipmentDetail(equipmentId!, authorizedStoreIds),
     enabled: equipmentId !== null,
     staleTime: 30 * 1000,
   });
@@ -72,7 +85,7 @@ export function useEquipmentDetail(equipmentId: number | null) {
 export function useEquipmentModels() {
   return useQuery({
     queryKey: ['equipmentModels'],
-    queryFn: () => mockGetEquipmentModels(),
+    queryFn: () => (useRealApi ? equipmentReal.fetchEquipmentModels() : mockGetEquipmentModels()),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -83,7 +96,10 @@ export function useStoreOptions() {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['storeOptions', user?.userId, authorizedStoreIds],
-    queryFn: () => mockGetStoreOptions(authorizedStoreIds),
+    queryFn: () =>
+      useRealApi
+        ? equipmentReal.fetchStoreOptions(authorizedStoreIds)
+        : mockGetStoreOptions(authorizedStoreIds),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -94,7 +110,10 @@ export function useFloorOptions(storeId: number | null) {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['floorOptions', user?.userId, authorizedStoreIds, storeId],
-    queryFn: () => mockGetFloorOptions(storeId!, authorizedStoreIds),
+    queryFn: () =>
+      useRealApi
+        ? equipmentReal.fetchFloorOptions(storeId!, authorizedStoreIds)
+        : mockGetFloorOptions(storeId!, authorizedStoreIds),
     enabled: storeId !== null,
     staleTime: 5 * 60 * 1000,
   });
@@ -104,7 +123,8 @@ export function useFloorOptions(storeId: number | null) {
 export function useGatewayOptions(floorId: number | null) {
   return useQuery({
     queryKey: ['gatewayOptions', floorId],
-    queryFn: () => mockGetGatewayOptions(floorId!),
+    queryFn: () =>
+      useRealApi ? equipmentReal.fetchGatewayOptions(floorId!) : mockGetGatewayOptions(floorId!),
     enabled: floorId !== null,
     staleTime: 5 * 60 * 1000,
   });
@@ -114,7 +134,7 @@ export function useGatewayOptions(floorId: number | null) {
 export function useDealerOptions() {
   return useQuery({
     queryKey: ['dealerOptions'],
-    queryFn: () => mockGetDealerOptions(),
+    queryFn: () => (useRealApi ? equipmentReal.fetchDealerOptions() : mockGetDealerOptions()),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -123,7 +143,8 @@ export function useDealerOptions() {
 export function useCreateEquipment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (req: EquipmentCreateRequest) => mockCreateEquipment(req),
+    mutationFn: (req: EquipmentCreateRequest) =>
+      useRealApi ? equipmentReal.createEquipment(req) : mockCreateEquipment(req),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['equipments'] });
     },
@@ -135,7 +156,7 @@ export function useUpdateEquipment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ equipmentId, data }: { equipmentId: number; data: EquipmentUpdateRequest }) =>
-      mockUpdateEquipment(equipmentId, data),
+      useRealApi ? equipmentReal.updateEquipment(equipmentId, data) : mockUpdateEquipment(equipmentId, data),
     onSuccess: (
       _data: ApiResponse<EquipmentDetail>,
       variables: { equipmentId: number; data: EquipmentUpdateRequest },
@@ -150,7 +171,8 @@ export function useUpdateEquipment() {
 export function useDeleteEquipment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (equipmentId: number) => mockDeleteEquipment(equipmentId),
+    mutationFn: (equipmentId: number) =>
+      useRealApi ? equipmentReal.deleteEquipment(equipmentId) : mockDeleteEquipment(equipmentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['equipments'] });
     },

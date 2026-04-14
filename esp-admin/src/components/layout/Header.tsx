@@ -5,6 +5,7 @@ import {
   KeyOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { logout as apiLogout } from '../../api/auth.api';
 import { useAuthStore } from '../../stores/authStore';
 import { useUiStore } from '../../stores/uiStore';
 import { MENU_ITEMS } from '../../utils/roleHelper';
@@ -15,7 +16,7 @@ import EmergencyAlarmPanel from '../../pages/dashboard/components/EmergencyAlarm
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuthStore();
+  const { user, logout: clearAuth } = useAuthStore();
   const selectEquipment = useUiStore((s) => s.selectEquipment);
   const clearSelection = useUiStore((s) => s.clearSelection);
 
@@ -38,9 +39,15 @@ export default function Header() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await apiLogout();
+    } catch {
+      /* 서버 오류여도 로컬 세션은 정리 */
+    } finally {
+      clearAuth();
+      navigate('/login');
+    }
   };
 
   const handleAlarmClick = (equipmentId: number) => {

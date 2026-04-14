@@ -19,13 +19,17 @@ import {
   mockGetCustomerMapData,
   mockGetCustomerDealerOptions,
 } from './mock/customer.mock';
+import * as customerReal from './real/customer.real';
 import type { CustomerListParams, CustomerUpdateRequest } from '../types/customer.types';
+
+const useRealApi =
+  import.meta.env.VITE_USE_MOCK_API !== 'true' && Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
 
 // 고객 목록 조회
 export function useCustomerList(params?: CustomerListParams) {
   return useQuery({
     queryKey: ['customers', params],
-    queryFn: () => mockGetCustomerList(params),
+    queryFn: () => (useRealApi ? customerReal.fetchCustomerList(params) : mockGetCustomerList(params)),
     staleTime: 30 * 1000,
   });
 }
@@ -34,7 +38,8 @@ export function useCustomerList(params?: CustomerListParams) {
 export function useCustomerDetail(storeId: number | null) {
   return useQuery({
     queryKey: ['customer-detail', storeId],
-    queryFn: () => mockGetCustomerDetail(storeId!),
+    queryFn: () =>
+      useRealApi ? customerReal.fetchCustomerDetail(storeId!) : mockGetCustomerDetail(storeId!),
     enabled: storeId !== null,
     staleTime: 30 * 1000,
   });
@@ -45,7 +50,7 @@ export function useUpdateCustomer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ storeId, data }: { storeId: number; data: CustomerUpdateRequest }) =>
-      mockUpdateCustomer(storeId, data),
+      useRealApi ? customerReal.updateCustomer(storeId, data) : mockUpdateCustomer(storeId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customer-detail'] });
@@ -58,7 +63,7 @@ export function useUpdateCustomer() {
 export function useCustomerMapData() {
   return useQuery({
     queryKey: ['customer-map'],
-    queryFn: () => mockGetCustomerMapData(),
+    queryFn: () => (useRealApi ? customerReal.fetchCustomerMapData() : mockGetCustomerMapData()),
     staleTime: 60 * 1000,
   });
 }
@@ -67,7 +72,7 @@ export function useCustomerMapData() {
 export function useCustomerDealerOptions() {
   return useQuery({
     queryKey: ['customer-dealer-options'],
-    queryFn: () => mockGetCustomerDealerOptions(),
+    queryFn: () => (useRealApi ? customerReal.fetchCustomerDealerOptions() : mockGetCustomerDealerOptions()),
     staleTime: 5 * 60 * 1000,
   });
 }

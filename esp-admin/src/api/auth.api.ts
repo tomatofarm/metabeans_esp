@@ -1,3 +1,20 @@
+/**
+ * 인증·회원가입 — `VITE_API_BASE_URL` 설정 + `VITE_USE_MOCK_API !== 'true'` 이면 백엔드 연동 (`auth.real.ts`).
+ * Base: `{VITE_API_BASE_URL}` (= API_BASE_PATH `/api/v1` 포함)
+ *
+ * | 함수 | Method | 백엔드 경로 |
+ * |------|--------|-------------|
+ * | login | POST | /auth/login |
+ * | logout | POST | /auth/logout |
+ * | passwordResetRequest | POST | /auth/password-reset-request |
+ * | changePassword | PUT | /auth/password (Bearer) |
+ * | checkLoginId | GET | /auth/check-login-id?loginId= |
+ * | checkBusinessNumber | GET | /registration/check-business-number?number= |
+ * | getDealerList | GET | /registration/dealer-list?region= |
+ * | registerOwner/HQ/Admin/Dealer | POST | /registration/owner, /hq, /admin, /dealer |
+ *
+ * 백엔드에만 있고 프론트 미연동: POST /auth/refresh (쿠키 refresh — 추후 axios 인터셉터 등)
+ */
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   LoginRequest,
@@ -24,26 +41,28 @@ import {
   mockRegisterAdmin,
   mockRegisterDealer,
 } from './mock/auth.mock';
-// Phase 2: import { axiosLogin, axiosLogout, ... } from './real/auth.real';
+import * as authReal from './real/auth.real';
+
+/** 백엔드 `API_BASE_PATH`까지 포함한 절대 또는 상대 베이스 (예: `http://localhost:4000/api/v1`). */
+const useRealApi =
+  import.meta.env.VITE_USE_MOCK_API !== 'true' && Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
 
 export async function login(request: LoginRequest): Promise<LoginResponse> {
-  return mockLogin(request); // Phase 2: axiosLogin(request)
+  return useRealApi ? authReal.login(request) : mockLogin(request);
 }
 
 export async function logout(): Promise<void> {
-  return mockLogout(); // Phase 2: axiosLogout()
+  return useRealApi ? authReal.logout() : mockLogout();
 }
 
 export async function passwordResetRequest(
   request: PasswordResetRequest,
 ): Promise<{ message: string }> {
-  return mockPasswordResetRequest(request); // Phase 2: axiosPasswordResetRequest(request)
+  return useRealApi ? authReal.passwordResetRequest(request) : mockPasswordResetRequest(request);
 }
 
-export async function changePassword(
-  request: ChangePasswordRequest,
-): Promise<void> {
-  return mockChangePassword(request); // Phase 2: axiosChangePassword(request)
+export async function changePassword(request: ChangePasswordRequest): Promise<void> {
+  return useRealApi ? authReal.changePassword(request) : mockChangePassword(request);
 }
 
 // TanStack Query Hooks
@@ -75,33 +94,33 @@ export function useChangePassword() {
 // Registration APIs
 
 export async function checkLoginId(loginId: string): Promise<{ available: boolean }> {
-  return mockCheckLoginId(loginId); // Phase 2: axiosCheckLoginId(loginId)
+  return useRealApi ? authReal.checkLoginId(loginId) : mockCheckLoginId(loginId);
 }
 
 export async function checkBusinessNumber(
   number: string,
 ): Promise<{ isValid: boolean; isDuplicate: boolean }> {
-  return mockCheckBusinessNumber(number); // Phase 2: axiosCheckBusinessNumber(number)
+  return useRealApi ? authReal.checkBusinessNumber(number) : mockCheckBusinessNumber(number);
 }
 
 export async function getDealerList(region?: string): Promise<DealerListItem[]> {
-  return mockGetDealerList(region); // Phase 2: axiosGetDealerList(region)
+  return useRealApi ? authReal.getDealerList(region) : mockGetDealerList(region);
 }
 
 export async function registerOwner(request: RegisterOwnerRequest): Promise<RegisterResponse> {
-  return mockRegisterOwner(request); // Phase 2: axiosRegisterOwner(request)
+  return useRealApi ? authReal.registerOwner(request) : mockRegisterOwner(request);
 }
 
 export async function registerHQ(request: RegisterHQRequest): Promise<RegisterResponse> {
-  return mockRegisterHQ(request); // Phase 2: axiosRegisterHQ(request)
+  return useRealApi ? authReal.registerHQ(request) : mockRegisterHQ(request);
 }
 
 export async function registerAdmin(request: RegisterAdminRequest): Promise<RegisterResponse> {
-  return mockRegisterAdmin(request); // Phase 2: axiosRegisterAdmin(request)
+  return useRealApi ? authReal.registerAdmin(request) : mockRegisterAdmin(request);
 }
 
 export async function registerDealer(request: RegisterDealerRequest): Promise<RegisterResponse> {
-  return mockRegisterDealer(request); // Phase 2: axiosRegisterDealer(request)
+  return useRealApi ? authReal.registerDealer(request) : mockRegisterDealer(request);
 }
 
 // Registration Hooks
