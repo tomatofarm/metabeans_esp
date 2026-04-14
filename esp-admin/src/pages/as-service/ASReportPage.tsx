@@ -107,7 +107,9 @@ export default function ASReportPage({ requestId, onBack }: ASReportPageProps) {
     },
   ];
 
-  const resultInfo = RESULT_LABELS[report.result] ?? { label: report.result, status: 'default' as BadgeStatus };
+  const resultKey = report.result ?? '';
+  const resultInfo =
+    RESULT_LABELS[resultKey] ?? { label: resultKey || '-', status: 'default' as BadgeStatus };
 
   return (
     <div>

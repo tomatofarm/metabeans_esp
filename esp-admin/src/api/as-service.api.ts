@@ -32,6 +32,7 @@ import {
   mockGetDealerOptions,
   mockGetASStatusList,
 } from './mock/as-service.mock';
+import * as asServiceReal from './real/as-service.real';
 import type {
   AlertSeverity,
   AlertType,
@@ -53,6 +54,9 @@ function useMockAuthorizedStores(): AuthorizedStoresParam {
   return useMemo(() => resolveAuthorizedNumericStoreIds(storeIds), [storeIds]);
 }
 
+const useRealApi =
+  import.meta.env.VITE_USE_MOCK_API !== 'true' && Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
+
 // 알림 현황 조회
 export function useASAlerts(params?: {
   severity?: AlertSeverity;
@@ -68,7 +72,10 @@ export function useASAlerts(params?: {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['as-alerts', user?.userId, authorizedStoreIds, params],
-    queryFn: () => mockGetASAlerts({ ...params, authorizedStoreIds }),
+    queryFn: () =>
+      useRealApi
+        ? asServiceReal.fetchASAlerts({ ...params, authorizedStoreIds })
+        : mockGetASAlerts({ ...params, authorizedStoreIds }),
     staleTime: 30 * 1000,
   });
 }
@@ -87,7 +94,10 @@ export function useASRequests(params?: {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['as-requests', user?.userId, authorizedStoreIds, params],
-    queryFn: () => mockGetASRequests({ ...params, authorizedStoreIds }),
+    queryFn: () =>
+      useRealApi
+        ? asServiceReal.fetchASRequests({ ...params, authorizedStoreIds })
+        : mockGetASRequests({ ...params, authorizedStoreIds }),
     staleTime: 30 * 1000,
   });
 }
@@ -97,7 +107,9 @@ export function useCreateASRequest() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (req: ASCreateRequest) =>
-      mockCreateASRequest(req, getAuthorizedStoresSnapshot()),
+      useRealApi
+        ? asServiceReal.createASRequest(req, getAuthorizedStoresSnapshot())
+        : mockCreateASRequest(req, getAuthorizedStoresSnapshot()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['as-requests'] });
       queryClient.invalidateQueries({ queryKey: ['as-alerts'] });
@@ -111,7 +123,10 @@ export function useASStoreOptions() {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['as-store-options', user?.userId, authorizedStoreIds],
-    queryFn: () => mockGetASStoreOptions(authorizedStoreIds),
+    queryFn: () =>
+      useRealApi
+        ? asServiceReal.fetchASStoreOptions(authorizedStoreIds)
+        : mockGetASStoreOptions(authorizedStoreIds),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -122,7 +137,10 @@ export function useASEquipmentOptions(storeId: number | null) {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['as-equipment-options', user?.userId, authorizedStoreIds, storeId],
-    queryFn: () => mockGetEquipmentOptionsByStore(storeId!, authorizedStoreIds),
+    queryFn: () =>
+      useRealApi
+        ? asServiceReal.fetchEquipmentOptionsByStore(storeId!, authorizedStoreIds)
+        : mockGetEquipmentOptionsByStore(storeId!, authorizedStoreIds),
     enabled: storeId !== null,
     staleTime: 5 * 60 * 1000,
   });
@@ -144,7 +162,10 @@ export function useASStatusList(params?: {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['as-status-list', user?.userId, authorizedStoreIds, params],
-    queryFn: () => mockGetASStatusList({ ...params, authorizedStoreIds }),
+    queryFn: () =>
+      useRealApi
+        ? asServiceReal.fetchASStatusList({ ...params, authorizedStoreIds })
+        : mockGetASStatusList({ ...params, authorizedStoreIds }),
     staleTime: 30 * 1000,
   });
 }
@@ -155,7 +176,10 @@ export function useASDetail(requestId: number | null) {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['as-detail', user?.userId, authorizedStoreIds, requestId],
-    queryFn: () => mockGetASDetail(requestId!, authorizedStoreIds),
+    queryFn: () =>
+      useRealApi
+        ? asServiceReal.fetchASDetail(requestId!, authorizedStoreIds)
+        : mockGetASDetail(requestId!, authorizedStoreIds),
     enabled: requestId !== null,
     staleTime: 30 * 1000,
   });
@@ -166,7 +190,9 @@ export function useUpdateASStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ requestId, update }: { requestId: number; update: ASStatusUpdateRequest }) =>
-      mockUpdateASStatus(requestId, update, getAuthorizedStoresSnapshot()),
+      useRealApi
+        ? asServiceReal.updateASStatus(requestId, update, getAuthorizedStoresSnapshot())
+        : mockUpdateASStatus(requestId, update, getAuthorizedStoresSnapshot()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['as-requests'] });
       queryClient.invalidateQueries({ queryKey: ['as-status-list'] });
@@ -180,7 +206,9 @@ export function useAssignDealer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ requestId, dealerId }: { requestId: number; dealerId: number }) =>
-      mockAssignDealer(requestId, dealerId, getAuthorizedStoresSnapshot()),
+      useRealApi
+        ? asServiceReal.assignDealer(requestId, dealerId, getAuthorizedStoresSnapshot())
+        : mockAssignDealer(requestId, dealerId, getAuthorizedStoresSnapshot()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['as-requests'] });
       queryClient.invalidateQueries({ queryKey: ['as-status-list'] });
@@ -193,7 +221,7 @@ export function useAssignDealer() {
 export function useDealerOptions() {
   return useQuery({
     queryKey: ['dealer-options'],
-    queryFn: () => mockGetDealerOptions(),
+    queryFn: () => (useRealApi ? asServiceReal.fetchDealerOptions() : mockGetDealerOptions()),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -204,7 +232,10 @@ export function useASReport(requestId: number | null) {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['as-report', user?.userId, authorizedStoreIds, requestId],
-    queryFn: () => mockGetASReport(requestId!, authorizedStoreIds),
+    queryFn: () =>
+      useRealApi
+        ? asServiceReal.fetchASReport(requestId!, authorizedStoreIds)
+        : mockGetASReport(requestId!, authorizedStoreIds),
     enabled: requestId !== null,
     staleTime: 30 * 1000,
   });
@@ -215,7 +246,9 @@ export function useCreateASReport() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ requestId, data }: { requestId: number; data: ASReportCreateRequest }) =>
-      mockCreateASReport(requestId, data, getAuthorizedStoresSnapshot()),
+      useRealApi
+        ? asServiceReal.createASReport(requestId, data, getAuthorizedStoresSnapshot())
+        : mockCreateASReport(requestId, data, getAuthorizedStoresSnapshot()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['as-requests'] });
       queryClient.invalidateQueries({ queryKey: ['as-status-list'] });

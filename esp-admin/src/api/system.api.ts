@@ -50,7 +50,7 @@ const useRealApi =
 export function usePermissionMatrix() {
   return useQuery({
     queryKey: ['system-permissions'],
-    queryFn: () => mockGetPermissionMatrix(),
+    queryFn: () => (useRealApi ? systemReal.fetchPermissionMatrix() : mockGetPermissionMatrix()),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -58,7 +58,8 @@ export function usePermissionMatrix() {
 export function useUpdatePermissions() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (request: PermissionUpdateRequest) => mockUpdatePermissions(request),
+    mutationFn: (request: PermissionUpdateRequest) =>
+      useRealApi ? systemReal.updatePermissions(request) : mockUpdatePermissions(request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-permissions'] });
     },
@@ -70,7 +71,7 @@ export function useUpdatePermissions() {
 export function usePendingApprovals() {
   return useQuery({
     queryKey: ['system-approvals'],
-    queryFn: () => mockGetPendingApprovals(),
+    queryFn: () => (useRealApi ? systemReal.fetchPendingApprovals() : mockGetPendingApprovals()),
     staleTime: 30 * 1000,
   });
 }
@@ -78,7 +79,7 @@ export function usePendingApprovals() {
 export function useApproveUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (userId: number) => mockApproveUser(userId),
+    mutationFn: (userId: number) => (useRealApi ? systemReal.approveUser(userId) : mockApproveUser(userId)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-approvals'] });
       queryClient.invalidateQueries({ queryKey: ['system-users'] });
@@ -90,7 +91,7 @@ export function useRejectUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, reason }: { userId: number; reason: string }) =>
-      mockRejectUser(userId, reason),
+      useRealApi ? systemReal.rejectUser(userId, reason) : mockRejectUser(userId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-approvals'] });
     },
@@ -100,7 +101,8 @@ export function useRejectUser() {
 export function usePasswordResetRequests() {
   return useQuery({
     queryKey: ['system-password-resets'],
-    queryFn: () => mockGetPasswordResetRequests(),
+    queryFn: () =>
+      useRealApi ? systemReal.fetchPasswordResetRequests() : mockGetPasswordResetRequests(),
     staleTime: 30 * 1000,
   });
 }
@@ -108,7 +110,8 @@ export function usePasswordResetRequests() {
 export function useApprovePasswordReset() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (requestId: number) => mockApprovePasswordReset(requestId),
+    mutationFn: (requestId: number) =>
+      useRealApi ? systemReal.approvePasswordReset(requestId) : mockApprovePasswordReset(requestId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-password-resets'] });
     },
@@ -149,7 +152,10 @@ export function useUpdateSystemUser() {
 export function useUserPermissionOverrides(userId: number | null) {
   return useQuery({
     queryKey: ['system-user-overrides', userId],
-    queryFn: () => mockGetUserPermissionOverrides(userId!),
+    queryFn: () =>
+      useRealApi
+        ? systemReal.fetchUserPermissionOverrides(userId!)
+        : mockGetUserPermissionOverrides(userId!),
     enabled: userId !== null,
     staleTime: 30 * 1000,
   });
@@ -168,7 +174,10 @@ export function useSaveUserPermissionOverride() {
       featureCode: FeatureCode;
       isAllowed: boolean;
       reason?: string;
-    }) => mockSaveUserPermissionOverride(userId, featureCode, isAllowed, reason),
+    }) =>
+      useRealApi
+        ? systemReal.saveUserPermissionOverride(userId, featureCode, isAllowed, reason)
+        : mockSaveUserPermissionOverride(userId, featureCode, isAllowed, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-user-overrides'] });
       queryClient.invalidateQueries({ queryKey: ['system-user-detail'] });
@@ -180,7 +189,9 @@ export function useDeleteUserPermissionOverride() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, featureCode }: { userId: number; featureCode: FeatureCode }) =>
-      mockDeleteUserPermissionOverride(userId, featureCode),
+      useRealApi
+        ? systemReal.deleteUserPermissionOverride(userId, featureCode)
+        : mockDeleteUserPermissionOverride(userId, featureCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-user-overrides'] });
       queryClient.invalidateQueries({ queryKey: ['system-user-detail'] });
@@ -193,7 +204,7 @@ export function useDeleteUserPermissionOverride() {
 export function useThresholdSettings() {
   return useQuery({
     queryKey: ['system-thresholds'],
-    queryFn: () => mockGetThresholds(),
+    queryFn: () => (useRealApi ? systemReal.fetchThresholdSettings() : mockGetThresholds()),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -201,7 +212,8 @@ export function useThresholdSettings() {
 export function useUpdateThresholds() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<ThresholdSettings>) => mockUpdateThresholds(data),
+    mutationFn: (data: Partial<ThresholdSettings>) =>
+      useRealApi ? systemReal.updateThresholds(data) : mockUpdateThresholds(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-thresholds'] });
     },

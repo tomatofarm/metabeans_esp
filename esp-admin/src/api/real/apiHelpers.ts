@@ -57,3 +57,49 @@ export async function apiRequest<T>(cfg: {
     throw new Error(axiosErrorMessage(e));
   }
 }
+
+type ApiSuccessEnvelope<T> = { success: true; data: T; meta?: Record<string, unknown> };
+
+function unwrapEnvelope<T>(body: unknown): ApiSuccessEnvelope<T> {
+  if (
+    typeof body === 'object' &&
+    body !== null &&
+    'success' in body &&
+    (body as ApiSuccessEnvelope<T>).success === true &&
+    'data' in body
+  ) {
+    return body as ApiSuccessEnvelope<T>;
+  }
+  if (isApiFailBody(body)) {
+    throw new Error(body.error.message);
+  }
+  throw new Error('서버 응답 형식이 올바르지 않습니다.');
+}
+
+/** `ok(res, data, meta)` 형태 — `data`와 `meta`를 함께 쓸 때 */
+export async function apiRequestWithMeta<T>(cfg: {
+  method: 'get' | 'post' | 'put' | 'patch' | 'delete';
+  url: string;
+  data?: unknown;
+}): Promise<{ data: T; meta?: Record<string, unknown> }> {
+  try {
+    const res = await apiClient.request<unknown>({
+      method: cfg.method,
+      url: cfg.url,
+      ...(['get', 'delete'].includes(cfg.method) ? {} : { data: cfg.data }),
+    });
+    const env = unwrapEnvelope<T>(res.data);
+    return { data: env.data, meta: env.meta };
+  } catch (e) {
+    const ax = e as AxiosError<unknown>;
+    if (ax.response?.data) {
+      try {
+        const env = unwrapEnvelope<T>(ax.response.data);
+        return { data: env.data, meta: env.meta };
+      } catch {
+        throw new Error(axiosErrorMessage(e));
+      }
+    }
+    throw new Error(axiosErrorMessage(e));
+  }
+}
