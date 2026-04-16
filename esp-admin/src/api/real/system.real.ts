@@ -276,13 +276,22 @@ export async function rejectUser(
 export async function fetchPasswordResetRequests(): Promise<
   ApiResponse<PasswordResetRequestItem[]>
 > {
-  return { success: true, data: [] };
+  const rows = await apiRequest<PasswordResetRequestItem[]>({
+    method: 'get',
+    url: '/system/password-reset-requests',
+  });
+  return { success: true, data: rows };
 }
 
 export async function approvePasswordReset(
-  _requestId: number,
+  requestId: number,
 ): Promise<ApiResponse<{ success: boolean; tempPassword: string }>> {
-  throw new Error('비밀번호 재설정 승인 API가 아직 연결되지 않았습니다.');
+  const data = await apiRequest<{ tempPassword: string }>({
+    method: 'patch',
+    url: `/system/password-reset-requests/${requestId}`,
+    data: { action: 'APPROVE' },
+  });
+  return { success: true, data: { success: true, tempPassword: data.tempPassword } };
 }
 
 export async function fetchUserPermissionOverrides(
