@@ -10,7 +10,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useUiStore } from '../../stores/uiStore';
 import { useAuthStore } from '../../stores/authStore';
 import type { StoreTreeNode } from '../../types/equipment.types';
-import { mockStoreTree, STORE_ID_MAP } from '../../api/mock/common.mock';
+import { useEquipmentTree } from '../../hooks/useEquipmentTree';
 
 const { Search } = Input;
 
@@ -67,9 +67,41 @@ function propagateDot(statuses: string[]): DotStatus {
 function filterStoresByRole(stores: StoreTreeNode[], storeIds: string[]): StoreTreeNode[] {
   if (storeIds.includes('*')) return stores;
   const numericIds = storeIds
-    .map((sid) => STORE_ID_MAP[sid])
-    .filter((id): id is number => id !== undefined);
+    .map((sid) => Number(sid))
+    .filter((id) => Number.isFinite(id));
   return stores.filter((s) => numericIds.includes(s.storeId));
+}
+
+function floorEquipments(
+  floor: StoreTreeNode['floors'][number] & {
+    equipment?: Array<{
+      equipmentId: number;
+      equipmentName?: string;
+      mqttEquipmentId: string;
+      connectionStatus: string;
+      controllers: Array<{ controllerId: number; ctrlDeviceId: string; connectionStatus: string }>;
+    }>;
+  },
+): Array<{
+  equipmentId: number;
+  equipmentName?: string;
+  mqttEquipmentId: string;
+  connectionStatus: string;
+  controllers: Array<{ controllerId: number; ctrlDeviceId: string; connectionStatus: string }>;
+}> {
+  if (Array.isArray(floor.equipment)) return floor.equipment;
+  const fromGateways: Array<{
+    equipmentId: number;
+    equipmentName?: string;
+    mqttEquipmentId: string;
+    connectionStatus: string;
+    controllers: Array<{ controllerId: number; ctrlDeviceId: string; connectionStatus: string }>;
+  }> = [];
+  for (const gw of floor.gateways ?? []) {
+    const eqs = (gw as { equipments?: typeof fromGateways }).equipments ?? [];
+    fromGateways.push(...eqs);
+  }
+  return fromGateways;
 }
 
 function buildTreeData(stores: StoreTreeNode[], searchText: string): DataNode[] {
@@ -83,37 +115,35 @@ function buildTreeData(stores: StoreTreeNode[], searchText: string): DataNode[] 
     const allEquipConns: string[] = [];
 
     for (const fl of store.floors) {
-      for (const gw of fl.gateways) {
-        for (const equip of gw.equipments) {
-          allEquipConns.push(equip.connectionStatus);
-          const ctrlConns = equip.controllers.map((c) => c.connectionStatus);
-          const equipStatus: DotStatus =
-            equip.connectionStatus === 'OFFLINE'
-              ? 'DANGER'
-              : propagateDot(ctrlConns);
+      for (const equip of floorEquipments(fl)) {
+        allEquipConns.push(equip.connectionStatus);
+        const ctrlConns = equip.controllers.map((c) => c.connectionStatus);
+        const equipStatus: DotStatus =
+          equip.connectionStatus === 'OFFLINE'
+            ? 'DANGER'
+            : propagateDot(ctrlConns);
 
-          allEquipments.push({
+        allEquipments.push({
+          title: (
+            <TreeTitle
+              name={equip.equipmentName ?? equip.mqttEquipmentId}
+              status={equipStatus}
+            />
+          ),
+          key: `equipment-${equip.equipmentId}`,
+          icon: <DesktopOutlined />,
+          children: equip.controllers.map((ctrl) => ({
             title: (
               <TreeTitle
-                name={equip.equipmentName ?? equip.mqttEquipmentId}
-                status={equipStatus}
+                name={ctrl.ctrlDeviceId}
+                status={connToDot(ctrl.connectionStatus)}
               />
             ),
-            key: `equipment-${equip.equipmentId}`,
-            icon: <DesktopOutlined />,
-            children: equip.controllers.map((ctrl) => ({
-              title: (
-                <TreeTitle
-                  name={ctrl.ctrlDeviceId}
-                  status={connToDot(ctrl.connectionStatus)}
-                />
-              ),
-              key: `controller-${ctrl.controllerId}`,
-              icon: <ControlOutlined />,
-              isLeaf: true,
-            })),
-          });
-        }
+            key: `controller-${ctrl.controllerId}`,
+            icon: <ControlOutlined />,
+            isLeaf: true,
+          })),
+        });
       }
     }
 
@@ -134,11 +164,9 @@ function buildControllerToEquipmentMap(stores: StoreTreeNode[]): Record<number, 
   const map: Record<number, number> = {};
   for (const store of stores) {
     for (const fl of store.floors) {
-      for (const gw of fl.gateways) {
-        for (const equip of gw.equipments) {
-          for (const ctrl of equip.controllers) {
-            map[ctrl.controllerId] = equip.equipmentId;
-          }
+      for (const equip of floorEquipments(fl)) {
+        for (const ctrl of equip.controllers) {
+          map[ctrl.controllerId] = equip.equipmentId;
         }
       }
     }
@@ -176,12 +204,16 @@ export default function Sidebar() {
     clearSelection,
   } = useUiStore();
   const user = useAuthStore((s) => s.user);
+  const { data: treeStores, isLoading } = useEquipmentTree();
   const navigate = useNavigate();
   const location = useLocation();
 
   const roleFilteredStores = useMemo(
-    () => filterStoresByRole(mockStoreTree, user?.storeIds ?? ['*']),
-    [user?.storeIds],
+    () => {
+      if (user?.role === 'ADMIN') return treeStores;
+      return filterStoresByRole(treeStores, user?.storeIds ?? ['*']);
+    },
+    [treeStores, user?.role, user?.storeIds],
   );
 
   const controllerToEquipment = useMemo(
@@ -263,7 +295,7 @@ export default function Sidebar() {
           onChange={(e) => setSearchText(e.target.value)}
         />
       </div>
-      {treeData.length > 0 ? (
+      {isLoading ? null : treeData.length > 0 ? (
         <Tree
           showIcon
           defaultExpandAll

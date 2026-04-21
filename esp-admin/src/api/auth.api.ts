@@ -13,7 +13,7 @@
  * | getDealerList | GET | /registration/dealer-list?region= |
  * | registerOwner/HQ/Admin/Dealer | POST | /registration/owner, /hq, /admin, /dealer |
  *
- * 백엔드에만 있고 프론트 미연동: POST /auth/refresh (쿠키 refresh — 추후 axios 인터셉터 등)
+ * POST /auth/refresh: `httpClient` 응답 인터셉터에서 401 시 쿠키 기반으로 자동 호출됨.
  */
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type {

@@ -12,7 +12,7 @@ export interface CustomerListItem {
   latitude: number;
   longitude: number;
   phone: string;
-  businessType: string;
+  businessType?: string;
   equipmentCount: number;
   status: StoreStatus;
   dealerName: string;
@@ -25,7 +25,7 @@ export interface CustomerDetail {
   siteId: string;
   storeName: string;
   brandName?: string;
-  businessType: string;
+  businessType?: string;
   address: string;
   latitude: number;
   longitude: number;

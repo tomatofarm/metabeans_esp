@@ -61,7 +61,7 @@ function mapListRow(s: ApiStoreListRow): CustomerListItem {
     latitude: num(s.latitude),
     longitude: num(s.longitude),
     phone: s.contactPhone ?? '-',
-    businessType: (s.businessType as string) ?? '-',
+    businessType: (s.businessType as string) ?? undefined,
     equipmentCount: s._count.equipment,
     status: s.status as StoreStatus,
     dealerName: s.dealer?.name ?? '-',
@@ -200,7 +200,7 @@ export async function fetchCustomerDetail(storeId: number): Promise<ApiResponse<
     siteId: store.siteId,
     storeName: store.storeName,
     brandName: store.brandName ?? undefined,
-    businessType: (store.businessType as string) ?? '-',
+    businessType: (store.businessType as string) ?? undefined,
     address: store.address,
     latitude: num(store.latitude),
     longitude: num(store.longitude),
@@ -236,7 +236,9 @@ export async function updateCustomer(
   if (data.storeName !== undefined) body.storeName = data.storeName;
   if (data.address !== undefined) body.address = data.address;
   if (data.phone !== undefined) body.contactPhone = data.phone;
-  if (data.businessType !== undefined) body.businessType = data.businessType as BusinessType;
+  if (data.businessType && data.businessType !== '-') {
+    body.businessType = data.businessType as BusinessType;
+  }
   if (data.status !== undefined) body.status = data.status;
   if (data.dealerId !== undefined) body.dealerId = data.dealerId;
   if (data.latitude !== undefined) body.latitude = data.latitude;

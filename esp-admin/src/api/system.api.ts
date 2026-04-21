@@ -73,6 +73,7 @@ export function usePendingApprovals() {
     queryKey: ['system-approvals'],
     queryFn: () => (useRealApi ? systemReal.fetchPendingApprovals() : mockGetPendingApprovals()),
     staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 }
 
@@ -104,6 +105,7 @@ export function usePasswordResetRequests() {
     queryFn: () =>
       useRealApi ? systemReal.fetchPasswordResetRequests() : mockGetPasswordResetRequests(),
     staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 }
 
