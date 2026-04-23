@@ -133,7 +133,15 @@ export default function OwnerDashboardPage({ onNavigateToEquipment }: OwnerDashb
   const { data: storeData, isLoading: storeLoading } = useStoreDashboard(numericStoreId);
   const { data: issues, isLoading: issuesLoading } = useRoleDashboardIssues(storeIds);
   const { data: pendingAs, isLoading: asLoading } = useRoleDashboardPendingAs(storeIds);
-  const { isAllowed: canViewIndoorAir } = useFeaturePermission('dashboard.indoor_air');
+  const { isAllowed: canViewIndoorAir, isLoading: indoorAirPermLoading } =
+    useFeaturePermission('dashboard.indoor_air');
+  const showIndoorAir = indoorAirPermLoading || canViewIndoorAir;
+  const { isAllowed: canViewStoreOverview, isLoading: storeOverviewPermLoading } =
+    useFeaturePermission('dashboard.total_stores');
+  const showStoreOverview = storeOverviewPermLoading || canViewStoreOverview;
+  const { isAllowed: canViewAs, isLoading: asViewPermLoading } = useFeaturePermission('as.view');
+  const { isAllowed: canCreateAs, isLoading: asCreatePermLoading } = useFeaturePermission('as.create');
+  const showAsPanel = asViewPermLoading || asCreatePermLoading || canViewAs || canCreateAs;
 
   if (storeLoading) {
     return <Spin tip="매장 데이터 로딩 중..." style={{ display: 'block', marginTop: 100 }} />;
@@ -155,55 +163,63 @@ export default function OwnerDashboardPage({ onNavigateToEquipment }: OwnerDashb
         )}
       </div>
 
-      <Row gutter={[16, 16]}>
-        {canViewIndoorAir && (
-          <Col xs={24} lg={12} style={{ minWidth: 0 }}>
-            <AirQualityCard
-              data={storeData?.iaqData}
-              floorIaqList={storeData?.floorIaqList}
-              storeName={storeData?.storeName}
-            />
-          </Col>
-        )}
-        <Col xs={24} lg={canViewIndoorAir ? 12 : 24} style={{ minWidth: 0 }}>
-          <Card title="장비 상태" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
-            {storeData && storeData.equipments.length > 0 ? (
-              <Table
-                dataSource={storeData.equipments}
-                columns={equipmentColumns(onNavigateToEquipment)}
-                rowKey="equipmentId"
-                size="small"
-                pagination={false}
-                className="dashboard-table"
+      {(showIndoorAir || showStoreOverview) && (
+        <Row gutter={[16, 16]}>
+          {showIndoorAir && (
+            <Col xs={24} lg={showStoreOverview ? 12 : 24} style={{ minWidth: 0 }}>
+              <AirQualityCard
+                data={storeData?.iaqData}
+                floorIaqList={storeData?.floorIaqList}
+                storeName={storeData?.storeName}
               />
-            ) : (
-              <Empty description="장비가 없습니다." image={Empty.PRESENTED_IMAGE_SIMPLE} />
-            )}
-          </Card>
-        </Col>
-      </Row>
+            </Col>
+          )}
+          {showStoreOverview && (
+            <Col xs={24} lg={showIndoorAir ? 12 : 24} style={{ minWidth: 0 }}>
+              <Card title="장비 상태" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
+                {storeData && storeData.equipments.length > 0 ? (
+                  <Table
+                    dataSource={storeData.equipments}
+                    columns={equipmentColumns(onNavigateToEquipment)}
+                    rowKey="equipmentId"
+                    size="small"
+                    pagination={false}
+                    className="dashboard-table"
+                  />
+                ) : (
+                  <Empty description="장비가 없습니다." image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                )}
+              </Card>
+            </Col>
+          )}
+        </Row>
+      )}
 
-      <Card title="이슈 알림" size="small" loading={issuesLoading} style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
-        {allIssueItems.length > 0 ? (
-          <Table
-            dataSource={allIssueItems}
-            columns={issueColumns}
-            rowKey="issueId"
-            size="small"
-            pagination={false}
-            className="dashboard-table"
-          />
-        ) : (
-          <Empty description="이슈 없음" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        )}
-      </Card>
+      {showStoreOverview && (
+        <Card title="이슈 알림" size="small" loading={issuesLoading} style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
+          {allIssueItems.length > 0 ? (
+            <Table
+              dataSource={allIssueItems}
+              columns={issueColumns}
+              rowKey="issueId"
+              size="small"
+              pagination={false}
+              className="dashboard-table"
+            />
+          ) : (
+            <Empty description="이슈 없음" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          )}
+        </Card>
+      )}
 
-      <ASRequestPanel
-        data={pendingAs}
-        loading={asLoading}
-        showCreateButton
-        onCreateClick={() => navigate('/as-service/request')}
-      />
+      {showAsPanel && (
+        <ASRequestPanel
+          data={pendingAs}
+          loading={asLoading}
+          showCreateButton={canCreateAs}
+          onCreateClick={() => navigate('/as-service/request')}
+        />
+      )}
     </Space>
   );
 }

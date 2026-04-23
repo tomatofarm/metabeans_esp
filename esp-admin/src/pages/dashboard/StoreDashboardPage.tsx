@@ -103,7 +103,14 @@ const issueColumns = [
 
 export default function StoreDashboardPage({ storeId, onEquipmentClick }: StoreDashboardPageProps) {
   const { data, isLoading } = useStoreDashboard(storeId);
-  const { isAllowed: canViewIndoorAir } = useFeaturePermission('dashboard.indoor_air');
+  const { isAllowed: canViewIndoorAir, isLoading: indoorAirPermLoading } =
+    useFeaturePermission('dashboard.indoor_air');
+  const showIndoorAir = indoorAirPermLoading || canViewIndoorAir;
+  const { isAllowed: canViewStoreOverview, isLoading: storeOverviewPermLoading } =
+    useFeaturePermission('dashboard.total_stores');
+  const showStoreOverview = storeOverviewPermLoading || canViewStoreOverview;
+  const { isAllowed: canViewAs, isLoading: asViewPermLoading } = useFeaturePermission('as.view');
+  const showRecentAs = asViewPermLoading || canViewAs;
 
   if (isLoading) {
     return <Spin tip="매장 데이터 로딩 중..." style={{ display: 'block', marginTop: 100 }} />;
@@ -128,71 +135,79 @@ export default function StoreDashboardPage({ storeId, onEquipmentClick }: StoreD
         </Typography.Text>
       </div>
 
-      <Row gutter={[16, 16]}>
-        {canViewIndoorAir && (
-          <Col xs={24} lg={12} style={{ minWidth: 0 }}>
-            <AirQualityCard
-              data={data.iaqData}
-              floorIaqList={data.floorIaqList}
-              storeName={data.storeName}
-            />
-          </Col>
-        )}
-        <Col xs={24} lg={canViewIndoorAir ? 12 : 24} style={{ minWidth: 0 }}>
-          <Card title="장비 현황" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
+      {(showIndoorAir || showStoreOverview) && (
+        <Row gutter={[16, 16]}>
+          {showIndoorAir && (
+            <Col xs={24} lg={showStoreOverview ? 12 : 24} style={{ minWidth: 0 }}>
+              <AirQualityCard
+                data={data.iaqData}
+                floorIaqList={data.floorIaqList}
+                storeName={data.storeName}
+              />
+            </Col>
+          )}
+          {showStoreOverview && (
+            <Col xs={24} lg={showIndoorAir ? 12 : 24} style={{ minWidth: 0 }}>
+              <Card title="장비 현황" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
+                <Table
+                  dataSource={data.equipments}
+                  columns={equipmentColumns(onEquipmentClick)}
+                  rowKey="equipmentId"
+                  size="small"
+                  pagination={false}
+                  className="dashboard-table"
+                />
+              </Card>
+            </Col>
+          )}
+        </Row>
+      )}
+
+      {showStoreOverview && (
+        <Card title="매장 이슈" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
+          {data.issues.length > 0 ? (
             <Table
-              dataSource={data.equipments}
-              columns={equipmentColumns(onEquipmentClick)}
-              rowKey="equipmentId"
+              dataSource={data.issues}
+              columns={issueColumns}
+              rowKey="issueId"
               size="small"
               pagination={false}
               className="dashboard-table"
             />
-          </Card>
-        </Col>
-      </Row>
+          ) : (
+            <Empty description="이슈 없음" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          )}
+        </Card>
+      )}
 
-      <Card title="매장 이슈" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
-        {data.issues.length > 0 ? (
-          <Table
-            dataSource={data.issues}
-            columns={issueColumns}
-            rowKey="issueId"
-            size="small"
-            pagination={false}
-            className="dashboard-table"
-          />
-        ) : (
-          <Empty description="이슈 없음" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        )}
-      </Card>
-
-      <Card title="최근 A/S 현황" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
-        {data.recentAsRequests.length > 0 ? (
-          <List
-            dataSource={data.recentAsRequests}
-            renderItem={(item: StoreAsRequest) => (
-              <List.Item
-                extra={
-                  <StatusBadge
-                    status={
-                      ({ COMPLETED: 'success', PENDING: 'default', IN_PROGRESS: 'warning', ACCEPTED: 'info', ASSIGNED: 'warning' } as Record<string, BadgeStatus>)[item.status] ?? 'info'
-                    }
-                    label={AS_STATUS_LABELS[item.status] ?? item.status}
+      {showRecentAs && (
+        <Card title="최근 A/S 현황" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
+          {data.recentAsRequests.length > 0 ? (
+            <List
+              dataSource={data.recentAsRequests}
+              renderItem={(item: StoreAsRequest) => (
+                <List.Item
+                  extra={
+                    <StatusBadge
+                      status={
+                        ({ COMPLETED: 'success', PENDING: 'default', IN_PROGRESS: 'warning', ACCEPTED: 'info', ASSIGNED: 'warning' } as Record<string, BadgeStatus>)[item.status] ?? 'info'
+                      }
+                      label={AS_STATUS_LABELS[item.status] ?? item.status}
+                    />
+                  }
+                >
+                  <List.Item.Meta
+                    title={item.equipmentName ?? '장비 미지정'}
+                    description={item.description}
                   />
-                }
-              >
-                <List.Item.Meta
-                  title={item.equipmentName ?? '장비 미지정'}
-                  description={item.description}
-                />
-              </List.Item>
-            )}
-          />
-        ) : (
-          <Empty description="A/S 내역 없음" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        )}
-      </Card>
+                </List.Item>
+              )}
+            />
+          ) : (
+            <Empty description="A/S 내역 없음" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          )}
+        </Card>
+      )}
     </Space>
   );
 }

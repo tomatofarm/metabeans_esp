@@ -1,4 +1,4 @@
-import { Menu, Space, Button, Dropdown } from 'antd';
+import { Menu, Space, Button, Dropdown, Skeleton } from 'antd';
 import {
   LogoutOutlined,
   UserOutlined,
@@ -21,7 +21,7 @@ export default function Header() {
   const clearSelection = useUiStore((s) => s.clearSelection);
 
   const role = user?.role;
-  const { showMenuKey } = useTopMenuSectionVisibility();
+  const { showMenuKey, isLoading: permLoading } = useTopMenuSectionVisibility();
 
   const menuItems = MENU_ITEMS.filter((item) => showMenuKey(item.key)).map((item) => ({
     key: item.key,
@@ -118,14 +118,21 @@ export default function Header() {
         >
           MetaBeans ESP
         </span>
-        <Menu
-          mode="horizontal"
-          selectedKeys={[currentMenuKey]}
-          items={menuItems}
-          onClick={handleMenuClick}
-          overflowedIndicator={null}
-          style={{ border: 'none', flex: 1, minWidth: 0, background: 'transparent' }}
-        />
+        {permLoading && role !== 'ADMIN' ? (
+          <Skeleton.Input
+            active
+            style={{ width: 320, height: 22, borderRadius: 6 }}
+          />
+        ) : (
+          <Menu
+            mode="horizontal"
+            selectedKeys={[currentMenuKey]}
+            items={menuItems}
+            onClick={handleMenuClick}
+            overflowedIndicator={null}
+            style={{ border: 'none', flex: 1, minWidth: 0, background: 'transparent' }}
+          />
+        )}
       </div>
 
       <Space size="middle">

@@ -12,6 +12,7 @@ import {
 } from '../../api/dashboard.api';
 import type { RoleDashboardSummary, StoreMapItem } from '../../types/dashboard.types';
 import { STATUS_COLORS } from '../../utils/constants';
+import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import IssuePanel from './components/IssuePanel';
 import ASRequestPanel from './components/ASRequestPanel';
 import StatusTag from '../../components/common/StatusTag';
@@ -103,6 +104,13 @@ export default function DealerDashboardPage({
   const { data: stores, isLoading: storesLoading } = useRoleStoreList(storeIds);
   const { data: pendingAs, isLoading: asLoading } = useRoleDashboardPendingAs(storeIds);
 
+  /** '전체 가맹점' 권한 — 관할 요약·매장 목록·이슈 패널(대시보드 개요) */
+  const { isAllowed: canViewStoreOverview, isLoading: storeOverviewPermLoading } =
+    useFeaturePermission('dashboard.total_stores');
+  const showStoreOverview = storeOverviewPermLoading || canViewStoreOverview;
+  const { isAllowed: canViewAsList, isLoading: asViewPermLoading } = useFeaturePermission('as.view');
+  const showAsPanel = asViewPermLoading || canViewAsList;
+
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
       <div>
@@ -114,29 +122,35 @@ export default function DealerDashboardPage({
         </Typography.Text>
       </div>
 
-      <DealerSummaryCards data={summary} loading={summaryLoading} />
+      {showStoreOverview && (
+        <DealerSummaryCards data={summary} loading={summaryLoading} />
+      )}
 
-      <IssuePanel
-        categories={issues}
-        loading={issuesLoading}
-        onEquipmentClick={onNavigateToEquipment}
-      />
+      {showStoreOverview && (
+        <IssuePanel
+          categories={issues}
+          loading={issuesLoading}
+          onEquipmentClick={onNavigateToEquipment}
+        />
+      )}
 
-      <Card title="관할 매장 목록" size="small" loading={storesLoading}>
-        {stores && stores.length > 0 ? (
-          <Table
-            dataSource={stores}
-            columns={storeColumns(onNavigateToStore)}
-            rowKey="storeId"
-            size="small"
-            pagination={false}
-          />
-        ) : (
-          <Empty description="관할 매장이 없습니다." image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        )}
-      </Card>
+      {showStoreOverview && (
+        <Card title="관할 매장 목록" size="small" loading={storesLoading}>
+          {stores && stores.length > 0 ? (
+            <Table
+              dataSource={stores}
+              columns={storeColumns(onNavigateToStore)}
+              rowKey="storeId"
+              size="small"
+              pagination={false}
+            />
+          ) : (
+            <Empty description="관할 매장이 없습니다." image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          )}
+        </Card>
+      )}
 
-      <ASRequestPanel data={pendingAs} loading={asLoading} />
+      {showAsPanel && <ASRequestPanel data={pendingAs} loading={asLoading} />}
     </Space>
   );
 }

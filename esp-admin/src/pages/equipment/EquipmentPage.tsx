@@ -35,13 +35,17 @@ function EquipmentTabs() {
     canDamper ||
     canFan;
   const controlPermLoading = powerPermLoading || damperPermLoading || fanPermLoading;
+  const { isAllowed: canViewHistory, isLoading: historyPermLoading } =
+    useFeaturePermission('history.view');
+  const showHistoryTab = historyPermLoading || canViewHistory;
   const selectedEquipmentId = useUiStore((s) => s.selectedEquipmentId);
 
   const firstAvailableTab = (): 'info' | 'monitoring' | 'control' | 'history' => {
     if (showEquipmentInfoTab) return 'info';
     if (showMonitoringTab) return 'monitoring';
     if (showControlTab) return 'control';
-    return 'history';
+    if (showHistoryTab) return 'history';
+    return 'info';
   };
 
   // 현재 활성 탭 결정
@@ -57,6 +61,7 @@ function EquipmentTabs() {
   if (activeTab === 'info' && !showEquipmentInfoTab) activeTab = firstAvailableTab();
   if (activeTab === 'monitoring' && !showMonitoringTab) activeTab = firstAvailableTab();
   if (activeTab === 'control' && !showControlTab) activeTab = firstAvailableTab();
+  if (activeTab === 'history' && !showHistoryTab) activeTab = firstAvailableTab();
 
   const resolvedFallbackTab = firstAvailableTab();
   const fallbackPath =
@@ -98,6 +103,21 @@ function EquipmentTabs() {
     fallbackPath,
   ]);
 
+  useEffect(() => {
+    if (infoPermLoading || monitoringPermLoading || historyPermLoading) return;
+    if (!showHistoryTab && location.pathname.includes('/equipment/history')) {
+      navigate(fallbackPath, { replace: true });
+    }
+  }, [
+    infoPermLoading,
+    monitoringPermLoading,
+    historyPermLoading,
+    showHistoryTab,
+    location.pathname,
+    navigate,
+    fallbackPath,
+  ]);
+
   const handleTabChange = (key: string) => {
     switch (key) {
       case 'info':
@@ -123,11 +143,15 @@ function EquipmentTabs() {
     ...(showControlTab
       ? [{ key: 'control' as const, label: '장치 제어', disabled: !selectedEquipmentId }]
       : []),
-    {
-      key: 'history',
-      label: '이력 조회',
-      disabled: !selectedEquipmentId,
-    },
+    ...(showHistoryTab
+      ? [
+          {
+            key: 'history' as const,
+            label: '이력 조회',
+            disabled: !selectedEquipmentId,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -155,7 +179,7 @@ function EquipmentTabs() {
       {activeTab === 'info' && <EquipmentInfoPage />}
       {activeTab === 'monitoring' && showMonitoringTab && <RealtimeMonitorPage />}
       {activeTab === 'control' && showControlTab && <DeviceControlPage />}
-      {activeTab === 'history' && <HistoryPage />}
+      {activeTab === 'history' && showHistoryTab && <HistoryPage />}
     </div>
   );
 }

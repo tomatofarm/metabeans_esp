@@ -20,21 +20,24 @@ function featureCodesForCategory(category: string): FeatureCode[] {
 
 /**
  * 상단 메뉴: 해당 섹터(카테고리)에 속한 기능 권한이 하나도 없으면 메뉴 숨김.
- * 로딩 중에는 낙관적으로 모두 표시. ADMIN은 항상 해당 섹터 표시.
+ * 로딩 중에는 메뉴를 숨겨 "잠깐 보였다 사라지는" 깜빡임을 방지한다.
+ * ADMIN은 매트릭스 로딩 완료 후에도 항상 모든 섹터 표시.
  */
 export function useTopMenuSectionVisibility() {
   const role = useAuthStore((s) => s.user?.role);
   const { data, isLoading } = usePermissionMatrix();
-  const matrix = data?.data ?? [];
 
   return useMemo(() => {
+    const matrix = data?.data ?? [];
+
     const showSectionForMenuKey = (menuKey: string): boolean => {
       if (!role) return false;
+      // 매트릭스 로딩 중: ADMIN이면 바로 표시, 그 외 역할은 로딩 완료까지 숨김
+      if (isLoading) return role === 'ADMIN';
       const category = CATEGORY_BY_MENU_KEY[menuKey];
       if (!category) return true;
       const codes = featureCodesForCategory(category);
       if (codes.length === 0) return false;
-      if (isLoading) return true;
       if (role === 'ADMIN') return true;
       return codes.some((code) => {
         const row = matrix.find((m) => m.featureCode === code);
@@ -46,5 +49,5 @@ export function useTopMenuSectionVisibility() {
       isLoading,
       showMenuKey: showSectionForMenuKey,
     };
-  }, [isLoading, matrix, role]);
+  }, [data?.data, isLoading, role]);
 }

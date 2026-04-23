@@ -127,7 +127,14 @@ export default function HQDashboardPage({
   const { data: issues, isLoading: issuesLoading } = useRoleDashboardIssues(storeIds);
   const { data: stores, isLoading: storesLoading } = useRoleStoreList(storeIds);
   const { data: pendingAs, isLoading: asLoading } = useRoleDashboardPendingAs(storeIds);
-  const { isAllowed: canViewIndoorAir } = useFeaturePermission('dashboard.indoor_air');
+  const { isAllowed: canViewIndoorAir, isLoading: indoorAirPermLoading } =
+    useFeaturePermission('dashboard.indoor_air');
+  const showIndoorAir = indoorAirPermLoading || canViewIndoorAir;
+  const { isAllowed: canViewStoreOverview, isLoading: storeOverviewPermLoading } =
+    useFeaturePermission('dashboard.total_stores');
+  const showStoreOverview = storeOverviewPermLoading || canViewStoreOverview;
+  const { isAllowed: canViewAsList, isLoading: asViewPermLoading } = useFeaturePermission('as.view');
+  const showAsPanel = asViewPermLoading || canViewAsList;
 
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
@@ -140,38 +147,44 @@ export default function HQDashboardPage({
         </Typography.Text>
       </div>
 
-      <HQSummaryCards data={summary} loading={summaryLoading} />
+      {showStoreOverview && <HQSummaryCards data={summary} loading={summaryLoading} />}
 
-      <Row gutter={[16, 16]}>
-        {canViewIndoorAir && (
-          <Col xs={24} lg={12}>
-            <IAQOverview storeIds={storeIds} />
-          </Col>
-        )}
-        <Col xs={24} lg={canViewIndoorAir ? 12 : 24}>
-          <Card title="소속 매장 목록" size="small" loading={storesLoading}>
-            {stores && stores.length > 0 ? (
-              <Table
-                dataSource={stores}
-                columns={storeColumns(onNavigateToStore)}
-                rowKey="storeId"
-                size="small"
-                pagination={false}
-              />
-            ) : (
-              <Empty description="소속 매장이 없습니다." image={Empty.PRESENTED_IMAGE_SIMPLE} />
-            )}
-          </Card>
-        </Col>
-      </Row>
+      {(showIndoorAir || showStoreOverview) && (
+        <Row gutter={[16, 16]}>
+          {showIndoorAir && (
+            <Col xs={24} lg={showStoreOverview ? 12 : 24}>
+              <IAQOverview storeIds={storeIds} />
+            </Col>
+          )}
+          {showStoreOverview && (
+            <Col xs={24} lg={showIndoorAir ? 12 : 24}>
+              <Card title="소속 매장 목록" size="small" loading={storesLoading}>
+                {stores && stores.length > 0 ? (
+                  <Table
+                    dataSource={stores}
+                    columns={storeColumns(onNavigateToStore)}
+                    rowKey="storeId"
+                    size="small"
+                    pagination={false}
+                  />
+                ) : (
+                  <Empty description="소속 매장이 없습니다." image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                )}
+              </Card>
+            </Col>
+          )}
+        </Row>
+      )}
 
-      <IssuePanel
-        categories={issues}
-        loading={issuesLoading}
-        onEquipmentClick={onNavigateToEquipment}
-      />
+      {showStoreOverview && (
+        <IssuePanel
+          categories={issues}
+          loading={issuesLoading}
+          onEquipmentClick={onNavigateToEquipment}
+        />
+      )}
 
-      <ASRequestPanel data={pendingAs} loading={asLoading} />
+      {showAsPanel && <ASRequestPanel data={pendingAs} loading={asLoading} />}
     </Space>
   );
 }
