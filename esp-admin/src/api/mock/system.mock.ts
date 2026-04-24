@@ -80,13 +80,6 @@ export async function mockGetPermissionMatrix(): Promise<ApiResponse<PermissionM
   return mockDelay(wrapResponse(matrix), 400);
 }
 
-/** 본인 권한 Mock — `GET /users/me/permissions` 대응(실 API와 동일 `PermissionMatrix[]` 형) */
-export async function mockGetMyEffectivePermissions(
-  _role: UserRole,
-): Promise<ApiResponse<PermissionMatrix[]>> {
-  return mockGetPermissionMatrix();
-}
-
 export async function mockUpdatePermissions(
   request: PermissionUpdateRequest,
 ): Promise<ApiResponse<{ success: boolean }>> {

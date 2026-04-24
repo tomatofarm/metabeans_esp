@@ -256,57 +256,6 @@ export async function fetchPermissionMatrix(): Promise<ApiResponse<PermissionMat
   return { success: true, data: matrix };
 }
 
-/**
- * 본인 계정에 최종 적용된 기능 권한만 조회 (비관리자).
- * `GET /system/permissions`는 403 — 이 엔드포인트로 대체.
- * 응답은 `MeEffectivePermissionsResponse` (백엔드 요청서 `docs/ESP_백엔드_요청_본인_권한_조회_API.md` 참고).
- */
-export const ME_EFFECTIVE_PERMISSIONS_PATH = '/users/me/permissions' as const;
-
-export interface MeEffectivePermissionsResponse {
-  /** 키는 프론트 `FeatureCode`와 **동일 문자열**. 누락·false = 비허용. */
-  allowedFeatures: Partial<Record<FeatureCode, boolean>>;
-}
-
-export function mapAllowedFeaturesToMatrix(
-  role: UserRole,
-  allowedFeatures: Partial<Record<string, boolean>>,
-): PermissionMatrix[] {
-  return FEATURE_CODE_LIST.map((info) => {
-    const allowed = Boolean(allowedFeatures[info.code]);
-    return {
-      featureCode: info.code,
-      label: info.label,
-      category: info.category,
-      permissions: {
-        ADMIN: true,
-        DEALER: role === 'DEALER' ? allowed : false,
-        HQ: role === 'HQ' ? allowed : false,
-        OWNER: role === 'OWNER' ? allowed : false,
-      },
-    };
-  });
-}
-
-export async function fetchMyEffectivePermissions(
-  role: UserRole,
-): Promise<ApiResponse<PermissionMatrix[]>> {
-  const body = await apiRequest<MeEffectivePermissionsResponse | Record<string, unknown>>({
-    method: 'get',
-    url: ME_EFFECTIVE_PERMISSIONS_PATH,
-  });
-  const allowed =
-    body &&
-    typeof body === 'object' &&
-    'allowedFeatures' in body &&
-    body.allowedFeatures &&
-    typeof (body as MeEffectivePermissionsResponse).allowedFeatures === 'object'
-      ? (body as MeEffectivePermissionsResponse).allowedFeatures
-      : ({} as Partial<Record<string, boolean>>);
-  const matrix = mapAllowedFeaturesToMatrix(role, allowed);
-  return { success: true, data: matrix };
-}
-
 export async function updatePermissions(
   request: PermissionUpdateRequest,
 ): Promise<ApiResponse<{ success: boolean }>> {

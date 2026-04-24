@@ -5,8 +5,8 @@
  *
  * | 구역 | 훅 | REST |
  * |------|-----|------|
- * | 권한(전체) | usePermissionMatrix(ADMIN) | `GET /system/permissions` + `useUpdatePermissions` → `PUT /system/permissions` |
- * | 권한(본인) | usePermissionMatrix(非ADMIN) | `GET /users/me/permissions` (본인 `FeatureCode` 허용만). 상세: `docs/ESP_백엔드_요청_본인_권한_조회_API.md` |
+ * | 권한 매트릭스 | `usePermissionMatrix` | `GET /system/permissions` — **서버에 저장된 전부** (접속 제어는 토큰/역할/기능, 프론트는 역할로 분기하지 않음) |
+ * | 권한 저장 | `useUpdatePermissions` | `PUT /system/permissions` — 가능 여부는 **서버**가 결정. `GET`과 **동일한** 매트릭스 스키마. |
  * | 권한 오버라이드 | useUserPermissionOverrides, useSaveUserPermissionOverride, useDeleteUserPermissionOverride | §9.1.3 — **UI에서 사용자 편집 시 제거됨**, 훅·Mock은 잔존 |
  * | 가입 승인 | usePendingApprovals, useApproveUser, useRejectUser | GET /system/approvals, PATCH .../approvals/:userId |
  * | 비번 재설정 대기 | usePasswordResetRequests, useApprovePasswordReset | §9 본문에 없을 수 있음 — 백엔드 스펙 확인 |
@@ -20,7 +20,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as systemReal from './real/system.real';
 import { useAuthStore } from '../stores/authStore';
 import {
-  mockGetMyEffectivePermissions,
   mockGetPermissionMatrix,
   mockUpdatePermissions,
   mockGetPendingApprovals,
@@ -50,18 +49,13 @@ const useRealApi =
 
 // ===== 권한 관리 =====
 
+/** `system.permission` 등으로 UI에 들어온 사용자(어드민 외)도 **동일** 매트릭스를 써야 하므로 `GET`은 역할 분기 없이 한 종류. */
 export function usePermissionMatrix() {
-  const role = useAuthStore((s) => s.user?.role);
+  const isLoggedIn = useAuthStore((s) => Boolean(s.user));
   return useQuery({
-    queryKey: ['system-permissions', role],
-    queryFn: async () => {
-      if (!role) throw new Error('usePermissionMatrix: 로그인 역할이 없습니다.');
-      if (useRealApi) {
-        return role === 'ADMIN' ? systemReal.fetchPermissionMatrix() : systemReal.fetchMyEffectivePermissions(role);
-      }
-      return role === 'ADMIN' ? mockGetPermissionMatrix() : mockGetMyEffectivePermissions(role);
-    },
-    enabled: Boolean(role),
+    queryKey: ['system-permissions'],
+    queryFn: () => (useRealApi ? systemReal.fetchPermissionMatrix() : mockGetPermissionMatrix()),
+    enabled: isLoggedIn,
     staleTime: 5 * 60 * 1000,
   });
 }
