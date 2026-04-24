@@ -5,7 +5,8 @@
  *
  * | 구역 | 훅 | REST |
  * |------|-----|------|
- * | 권한 | usePermissionMatrix, useUpdatePermissions | GET/PUT /system/permissions |
+ * | 권한(전체) | usePermissionMatrix(ADMIN) | `GET /system/permissions` + `useUpdatePermissions` → `PUT /system/permissions` |
+ * | 권한(본인) | usePermissionMatrix(非ADMIN) | `GET /users/me/permissions` (본인 `FeatureCode` 허용만). 상세: `docs/ESP_백엔드_요청_본인_권한_조회_API.md` |
  * | 권한 오버라이드 | useUserPermissionOverrides, useSaveUserPermissionOverride, useDeleteUserPermissionOverride | §9.1.3 — **UI에서 사용자 편집 시 제거됨**, 훅·Mock은 잔존 |
  * | 가입 승인 | usePendingApprovals, useApproveUser, useRejectUser | GET /system/approvals, PATCH .../approvals/:userId |
  * | 비번 재설정 대기 | usePasswordResetRequests, useApprovePasswordReset | §9 본문에 없을 수 있음 — 백엔드 스펙 확인 |
@@ -17,7 +18,9 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as systemReal from './real/system.real';
+import { useAuthStore } from '../stores/authStore';
 import {
+  mockGetMyEffectivePermissions,
   mockGetPermissionMatrix,
   mockUpdatePermissions,
   mockGetPendingApprovals,
@@ -48,9 +51,17 @@ const useRealApi =
 // ===== 권한 관리 =====
 
 export function usePermissionMatrix() {
+  const role = useAuthStore((s) => s.user?.role);
   return useQuery({
-    queryKey: ['system-permissions'],
-    queryFn: () => (useRealApi ? systemReal.fetchPermissionMatrix() : mockGetPermissionMatrix()),
+    queryKey: ['system-permissions', role],
+    queryFn: async () => {
+      if (!role) throw new Error('usePermissionMatrix: 로그인 역할이 없습니다.');
+      if (useRealApi) {
+        return role === 'ADMIN' ? systemReal.fetchPermissionMatrix() : systemReal.fetchMyEffectivePermissions(role);
+      }
+      return role === 'ADMIN' ? mockGetPermissionMatrix() : mockGetMyEffectivePermissions(role);
+    },
+    enabled: Boolean(role),
     staleTime: 5 * 60 * 1000,
   });
 }

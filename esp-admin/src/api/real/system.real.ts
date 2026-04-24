@@ -184,8 +184,33 @@ interface ApiRolePermissionRow {
   isAllowed: boolean;
 }
 
+/** 백엔드가 "DEALER" / "dealer" / "Dealer" 등으로 보내도 UI는 `UserRole` 키로만 쌓는다. */
+function normalizeUserRoleString(role: string | undefined | null): UserRole | 'ADMIN' | null {
+  if (role == null || typeof role !== 'string') return null;
+  const u = role.trim().toUpperCase();
+  if (u === 'ADMIN' || u === 'DEALER' || u === 'HQ' || u === 'OWNER') return u as UserRole | 'ADMIN';
+  return null;
+}
+
+/**
+ * @deprecated 설계서 예시용 — 항목당 `permissions`가 한 번에 오는 응답(§9.1.1)과 호환. `featureCode`는 `FEATURE_CODE_LIST`와 **동일 문자열**이어야 반영됨.
+ */
+function mergeNestedFeatureBlocks(
+  byFeature: Map<string, Record<UserRole, boolean>>,
+  items: Array<{ featureCode: string; permissions?: Partial<Record<UserRole, boolean>> }>,
+) {
+  for (const item of items) {
+    if (!item.featureCode || !item.permissions) continue;
+    const perms = byFeature.get(item.featureCode);
+    if (!perms) continue;
+    for (const r of ['DEALER', 'HQ', 'OWNER'] as const) {
+      if (r in item.permissions) perms[r] = Boolean(item.permissions[r]);
+    }
+  }
+}
+
 export async function fetchPermissionMatrix(): Promise<ApiResponse<PermissionMatrix[]>> {
-  const raw = await apiRequest<{ featureCodes: ApiRolePermissionRow[] }>({
+  const raw = await apiRequest<{ featureCodes: ApiRolePermissionRow[] } | { featureCodes: unknown }>({
     method: 'get',
     url: '/system/permissions',
   });
@@ -198,11 +223,28 @@ export async function fetchPermissionMatrix(): Promise<ApiResponse<PermissionMat
       OWNER: false,
     });
   }
-  for (const row of raw.featureCodes) {
-    if (row.role === 'ADMIN') continue;
-    const perms = byFeature.get(row.featureCode);
-    if (perms && row.role in perms) {
-      (perms as Record<string, boolean>)[row.role] = row.isAllowed;
+
+  const list = (raw as { featureCodes?: unknown })?.featureCodes;
+  if (Array.isArray(list) && list.length > 0) {
+    const first = list[0] as Record<string, unknown>;
+    if (
+      first &&
+      'permissions' in first &&
+      typeof first.permissions === 'object' &&
+      first.permissions != null &&
+      !('role' in first)
+    ) {
+      mergeNestedFeatureBlocks(
+        byFeature,
+        list as Array<{ featureCode: string; permissions?: Partial<Record<UserRole, boolean>> }>,
+      );
+    } else {
+      for (const row of list as ApiRolePermissionRow[]) {
+        const r = normalizeUserRoleString(row?.role);
+        if (r === 'ADMIN' || r == null) continue;
+        const perms = byFeature.get(row.featureCode);
+        if (perms) perms[r] = row.isAllowed;
+      }
     }
   }
   const matrix: PermissionMatrix[] = FEATURE_CODE_LIST.map((info) => ({
@@ -211,6 +253,57 @@ export async function fetchPermissionMatrix(): Promise<ApiResponse<PermissionMat
     category: info.category,
     permissions: byFeature.get(info.code)!,
   }));
+  return { success: true, data: matrix };
+}
+
+/**
+ * 본인 계정에 최종 적용된 기능 권한만 조회 (비관리자).
+ * `GET /system/permissions`는 403 — 이 엔드포인트로 대체.
+ * 응답은 `MeEffectivePermissionsResponse` (백엔드 요청서 `docs/ESP_백엔드_요청_본인_권한_조회_API.md` 참고).
+ */
+export const ME_EFFECTIVE_PERMISSIONS_PATH = '/users/me/permissions' as const;
+
+export interface MeEffectivePermissionsResponse {
+  /** 키는 프론트 `FeatureCode`와 **동일 문자열**. 누락·false = 비허용. */
+  allowedFeatures: Partial<Record<FeatureCode, boolean>>;
+}
+
+export function mapAllowedFeaturesToMatrix(
+  role: UserRole,
+  allowedFeatures: Partial<Record<string, boolean>>,
+): PermissionMatrix[] {
+  return FEATURE_CODE_LIST.map((info) => {
+    const allowed = Boolean(allowedFeatures[info.code]);
+    return {
+      featureCode: info.code,
+      label: info.label,
+      category: info.category,
+      permissions: {
+        ADMIN: true,
+        DEALER: role === 'DEALER' ? allowed : false,
+        HQ: role === 'HQ' ? allowed : false,
+        OWNER: role === 'OWNER' ? allowed : false,
+      },
+    };
+  });
+}
+
+export async function fetchMyEffectivePermissions(
+  role: UserRole,
+): Promise<ApiResponse<PermissionMatrix[]>> {
+  const body = await apiRequest<MeEffectivePermissionsResponse | Record<string, unknown>>({
+    method: 'get',
+    url: ME_EFFECTIVE_PERMISSIONS_PATH,
+  });
+  const allowed =
+    body &&
+    typeof body === 'object' &&
+    'allowedFeatures' in body &&
+    body.allowedFeatures &&
+    typeof (body as MeEffectivePermissionsResponse).allowedFeatures === 'object'
+      ? (body as MeEffectivePermissionsResponse).allowedFeatures
+      : ({} as Partial<Record<string, boolean>>);
+  const matrix = mapAllowedFeaturesToMatrix(role, allowed);
   return { success: true, data: matrix };
 }
 
