@@ -43,9 +43,10 @@ function MetricCard({ name, value, unit, level, badge }: MetricCardProps) {
 
 interface Props {
   controllers: RealtimeControllerData[];
+  inletTempThreshold?: { yellowMin?: number; redMin?: number };
 }
 
-export default function FireSensorSection({ controllers }: Props) {
+export default function FireSensorSection({ controllers, inletTempThreshold }: Props) {
   if (controllers.length === 0) return null;
 
   return (
@@ -56,7 +57,11 @@ export default function FireSensorSection({ controllers }: Props) {
     >
       {controllers.map((ctrl, idx) => {
         const sd = ctrl.sensorData;
-        const tempLevel = getInletTempLevel(sd.inletTemp);
+        const tempLevel = getInletTempLevel(
+          sd.inletTemp,
+          inletTempThreshold?.yellowMin ?? 70,
+          inletTempThreshold?.redMin ?? 100,
+        );
 
         return (
           <div key={ctrl.controllerId} style={{ marginBottom: idx < controllers.length - 1 ? 24 : 0 }}>

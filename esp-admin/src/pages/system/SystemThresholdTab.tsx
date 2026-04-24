@@ -30,6 +30,21 @@ import {
 } from '../../types/system.types';
 
 const { Text } = Typography;
+const DEFAULT_SPARK_BASE_TIME_SEC = 600;
+const DEFAULT_CLEANING_THRESHOLD = {
+  sparkThreshold: 700,
+  sparkTimeWindow: 600,
+  pressureBase: 20,
+  pressureRate: 10,
+} as const;
+const DEFAULT_MONITORING_BY_NAME: Record<string, { yellowMin?: number; redMin?: number }> = {
+  '보드 온도': { yellowMin: 60, redMin: 80 },
+  '스파크': { yellowMin: 30, redMin: 60 },
+  'PM2.5': { yellowMin: 35, redMin: 75 },
+  'PM10': { yellowMin: 75, redMin: 100 },
+  '차압 (필터 점검)': { yellowMin: 30, redMin: undefined },
+  '유입 온도': { yellowMin: 70, redMin: 100 },
+};
 
 // Icon mapping for threshold metric names
 const METRIC_ICON_MAP: Record<string, { icon: ReactNode; className: string }> = {
@@ -177,10 +192,35 @@ export default function SystemThresholdTab() {
   };
 
   const handleReset = () => {
-    if (response?.data) {
-      setLocalData(JSON.parse(JSON.stringify(response.data)));
-      message.info('원래 값으로 복원되었습니다.');
-    }
+    setLocalData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        monitoringThresholds: prev.monitoringThresholds.map((t) => {
+          const d = DEFAULT_MONITORING_BY_NAME[t.metricName];
+          if (!d) return t;
+          return {
+            ...t,
+            yellowMin: d.yellowMin,
+            redMin: d.redMin,
+          };
+        }),
+        sparkBaseTime: DEFAULT_SPARK_BASE_TIME_SEC,
+        damperAutoSettings: prev.damperAutoSettings.map((s) => ({
+          ...s,
+          targetFlowCmh: DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
+          targetVelocity: DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
+        })),
+        cleaningThresholds: prev.cleaningThresholds.map((c) => ({
+          ...c,
+          sparkThreshold: DEFAULT_CLEANING_THRESHOLD.sparkThreshold,
+          sparkTimeWindow: DEFAULT_CLEANING_THRESHOLD.sparkTimeWindow,
+          pressureBase: DEFAULT_CLEANING_THRESHOLD.pressureBase,
+          pressureRate: DEFAULT_CLEANING_THRESHOLD.pressureRate,
+        })),
+      };
+    });
+    message.info('기본값으로 복원되었습니다. 저장 시 서버에 반영됩니다.');
   };
 
   const damperColumns: ColumnsType<DamperAutoSetting> = [
@@ -438,15 +478,20 @@ export default function SystemThresholdTab() {
         </div>
         {localData.cleaningThresholds.map((ct) => (
           <div
-            key={ct.thresholdId}
+            key={`${ct.equipmentId}-${ct.thresholdId}`}
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
               gap: 16,
             }}
           >
+            {ct.equipmentDisplayName ? (
+              <div style={{ gridColumn: '1 / -1', marginBottom: 4 }}>
+                <Text strong>{ct.equipmentDisplayName}</Text>
+              </div>
+            ) : null}
             <div className="threshold-input-group">
-              <div className="threshold-input-label">스파크 임계값 (0-99)</div>
+              <div className="threshold-input-label">스파크 임계값 (0-9999, pp_spark 스케일)</div>
               <div className="threshold-input-wrap">
                 <InputNumber
                   value={ct.sparkThreshold}
@@ -456,15 +501,15 @@ export default function SystemThresholdTab() {
                       return {
                         ...prev,
                         cleaningThresholds: prev.cleaningThresholds.map((t) =>
-                          t.thresholdId === ct.thresholdId
-                            ? { ...t, sparkThreshold: v ?? 70 }
+                          t.equipmentId === ct.equipmentId
+                            ? { ...t, sparkThreshold: v ?? 700 }
                             : t,
                         ),
                       };
                     });
                   }}
                   min={0}
-                  max={99}
+                  max={9999}
                   style={{ width: '100%' }}
                 />
               </div>
@@ -480,7 +525,7 @@ export default function SystemThresholdTab() {
                       return {
                         ...prev,
                         cleaningThresholds: prev.cleaningThresholds.map((t) =>
-                          t.thresholdId === ct.thresholdId
+                          t.equipmentId === ct.equipmentId
                             ? { ...t, sparkTimeWindow: v ?? 600 }
                             : t,
                         ),
@@ -506,7 +551,7 @@ export default function SystemThresholdTab() {
                       return {
                         ...prev,
                         cleaningThresholds: prev.cleaningThresholds.map((t) =>
-                          t.thresholdId === ct.thresholdId
+                          t.equipmentId === ct.equipmentId
                             ? { ...t, pressureBase: v ?? undefined }
                             : t,
                         ),
@@ -530,7 +575,7 @@ export default function SystemThresholdTab() {
                       return {
                         ...prev,
                         cleaningThresholds: prev.cleaningThresholds.map((t) =>
-                          t.thresholdId === ct.thresholdId
+                          t.equipmentId === ct.equipmentId
                             ? { ...t, pressureRate: v ?? 10 }
                             : t,
                         ),

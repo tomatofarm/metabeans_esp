@@ -2,7 +2,9 @@ import { useMemo } from 'react';
 import { Row, Col, Spin, Empty, Typography, Tag } from 'antd';
 import { SyncOutlined } from '@ant-design/icons';
 import { useUiStore } from '../../stores/uiStore';
+import { useAuthStore } from '../../stores/authStore';
 import { useRealtimeSensorData, useSensorHistory } from '../../api/monitoring.api';
+import { useThresholdSettings } from '../../api/system.api';
 import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import { SENSOR_INTERVAL_MS } from '../../utils/constants';
 import ControllerBasicStatusSection from './components/ControllerBasicStatusSection';
@@ -17,6 +19,7 @@ const { Text } = Typography;
 export default function RealtimeMonitorPage() {
   const selectedEquipmentId = useUiStore((s) => s.selectedEquipmentId);
   const selectedControllerId = useUiStore((s) => s.selectedControllerId);
+  const role = useAuthStore((s) => s.user?.role);
 
   const { isAllowed: canEquipmentStatus, isLoading: equipmentStatusLoading } =
     useFeaturePermission('monitoring.equipment_status');
@@ -46,6 +49,24 @@ export default function RealtimeMonitorPage() {
 
   const { data: realtimeData, isLoading, dataUpdatedAt } = useRealtimeSensorData(selectedEquipmentId);
   const { data: historyData } = useSensorHistory(selectedEquipmentId);
+  const { data: thresholdResponse } = useThresholdSettings(role === 'ADMIN');
+
+  const monitoringThresholdByName = useMemo(() => {
+    const map = new Map<string, { yellowMin?: number; redMin?: number }>();
+    for (const t of thresholdResponse?.data.monitoringThresholds ?? []) {
+      map.set(t.metricName, { yellowMin: t.yellowMin, redMin: t.redMin });
+    }
+    return map;
+  }, [thresholdResponse?.data.monitoringThresholds]);
+
+  const selectedEquipmentCleaning = useMemo(() => {
+    if (!selectedEquipmentId) return null;
+    return (
+      thresholdResponse?.data.cleaningThresholds.find((c) => c.equipmentId === selectedEquipmentId) ??
+      thresholdResponse?.data.cleaningThresholds[0] ??
+      null
+    );
+  }, [selectedEquipmentId, thresholdResponse?.data.cleaningThresholds]);
 
   const filteredControllers = useMemo(() => {
     if (!realtimeData) return [];
@@ -116,7 +137,15 @@ export default function RealtimeMonitorPage() {
             <Col xs={24} xl={hasRightCol ? 12 : 24}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {showEquipmentStatus && (
-                  <ControllerBasicStatusSection controllers={filteredControllers} />
+                  <ControllerBasicStatusSection
+                    controllers={filteredControllers}
+                    thresholds={{
+                      boardTemp: monitoringThresholdByName.get('보드 온도'),
+                      spark: monitoringThresholdByName.get('스파크'),
+                      pm25: monitoringThresholdByName.get('PM2.5'),
+                      pm10: monitoringThresholdByName.get('PM10'),
+                    }}
+                  />
                 )}
                 {showEsg && (
                   <MonitoringEsgSection
@@ -130,11 +159,26 @@ export default function RealtimeMonitorPage() {
           {hasRightCol && (
             <Col xs={24} xl={hasLeftCol ? 12 : 24}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {showFireDetection && <FireSensorSection controllers={filteredControllers} />}
+                {showFireDetection && (
+                  <FireSensorSection
+                    controllers={filteredControllers}
+                    inletTempThreshold={monitoringThresholdByName.get('유입 온도')}
+                  />
+                )}
                 {showFilterStatus && (
                   <FilterCheckSection
                     controllers={filteredControllers}
                     historyData={filteredHistory}
+                    criteria={
+                      selectedEquipmentCleaning
+                        ? {
+                            sparkThreshold: selectedEquipmentCleaning.sparkThreshold,
+                            sparkTimeWindowSec: selectedEquipmentCleaning.sparkTimeWindow,
+                            pressureBase: selectedEquipmentCleaning.pressureBase,
+                            pressureRatePercent: selectedEquipmentCleaning.pressureRate,
+                          }
+                        : undefined
+                    }
                   />
                 )}
               </div>

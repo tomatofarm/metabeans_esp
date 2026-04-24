@@ -46,9 +46,13 @@ export function getCommIssueLevel(lastSeenAt: string | undefined | null): Status
  * 유입 온도 이상 판정
  * Yellow: 70°C 이상, Red: 100°C 이상
  */
-export function getInletTempLevel(inletTemp: number): StatusLevel {
-  if (inletTemp >= INLET_TEMP_THRESHOLDS.redMin) return 'red';
-  if (inletTemp >= INLET_TEMP_THRESHOLDS.yellowMin) return 'yellow';
+export function getInletTempLevel(
+  inletTemp: number,
+  yellowMin: number = INLET_TEMP_THRESHOLDS.yellowMin,
+  redMin: number = INLET_TEMP_THRESHOLDS.redMin,
+): StatusLevel {
+  if (inletTemp >= redMin) return 'red';
+  if (inletTemp >= yellowMin) return 'yellow';
   return 'green';
 }
 
@@ -158,7 +162,7 @@ export interface FilterCheckResult {
 export function computeSparkWindowAvg(
   history: SensorHistoryDataPoint[],
   controllerName: string,
-  windowMin = FILTER_CHECK_PARAMS.sparkWindowMin,
+  windowMin: number = FILTER_CHECK_PARAMS.sparkWindowMin,
 ): number {
   const cutoffTs = Math.floor(Date.now() / 1000) - windowMin * 60;
   const pts = history.filter(
@@ -177,9 +181,9 @@ export function computeSparkWindowAvg(
 export function getFilterCheckResult(
   diffPressure: number,
   sparkAvg: number,
-  sparkThreshold = FILTER_CHECK_PARAMS.sparkThreshold,
-  pressureBaseline = FILTER_CHECK_PARAMS.pressureBaseline,
-  pressureIncreaseRate = FILTER_CHECK_PARAMS.pressureIncreaseRate,
+  sparkThreshold: number = FILTER_CHECK_PARAMS.sparkThreshold,
+  pressureBaseline: number = FILTER_CHECK_PARAMS.pressureBaseline,
+  pressureIncreaseRate: number = FILTER_CHECK_PARAMS.pressureIncreaseRate,
 ): FilterCheckResult {
   const sparkConditionMet = sparkAvg >= sparkThreshold;
   const pressureConditionMet = diffPressure >= pressureBaseline * (1 + pressureIncreaseRate);

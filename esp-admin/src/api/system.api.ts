@@ -57,6 +57,9 @@ export function usePermissionMatrix() {
     queryFn: () => (useRealApi ? systemReal.fetchPermissionMatrix() : mockGetPermissionMatrix()),
     enabled: isLoggedIn,
     staleTime: 5 * 60 * 1000,
+    /** 로그인 세션 중 관리자 권한 변경 등이 반영되도록 주기 갱신 (AppLayout 등에서만 구독) */
+    refetchInterval: 5 * 60 * 1000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -212,11 +215,14 @@ export function useDeleteUserPermissionOverride() {
 
 // ===== 기준수치 관리 =====
 
-export function useThresholdSettings() {
+export function useThresholdSettings(enabled = true) {
   return useQuery({
     queryKey: ['system-thresholds'],
     queryFn: () => (useRealApi ? systemReal.fetchThresholdSettings() : mockGetThresholds()),
+    enabled,
     staleTime: 5 * 60 * 1000,
+    // 시스템 탭 재진입 시 최신 기준값을 항상 다시 읽는다.
+    refetchOnMount: 'always',
   });
 }
 

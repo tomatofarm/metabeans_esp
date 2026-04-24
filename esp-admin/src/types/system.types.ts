@@ -185,6 +185,8 @@ export interface SystemUserUpdateRequest {
 export interface CleaningThreshold {
   thresholdId: number;
   equipmentId: number;
+  /** 기준수치 탭 표시용 (API가 내려주면 사용) */
+  equipmentDisplayName?: string;
   sparkThreshold: number;
   sparkTimeWindow: number;
   pressureBase?: number;

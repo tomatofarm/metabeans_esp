@@ -84,9 +84,10 @@ export default function ControlFanPage() {
 
           sendCommand.mutate(
             {
+              gatewayId: realtimeData?.gatewayId ?? 0,
               target: 2,
               action,
-              equipmentId: 'esp-001',
+              equipmentId: realtimeData?.mqttEquipmentId ?? 'all',
               controllerId,
             },
             {
@@ -108,7 +109,7 @@ export default function ControlFanPage() {
         },
       });
     },
-    [sendCommand, clearManualFanDraft],
+    [sendCommand, clearManualFanDraft, realtimeData],
   );
 
   const handleModeChange = useCallback(
@@ -124,10 +125,11 @@ export default function ControlFanPage() {
 
           sendCommand.mutate(
             {
+              gatewayId: realtimeData?.gatewayId ?? 0,
               target: 2,
               action: FAN_ACTIONS.SET_MODE,
               value: autoMode ? 1 : 0,
-              equipmentId: 'esp-001',
+              equipmentId: realtimeData?.mqttEquipmentId ?? 'all',
               controllerId,
             },
             {
@@ -148,7 +150,7 @@ export default function ControlFanPage() {
         },
       });
     },
-    [sendCommand],
+    [sendCommand, realtimeData],
   );
 
   const handleSetTargetVelocity = useCallback(
@@ -162,10 +164,11 @@ export default function ControlFanPage() {
 
           sendCommand.mutate(
             {
+              gatewayId: realtimeData?.gatewayId ?? 0,
               target: 2,
               action: FAN_ACTIONS.SET_TARGET_VELOCITY,
               value: targetVelocity,
-              equipmentId: 'esp-001',
+              equipmentId: realtimeData?.mqttEquipmentId ?? 'all',
               controllerId,
             },
             {
@@ -186,7 +189,7 @@ export default function ControlFanPage() {
         },
       });
     },
-    [sendCommand],
+    [sendCommand, realtimeData],
   );
 
   const handleBatchMode = useCallback(
@@ -200,10 +203,11 @@ export default function ControlFanPage() {
           setPendingCmds((prev) => ({ ...prev, batchMode: true }));
           sendCommand.mutate(
             {
+              gatewayId: realtimeData?.gatewayId ?? 0,
               target: 2,
               action: FAN_ACTIONS.SET_MODE,
               value: autoMode ? 1 : 0,
-              equipmentId: 'all',
+              equipmentId: realtimeData?.mqttEquipmentId ?? 'all',
               controllerId: 'all',
             },
             {
@@ -224,7 +228,7 @@ export default function ControlFanPage() {
         },
       });
     },
-    [sendCommand],
+    [sendCommand, realtimeData],
   );
 
   // 팬 제어 이력 필터
@@ -423,7 +427,8 @@ export default function ControlFanPage() {
                         key={opt.value}
                         type="button"
                         className={`fan-manual-level-btn ${draftManualAction === opt.value ? 'fan-manual-level-btn-active' : ''}`}
-                        disabled={!!pendingCmds[fanKey] || !isOnline}
+                        disabled={!!pendingCmds[fanKey]}
+                        title={!isOnline ? '통신 끊김: 풍량 선택만 가능하며, 적용은 연결 후에 할 수 있습니다.' : undefined}
                         aria-pressed={draftManualAction === opt.value}
                         onClick={() => {
                           setManualDraftFanActionByCtrl((prev) => ({ ...prev, [fanDraftKey]: opt.value }));
@@ -445,6 +450,7 @@ export default function ControlFanPage() {
                     className="fan-manual-apply-btn"
                     loading={!!pendingCmds[fanKey]}
                     disabled={!isOnline || draftManualAction === currentManualAction}
+                    title={!isOnline ? '통신이 연결된 뒤 적용할 수 있습니다.' : undefined}
                     onClick={() => handleApplyManualFanSpeed(
                       ctrl.controllerName,
                       ctrl.controllerName,

@@ -12,10 +12,14 @@ import {
   mockGetAlarmHistory,
   mockGetEquipmentChangeHistory,
 } from './mock/history.mock';
+import * as historyReal from './real/history.real';
 import type { ControlTarget } from '../types/control.types';
 import type { AlarmType } from '../types/equipment.types';
 import { useAuthStore } from '../stores/authStore';
 import { resolveAuthorizedNumericStoreIds } from '../utils/mockAccess';
+
+const useRealApi =
+  import.meta.env.VITE_USE_MOCK_API !== 'true' && Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
 
 function useMockAuthorizedStores() {
   const storeIds = useAuthStore((s) => s.user?.storeIds);
@@ -33,7 +37,9 @@ export function useSensorHistoryRange(
   return useQuery({
     queryKey: ['history', 'sensor', user?.userId, authorizedStoreIds, equipmentId, from, to],
     queryFn: () =>
-      mockGetSensorHistoryRange(equipmentId!, from!, to!, authorizedStoreIds),
+      useRealApi
+        ? historyReal.fetchSensorHistoryRange(equipmentId!, from!, to!)
+        : mockGetSensorHistoryRange(equipmentId!, from!, to!, authorizedStoreIds),
     enabled: equipmentId !== null && from !== null && to !== null,
     staleTime: 60 * 1000,
   });
@@ -51,7 +57,9 @@ export function useControlHistoryRange(
   return useQuery({
     queryKey: ['history', 'control', user?.userId, authorizedStoreIds, equipmentId, from, to, targetFilter],
     queryFn: () =>
-      mockGetControlHistoryRange(equipmentId!, from!, to!, targetFilter, authorizedStoreIds),
+      useRealApi
+        ? historyReal.fetchControlHistoryRange(equipmentId!, from!, to!, targetFilter)
+        : mockGetControlHistoryRange(equipmentId!, from!, to!, targetFilter, authorizedStoreIds),
     enabled: equipmentId !== null && from !== null && to !== null,
     staleTime: 30 * 1000,
   });
@@ -69,7 +77,9 @@ export function useAlarmHistory(
   return useQuery({
     queryKey: ['history', 'alarm', user?.userId, authorizedStoreIds, equipmentId, from, to, typeFilter],
     queryFn: () =>
-      mockGetAlarmHistory(equipmentId!, from!, to!, typeFilter, authorizedStoreIds),
+      useRealApi
+        ? historyReal.fetchAlarmHistory(equipmentId!, from!, to!, typeFilter)
+        : mockGetAlarmHistory(equipmentId!, from!, to!, typeFilter, authorizedStoreIds),
     enabled: equipmentId !== null && from !== null && to !== null,
     staleTime: 30 * 1000,
   });
@@ -81,7 +91,10 @@ export function useEquipmentChangeHistory(equipmentId: number | null) {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['history', 'equipment-change', user?.userId, authorizedStoreIds, equipmentId],
-    queryFn: () => mockGetEquipmentChangeHistory(equipmentId!, authorizedStoreIds),
+    queryFn: () =>
+      useRealApi
+        ? historyReal.fetchEquipmentChangeHistory(equipmentId!)
+        : mockGetEquipmentChangeHistory(equipmentId!, authorizedStoreIds),
     enabled: equipmentId !== null,
     staleTime: 60 * 1000,
   });

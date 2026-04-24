@@ -114,10 +114,11 @@ export default function ControlDamperPage() {
 
       sendCommand.mutate(
         {
+          gatewayId: realtimeData?.gatewayId ?? 0,
           target: 1,
           action: DAMPER_ACTIONS.SET_OPENING,
           value: stepInfo.value,
-          equipmentId: 'esp-001',
+          equipmentId: realtimeData?.mqttEquipmentId ?? 'all',
           controllerId,
         },
         {
@@ -139,7 +140,7 @@ export default function ControlDamperPage() {
         },
       );
     },
-    [sendCommand, clearManualDraft],
+    [sendCommand, clearManualDraft, realtimeData],
   );
 
   const handleApplyManualDamper = useCallback(
@@ -184,10 +185,11 @@ export default function ControlDamperPage() {
 
           sendCommand.mutate(
             {
+              gatewayId: realtimeData?.gatewayId ?? 0,
               target: 1,
               action: DAMPER_ACTIONS.SET_MODE,
               value: autoMode ? 1 : 0,
-              equipmentId: 'esp-001',
+              equipmentId: realtimeData?.mqttEquipmentId ?? 'all',
               controllerId,
             },
             {
@@ -208,7 +210,7 @@ export default function ControlDamperPage() {
         },
       });
     },
-    [sendCommand],
+    [sendCommand, realtimeData],
   );
 
   const handleSetTargetFlow = useCallback(
@@ -222,10 +224,11 @@ export default function ControlDamperPage() {
 
           sendCommand.mutate(
             {
+              gatewayId: realtimeData?.gatewayId ?? 0,
               target: 1,
               action: DAMPER_ACTIONS.SET_TARGET_FLOW,
               value: targetFlow,
-              equipmentId: 'esp-001',
+              equipmentId: realtimeData?.mqttEquipmentId ?? 'all',
               controllerId,
             },
             {
@@ -246,7 +249,7 @@ export default function ControlDamperPage() {
         },
       });
     },
-    [sendCommand],
+    [sendCommand, realtimeData],
   );
 
   const handleBatchMode = useCallback(
@@ -260,10 +263,11 @@ export default function ControlDamperPage() {
           setPendingCmds((prev) => ({ ...prev, batchMode: true }));
           sendCommand.mutate(
             {
+              gatewayId: realtimeData?.gatewayId ?? 0,
               target: 1,
               action: DAMPER_ACTIONS.SET_MODE,
               value: autoMode ? 1 : 0,
-              equipmentId: 'all',
+              equipmentId: realtimeData?.mqttEquipmentId ?? 'all',
               controllerId: 'all',
             },
             {
@@ -284,7 +288,7 @@ export default function ControlDamperPage() {
         },
       });
     },
-    [sendCommand],
+    [sendCommand, realtimeData],
   );
 
   // 댐퍼 제어 이력 필터
@@ -490,7 +494,8 @@ export default function ControlDamperPage() {
                           type="button"
                           className={`damper-eight-segment ${filled ? 'damper-eight-segment--filled' : ''}`}
                           style={filled ? { backgroundColor: segmentColor } : undefined}
-                          disabled={!!pendingCmds[damperKey] || !isOnline}
+                          disabled={!!pendingCmds[damperKey]}
+                          title={!isOnline ? '통신 끊김: 단계 선택만 가능하며, 적용은 연결 후에 할 수 있습니다.' : undefined}
                           aria-pressed={draftStep === s.step}
                           aria-label={`${s.step + 1}단계 ${s.opening}% (${getDamperOpeningText(s.opening)})`}
                           onClick={() =>
@@ -533,6 +538,7 @@ export default function ControlDamperPage() {
                     className="damper-apply-btn"
                     loading={!!pendingCmds[damperKey]}
                     disabled={!isOnline || draftStep === currentStep}
+                    title={!isOnline ? '통신이 연결된 뒤 적용할 수 있습니다.' : undefined}
                     onClick={() =>
                       handleApplyManualDamper(
                         ctrl.controllerName,

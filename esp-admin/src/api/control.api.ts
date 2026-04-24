@@ -19,9 +19,13 @@ import {
   mockUpdateFanAutoSettings,
   mockSendGatewayConfig,
 } from './mock/control.mock';
+import * as controlReal from './real/control.real';
 import type { SendControlRequest, FanAutoSettings, ConfigCommand } from '../types/control.types';
 import { useAuthStore } from '../stores/authStore';
 import { resolveAuthorizedNumericStoreIds } from '../utils/mockAccess';
+
+const useRealApi =
+  import.meta.env.VITE_USE_MOCK_API !== 'true' && Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
 
 function getAuthorizedStoresSnapshot() {
   return resolveAuthorizedNumericStoreIds(useAuthStore.getState().user?.storeIds);
@@ -36,7 +40,8 @@ function useMockAuthorizedStores() {
 export function useSendControlCommand() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (request: SendControlRequest) => mockSendControlCommand(request),
+    mutationFn: (request: SendControlRequest) =>
+      useRealApi ? controlReal.sendControlCommand(request) : mockSendControlCommand(request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['control', 'history'] });
     },
@@ -49,7 +54,10 @@ export function useControlHistory(equipmentId: number | null) {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['control', 'history', user?.userId, authorizedStoreIds, equipmentId],
-    queryFn: () => mockGetControlHistory(equipmentId!, authorizedStoreIds),
+    queryFn: () =>
+      useRealApi
+        ? controlReal.fetchControlHistory(equipmentId!)
+        : mockGetControlHistory(equipmentId!, authorizedStoreIds),
     enabled: equipmentId !== null,
     staleTime: 30 * 1000,
   });
@@ -61,7 +69,10 @@ export function useFanAutoSettings(equipmentId: number | null) {
   const authorizedStoreIds = useMockAuthorizedStores();
   return useQuery({
     queryKey: ['control', 'fan-auto-settings', user?.userId, authorizedStoreIds, equipmentId],
-    queryFn: () => mockGetFanAutoSettings(equipmentId!, authorizedStoreIds),
+    queryFn: () =>
+      useRealApi
+        ? controlReal.fetchFanAutoSettings(equipmentId!)
+        : mockGetFanAutoSettings(equipmentId!, authorizedStoreIds),
     enabled: equipmentId !== null,
     staleTime: 60 * 1000,
   });
@@ -72,7 +83,9 @@ export function useUpdateFanAutoSettings() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ equipmentId, settings }: { equipmentId: number; settings: Partial<FanAutoSettings> }) =>
-      mockUpdateFanAutoSettings(equipmentId, settings, getAuthorizedStoresSnapshot()),
+      useRealApi
+        ? controlReal.updateFanAutoSettings(equipmentId, settings)
+        : mockUpdateFanAutoSettings(equipmentId, settings, getAuthorizedStoresSnapshot()),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['control', 'fan-auto-settings', variables.equipmentId] });
     },
@@ -83,6 +96,6 @@ export function useUpdateFanAutoSettings() {
 export function useSendGatewayConfig() {
   return useMutation({
     mutationFn: ({ gatewayId, config }: { gatewayId: number; config: Partial<ConfigCommand> }) =>
-      mockSendGatewayConfig(gatewayId, config),
+      useRealApi ? controlReal.sendGatewayConfig(gatewayId, config) : mockSendGatewayConfig(gatewayId, config),
   });
 }

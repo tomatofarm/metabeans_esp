@@ -70,7 +70,10 @@ export function useStoreDashboard(storeId: number | null) {
     queryFn: () =>
       useRealApi ? dashboardReal.fetchStoreDashboard(storeId!) : mockGetStoreDashboard(storeId!),
     enabled: storeId !== null,
-    staleTime: 30 * 1000,
+    // 매장 상세(실내 공기질/장비 현황)는 준실시간 화면이라 10초마다 동기화
+    staleTime: 9 * 1000,
+    refetchInterval: 10 * 1000,
+    refetchOnWindowFocus: true,
   });
 }
 

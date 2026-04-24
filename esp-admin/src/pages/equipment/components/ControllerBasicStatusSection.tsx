@@ -56,9 +56,15 @@ function MetricCard({ name, value, unit, sub, level, badge }: MetricCardProps) {
 
 interface Props {
   controllers: RealtimeControllerData[];
+  thresholds?: {
+    boardTemp?: { yellowMin?: number; redMin?: number };
+    spark?: { yellowMin?: number; redMin?: number };
+    pm25?: { yellowMin?: number; redMin?: number };
+    pm10?: { yellowMin?: number; redMin?: number };
+  };
 }
 
-export default function ControllerBasicStatusSection({ controllers }: Props) {
+export default function ControllerBasicStatusSection({ controllers, thresholds }: Props) {
   if (controllers.length === 0) return null;
 
   return (
@@ -71,10 +77,26 @@ export default function ControllerBasicStatusSection({ controllers }: Props) {
         const sd = ctrl.sensorData;
         const connLevel = getConnectionStatusFromEpoch(sd.timestamp);
         const powerLevel = getPowerStatus(sd.ppPower);
-        const tempLevel = getBoardTempLevel(sd.ppTemp);
-        const sparkLevel = getSparkLevel(sd.ppSpark);
-        const pm25Level = getPM25Level(sd.pm25);
-        const pm10Level = getPM10Level(sd.pm10);
+        const tempLevel = getBoardTempLevel(
+          sd.ppTemp,
+          thresholds?.boardTemp?.yellowMin ?? 60,
+          thresholds?.boardTemp?.redMin ?? 80,
+        );
+        const sparkLevel = getSparkLevel(
+          sd.ppSpark,
+          thresholds?.spark?.yellowMin ?? 3000,
+          thresholds?.spark?.redMin ?? 7000,
+        );
+        const pm25Level = getPM25Level(
+          sd.pm25,
+          thresholds?.pm25?.yellowMin ?? 35,
+          thresholds?.pm25?.redMin ?? 75,
+        );
+        const pm10Level = getPM10Level(
+          sd.pm10,
+          thresholds?.pm10?.yellowMin ?? 75,
+          thresholds?.pm10?.redMin ?? 100,
+        );
 
         return (
           <div key={ctrl.controllerId} style={{ marginBottom: idx < controllers.length - 1 ? 24 : 0 }}>

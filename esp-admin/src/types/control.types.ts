@@ -130,6 +130,7 @@ export const DAMPER_STEPS = [
 
 // 제어 명령 요청 (프론트→API)
 export interface SendControlRequest {
+  gatewayId: number;
   target: ControlTarget;
   action: number;
   value?: number;

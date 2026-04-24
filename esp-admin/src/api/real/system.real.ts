@@ -398,15 +398,69 @@ interface ApiCleaningThresholdRow {
   updatedAt: string | Date;
 }
 
+interface ApiMonitoringThresholdRow {
+  thresholdId: number;
+  metricName: string;
+  yellowMin: number | null;
+  redMin: number | null;
+  description: string | null;
+  setBy: number;
+  updatedAt: string | Date;
+}
+
+interface ApiDamperAutoRow {
+  settingId: number;
+  equipmentId: number;
+  equipmentName: string;
+  targetFlowCmh: number;
+  targetVelocity: number;
+  updatedAt: string | Date;
+}
+
+const UNIT_BY_METRIC_NAME: Array<{ includes: string; unit: string }> = [
+  { includes: "온도", unit: "°C" },
+  { includes: "스파크", unit: "회" },
+  { includes: "PM2.5", unit: "µg/m³" },
+  { includes: "PM10", unit: "µg/m³" },
+  { includes: "차압", unit: "Pa" },
+];
+
+function inferMetricUnit(metricName: string): string {
+  return UNIT_BY_METRIC_NAME.find((x) => metricName.includes(x.includes))?.unit ?? "";
+}
+
 export async function fetchThresholdSettings(): Promise<ApiResponse<ThresholdSettings>> {
-  const cleaningRows = await apiRequest<ApiCleaningThresholdRow[]>({
-    method: 'get',
-    url: '/system/thresholds/cleaning',
-  });
+  const [cleaningRows, monitoringRows, damperRows, sparkBase] = await Promise.all([
+    apiRequest<ApiCleaningThresholdRow[]>({
+      method: 'get',
+      url: '/system/thresholds/cleaning',
+    }),
+    apiRequest<ApiMonitoringThresholdRow[]>({
+      method: 'get',
+      url: '/system/thresholds/monitoring',
+    }),
+    apiRequest<ApiDamperAutoRow[]>({
+      method: 'get',
+      url: '/system/thresholds/damper-auto',
+    }),
+    apiRequest<{ sparkBaseTime: number }>({
+      method: 'get',
+      url: '/system/thresholds/spark-base-time',
+    }),
+  ]);
   return {
     success: true,
     data: {
-      monitoringThresholds: [],
+      monitoringThresholds: monitoringRows.map((r) => ({
+        thresholdId: r.thresholdId,
+        metricName: r.metricName,
+        unit: inferMetricUnit(r.metricName),
+        yellowMin: r.yellowMin ?? undefined,
+        redMin: r.redMin ?? undefined,
+        description: r.description ?? undefined,
+        setBy: r.setBy,
+        updatedAt: iso(r.updatedAt),
+      })),
       cleaningThresholds: cleaningRows.map((r) => ({
         thresholdId: r.thresholdId,
         equipmentId: r.equipmentId,
@@ -417,8 +471,15 @@ export async function fetchThresholdSettings(): Promise<ApiResponse<ThresholdSet
         setBy: r.setBy,
         updatedAt: iso(r.updatedAt),
       })),
-      damperAutoSettings: [],
-      sparkBaseTime: 600,
+      damperAutoSettings: damperRows.map((r) => ({
+        settingId: r.settingId,
+        equipmentId: r.equipmentId,
+        equipmentName: r.equipmentName,
+        targetFlowCmh: r.targetFlowCmh,
+        targetVelocity: r.targetVelocity,
+        updatedAt: iso(r.updatedAt),
+      })),
+      sparkBaseTime: sparkBase.sparkBaseTime,
     },
   };
 }
@@ -426,6 +487,27 @@ export async function fetchThresholdSettings(): Promise<ApiResponse<ThresholdSet
 export async function updateThresholds(
   data: Partial<ThresholdSettings>,
 ): Promise<ApiResponse<{ success: boolean }>> {
+  if (data.sparkBaseTime !== undefined) {
+    await apiRequest<unknown>({
+      method: 'put',
+      url: '/system/thresholds/spark-base-time',
+      data: { sparkBaseTime: data.sparkBaseTime },
+    });
+  }
+  if (data.monitoringThresholds?.length) {
+    for (const m of data.monitoringThresholds) {
+      await apiRequest<unknown>({
+        method: 'put',
+        url: '/system/thresholds/monitoring',
+        data: {
+          thresholdId: m.thresholdId,
+          yellowMin: m.yellowMin ?? null,
+          redMin: m.redMin ?? null,
+          description: m.description ?? null,
+        },
+      });
+    }
+  }
   if (data.cleaningThresholds?.length) {
     for (const c of data.cleaningThresholds) {
       await apiRequest<unknown>({
@@ -437,6 +519,19 @@ export async function updateThresholds(
           sparkTimeWindow: c.sparkTimeWindow,
           pressureBase: c.pressureBase,
           pressureRate: c.pressureRate,
+        },
+      });
+    }
+  }
+  if (data.damperAutoSettings?.length) {
+    for (const s of data.damperAutoSettings) {
+      await apiRequest<unknown>({
+        method: 'put',
+        url: '/system/thresholds/damper-auto',
+        data: {
+          equipmentId: s.equipmentId,
+          targetFlowCmh: s.targetFlowCmh,
+          targetVelocity: s.targetVelocity,
         },
       });
     }

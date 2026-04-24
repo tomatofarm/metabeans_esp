@@ -35,14 +35,19 @@ export default function ControlPowerPage() {
         title: '전원 제어 확인',
         content: `파워팩 [${controllerLabel}]의 전원을 ${actionLabel}시겠습니까?`,
         onOk: () => {
+          if (!realtimeData?.gatewayId) {
+            message.error('게이트웨이 정보가 없어 제어할 수 없습니다.');
+            return;
+          }
           const key = `${controllerId}-power`;
           setPendingCmds((prev) => ({ ...prev, [key]: true }));
 
           sendCommand.mutate(
             {
+              gatewayId: realtimeData.gatewayId,
               target: 0,
               action,
-              equipmentId: realtimeData?.equipmentName?.split('#')[0]?.trim() ?? 'esp-001',
+              equipmentId: realtimeData.mqttEquipmentId ?? 'all',
               controllerId,
             },
             {
@@ -74,12 +79,17 @@ export default function ControlPowerPage() {
         title: '일괄 전원 제어',
         content: `이 장비의 모든 파워팩 전원을 ${actionLabel}시겠습니까?`,
         onOk: () => {
+          if (!realtimeData?.gatewayId) {
+            message.error('게이트웨이 정보가 없어 제어할 수 없습니다.');
+            return;
+          }
           setPendingCmds((prev) => ({ ...prev, batch: true }));
           sendCommand.mutate(
             {
+              gatewayId: realtimeData.gatewayId,
               target: 0,
               action,
-              equipmentId: 'all',
+              equipmentId: realtimeData.mqttEquipmentId ?? 'all',
               controllerId: 'all',
             },
             {
@@ -100,7 +110,7 @@ export default function ControlPowerPage() {
         },
       });
     },
-    [sendCommand],
+    [sendCommand, realtimeData],
   );
 
   // 제어 이력 테이블 (전원만 필터)

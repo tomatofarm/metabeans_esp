@@ -138,6 +138,10 @@ export interface RealtimeControllerData {
 // 실시간 모니터링 장비 데이터 (equipment 단위)
 export interface RealtimeMonitoringData {
   equipmentId: number;
+  /** MQTT equipment_id (제어 명령 payload용) */
+  mqttEquipmentId?: string;
+  /** 선택 장비가 연결된 gateway PK (제어 명령 전송용) */
+  gatewayId?: number;
   equipmentName: string;
   modelName: string;
   storeName: string;
