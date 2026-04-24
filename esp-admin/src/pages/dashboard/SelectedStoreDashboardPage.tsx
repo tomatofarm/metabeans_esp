@@ -10,7 +10,12 @@ import type { StoreEquipmentStatus, StoreAsRequest, DashboardIssueItem } from '.
 import { formatRelativeTime } from '../../utils/formatters';
 import { AS_STATUS_LABELS } from '../../utils/constants';
 
-interface StoreDashboardPageProps {
+/**
+ * `selectedStoreId`가 잡힌 뒤의 단일 매장 대시보드.
+ * **역할은 `UserRole`로 구분** — 점주는 `OWNER` 하나이며, 이 화면은 OWNER뿐 아니라
+ * 딜러·HQ·어드민이 매장을 선택해도 동일하게 사용한다 (구 `StoreDashboardPage`).
+ */
+interface SelectedStoreDashboardPageProps {
   storeId: number;
   onEquipmentClick: (equipmentId: number) => void;
 }
@@ -101,7 +106,10 @@ const issueColumns = [
   },
 ];
 
-export default function StoreDashboardPage({ storeId, onEquipmentClick }: StoreDashboardPageProps) {
+export default function SelectedStoreDashboardPage({
+  storeId,
+  onEquipmentClick,
+}: SelectedStoreDashboardPageProps) {
   const { data, isLoading } = useStoreDashboard(storeId);
   const { isAllowed: canViewIndoorAir, isLoading: indoorAirPermLoading } =
     useFeaturePermission('dashboard.indoor_air');

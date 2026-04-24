@@ -2,6 +2,7 @@ import { Typography, Space, Row, Col, Card, Table, Empty, Spin } from 'antd';
 import { DesktopOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { useSystemUsers } from '../../api/system.api';
 import {
   useRoleDashboardIssues,
   useRoleDashboardPendingAs,
@@ -11,6 +12,7 @@ import type { StoreEquipmentStatus, DashboardIssueItem } from '../../types/dashb
 import AirQualityCard from '../../components/common/AirQualityCard';
 import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import ASRequestPanel from './components/ASRequestPanel';
+import TotalUserSummaryCard from './components/TotalUserSummaryCard';
 import StatusTag from '../../components/common/StatusTag';
 import StatusBadge from '../../components/common/StatusBadge';
 import { formatRelativeTime } from '../../utils/formatters';
@@ -142,6 +144,13 @@ export default function OwnerDashboardPage({ onNavigateToEquipment }: OwnerDashb
   const { isAllowed: canViewAs, isLoading: asViewPermLoading } = useFeaturePermission('as.view');
   const { isAllowed: canCreateAs, isLoading: asCreatePermLoading } = useFeaturePermission('as.create');
   const showAsPanel = asViewPermLoading || asCreatePermLoading || canViewAs || canCreateAs;
+  const { isAllowed: canViewTotalUsers, isLoading: totalUsersPermLoading } =
+    useFeaturePermission('dashboard.total_users');
+  const { data: usersRes, isLoading: usersCountLoading } = useSystemUsers(
+    { page: 1, pageSize: 1 },
+    { enabled: !totalUsersPermLoading && canViewTotalUsers },
+  );
+  const totalUserCount = usersRes?.meta?.totalCount ?? usersRes?.data?.length ?? 0;
 
   if (storeLoading) {
     return <Spin tip="매장 데이터 로딩 중..." style={{ display: 'block', marginTop: 100 }} />;
@@ -162,6 +171,15 @@ export default function OwnerDashboardPage({ onNavigateToEquipment }: OwnerDashb
           </Typography.Text>
         )}
       </div>
+
+      {(totalUsersPermLoading || canViewTotalUsers) && (
+        <div className="summary-grid summary-grid-1" style={{ maxWidth: 360 }}>
+          <TotalUserSummaryCard
+            value={totalUserCount}
+            loading={usersCountLoading && canViewTotalUsers}
+          />
+        </div>
+      )}
 
       {(showIndoorAir || showStoreOverview) && (
         <Row gutter={[16, 16]}>

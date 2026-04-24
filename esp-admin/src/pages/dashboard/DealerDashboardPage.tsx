@@ -5,6 +5,7 @@ import {
   DesktopOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../../stores/authStore';
+import { useSystemUsers } from '../../api/system.api';
 import {
   useRoleDashboardSummary,
   useRoleDashboardIssues,
@@ -16,6 +17,7 @@ import { STATUS_COLORS } from '../../utils/constants';
 import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import IssuePanel from './components/IssuePanel';
 import ASRequestPanel from './components/ASRequestPanel';
+import TotalUserSummaryCard from './components/TotalUserSummaryCard';
 import StatusTag from '../../components/common/StatusTag';
 
 interface DealerDashboardPageProps {
@@ -23,10 +25,33 @@ interface DealerDashboardPageProps {
   onNavigateToEquipment: (equipmentId: number) => void;
 }
 
-function DealerSummaryCards({ data, loading }: { data?: RoleDashboardSummary; loading?: boolean }) {
-  if (loading) return <div className="summary-grid summary-grid-2"><div className="summary-card">로딩중...</div><div className="summary-card">로딩중...</div></div>;
+function DealerSummaryCards({
+  data,
+  loading,
+  showTotalUserCard,
+  totalUsers,
+  totalUsersLoading,
+}: {
+  data?: RoleDashboardSummary;
+  loading?: boolean;
+  showTotalUserCard?: boolean;
+  totalUsers?: number;
+  totalUsersLoading?: boolean;
+}) {
+  const cols = showTotalUserCard ? 3 : 2;
+  if (loading) {
+    return (
+      <div className={`summary-grid summary-grid-${cols}`}>
+        {Array.from({ length: cols }).map((_, i) => (
+          <div key={i} className="summary-card">
+            로딩중...
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
-    <div className="summary-grid summary-grid-2">
+    <div className={`summary-grid summary-grid-${cols}`}>
       <div className="summary-card">
         <div className="summary-card-icon" style={{ background: 'linear-gradient(135deg, #4A6CF7, #6B7CFF)' }}>
           <ShopOutlined />
@@ -46,6 +71,9 @@ function DealerSummaryCards({ data, loading }: { data?: RoleDashboardSummary; lo
           <div className="summary-card-sub">정상 {data?.normalEquipments ?? 0}</div>
         </div>
       </div>
+      {showTotalUserCard && (
+        <TotalUserSummaryCard value={totalUsers ?? 0} loading={totalUsersLoading} />
+      )}
     </div>
   );
 }
@@ -113,6 +141,16 @@ export default function DealerDashboardPage({
   const { isAllowed: canViewAsList, isLoading: asViewPermLoading } = useFeaturePermission('as.view');
   const { isAllowed: canCreateAs } = useFeaturePermission('as.create');
   const showAsPanel = asViewPermLoading || canViewAsList;
+  const { isAllowed: canViewTotalUsers, isLoading: totalUsersPermLoading } =
+    useFeaturePermission('dashboard.total_users');
+  const { data: usersRes, isLoading: usersCountLoading } = useSystemUsers(
+    { page: 1, pageSize: 1 },
+    { enabled: !totalUsersPermLoading && canViewTotalUsers },
+  );
+  const totalUserCount = usersRes?.meta?.totalCount ?? usersRes?.data?.length ?? 0;
+  const showTotalUserPermission = totalUsersPermLoading || canViewTotalUsers;
+  const showUsersCardInSummaryGrid = showStoreOverview && showTotalUserPermission;
+  const showUsersCardOnly = !showStoreOverview && showTotalUserPermission;
 
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
@@ -126,7 +164,21 @@ export default function DealerDashboardPage({
       </div>
 
       {showStoreOverview && (
-        <DealerSummaryCards data={summary} loading={summaryLoading} />
+        <DealerSummaryCards
+          data={summary}
+          loading={summaryLoading}
+          showTotalUserCard={showUsersCardInSummaryGrid}
+          totalUsers={totalUserCount}
+          totalUsersLoading={usersCountLoading && canViewTotalUsers}
+        />
+      )}
+      {showUsersCardOnly && (
+        <div className="summary-grid summary-grid-1" style={{ maxWidth: 360 }}>
+          <TotalUserSummaryCard
+            value={totalUserCount}
+            loading={usersCountLoading && canViewTotalUsers}
+          />
+        </div>
       )}
 
       {(showStoreOverview || showAsPanel) && (

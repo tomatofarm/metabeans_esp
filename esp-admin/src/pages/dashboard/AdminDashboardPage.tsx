@@ -28,9 +28,13 @@ export default function AdminDashboardPage({
   const { data: storeMap, isLoading: mapLoading } = useStoreMapData();
   const { data: esg, isLoading: esgLoading } = useEsgSummary();
   const { data: pendingAs, isLoading: asLoading } = useDashboardPendingAs();
-  const { data: usersRes } = useSystemUsers({ page: 1, pageSize: 1 });
+  const { isAllowed: canViewTotalUsers, isLoading: totalUsersPermLoading } =
+    useFeaturePermission('dashboard.total_users');
+  const { data: usersRes } = useSystemUsers(
+    { page: 1, pageSize: 1 },
+    { enabled: !totalUsersPermLoading && canViewTotalUsers },
+  );
   const totalUsers = usersRes?.meta?.totalCount ?? usersRes?.data?.length ?? 0;
-  const { isAllowed: canViewTotalUsers } = useFeaturePermission('dashboard.total_users');
   const { isAllowed: canViewTotalStores } = useFeaturePermission('dashboard.total_stores');
 
   return (

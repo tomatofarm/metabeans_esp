@@ -127,10 +127,14 @@ export function useApprovePasswordReset() {
 
 // ===== 사용자 관리 =====
 
-export function useSystemUsers(params?: UserListParams) {
+export function useSystemUsers(
+  params?: UserListParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: ['system-users', params],
     queryFn: () => (useRealApi ? systemReal.fetchSystemUsers(params) : mockGetUsers(params)),
+    enabled: options?.enabled !== false,
     staleTime: 30 * 1000,
   });
 }

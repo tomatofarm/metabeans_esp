@@ -6,7 +6,7 @@ import AdminDashboardPage from './AdminDashboardPage';
 import DealerDashboardPage from './DealerDashboardPage';
 import HQDashboardPage from './HQDashboardPage';
 import OwnerDashboardPage from './OwnerDashboardPage';
-import StoreDashboardPage from './StoreDashboardPage';
+import SelectedStoreDashboardPage from './SelectedStoreDashboardPage';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -41,10 +41,10 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Store selected → show store dashboard (all roles)
+  // 매장 선택됨 → 단일 매장 대시보드 (역할 구분 아님; 점주·딜러·HQ·어드민 공통)
   if (selectedStoreId) {
     return (
-      <StoreDashboardPage
+      <SelectedStoreDashboardPage
         storeId={selectedStoreId}
         onEquipmentClick={handleNavigateToEquipment}
       />

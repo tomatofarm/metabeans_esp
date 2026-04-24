@@ -190,6 +190,7 @@ body {
 .summary-grid-4 { grid-template-columns: repeat(4, 1fr); }
 .summary-grid-3 { grid-template-columns: repeat(3, 1fr); }
 .summary-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.summary-grid-1 { grid-template-columns: 1fr; }
 
 .summary-card {
   background: var(--color-white);

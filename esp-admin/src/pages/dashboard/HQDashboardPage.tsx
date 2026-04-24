@@ -5,19 +5,18 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { useSystemUsers } from '../../api/system.api';
 import {
   useRoleDashboardSummary,
   useRoleDashboardIssues,
   useRoleStoreList,
   useRoleDashboardPendingAs,
-  useStoreDashboard,
 } from '../../api/dashboard.api';
 import type { RoleDashboardSummary, StoreMapItem } from '../../types/dashboard.types';
 import { STATUS_COLORS } from '../../utils/constants';
-import { STORE_ID_MAP } from '../../api/mock/common.mock';
 import IssuePanel from './components/IssuePanel';
 import ASRequestPanel from './components/ASRequestPanel';
-import AirQualityCard from '../../components/common/AirQualityCard';
+import TotalUserSummaryCard from './components/TotalUserSummaryCard';
 import StatusTag from '../../components/common/StatusTag';
 import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 
@@ -26,10 +25,33 @@ interface HQDashboardPageProps {
   onNavigateToEquipment: (equipmentId: number) => void;
 }
 
-function HQSummaryCards({ data, loading }: { data?: RoleDashboardSummary; loading?: boolean }) {
-  if (loading) return <div className="summary-grid summary-grid-2"><div className="summary-card">로딩중...</div><div className="summary-card">로딩중...</div></div>;
+function HQSummaryCards({
+  data,
+  loading,
+  showTotalUserCard,
+  totalUsers,
+  totalUsersLoading,
+}: {
+  data?: RoleDashboardSummary;
+  loading?: boolean;
+  showTotalUserCard?: boolean;
+  totalUsers?: number;
+  totalUsersLoading?: boolean;
+}) {
+  const cols = showTotalUserCard ? 3 : 2;
+  if (loading) {
+    return (
+      <div className={`summary-grid summary-grid-${cols}`}>
+        {Array.from({ length: cols }).map((_, i) => (
+          <div key={i} className="summary-card">
+            로딩중...
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
-    <div className="summary-grid summary-grid-2">
+    <div className={`summary-grid summary-grid-${cols}`}>
       <div className="summary-card">
         <div className="summary-card-icon" style={{ background: 'linear-gradient(135deg, #4A6CF7, #6B7CFF)' }}>
           <ShopOutlined />
@@ -49,28 +71,10 @@ function HQSummaryCards({ data, loading }: { data?: RoleDashboardSummary; loadin
           <div className="summary-card-sub">정상 {data?.normalEquipments ?? 0}</div>
         </div>
       </div>
+      {showTotalUserCard && (
+        <TotalUserSummaryCard value={totalUsers ?? 0} loading={totalUsersLoading} />
+      )}
     </div>
-  );
-}
-
-function IAQOverview({ storeIds }: { storeIds: string[] }) {
-  const numericIds = storeIds
-    .filter((sid) => sid !== '*')
-    .map((sid) => STORE_ID_MAP[sid])
-    .filter((id): id is number => id !== undefined);
-
-  // 첫 번째 소속 매장의 IAQ 데이터를 대표로 표시
-  const firstStoreId = numericIds[0] ?? null;
-  const { data } = useStoreDashboard(firstStoreId);
-
-  if (!data?.iaqData) return null;
-
-  return (
-    <AirQualityCard
-      data={data.iaqData}
-      floorIaqList={data.floorIaqList}
-      storeName={data.storeName}
-    />
   );
 }
 
@@ -129,15 +133,22 @@ export default function HQDashboardPage({
   const { data: issues, isLoading: issuesLoading } = useRoleDashboardIssues(storeIds);
   const { data: stores, isLoading: storesLoading } = useRoleStoreList(storeIds);
   const { data: pendingAs, isLoading: asLoading } = useRoleDashboardPendingAs(storeIds);
-  const { isAllowed: canViewIndoorAir, isLoading: indoorAirPermLoading } =
-    useFeaturePermission('dashboard.indoor_air');
-  const showIndoorAir = indoorAirPermLoading || canViewIndoorAir;
   const { isAllowed: canViewStoreOverview, isLoading: storeOverviewPermLoading } =
     useFeaturePermission('dashboard.total_stores');
   const showStoreOverview = storeOverviewPermLoading || canViewStoreOverview;
   const { isAllowed: canViewAsList, isLoading: asViewPermLoading } = useFeaturePermission('as.view');
   const { isAllowed: canCreateAs } = useFeaturePermission('as.create');
   const showAsPanel = asViewPermLoading || canViewAsList;
+  const { isAllowed: canViewTotalUsers, isLoading: totalUsersPermLoading } =
+    useFeaturePermission('dashboard.total_users');
+  const { data: usersRes, isLoading: usersCountLoading } = useSystemUsers(
+    { page: 1, pageSize: 1 },
+    { enabled: !totalUsersPermLoading && canViewTotalUsers },
+  );
+  const totalUserCount = usersRes?.meta?.totalCount ?? usersRes?.data?.length ?? 0;
+  const showTotalUserPermission = totalUsersPermLoading || canViewTotalUsers;
+  const showUsersCardInSummaryGrid = showStoreOverview && showTotalUserPermission;
+  const showUsersCardOnly = !showStoreOverview && showTotalUserPermission;
 
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
@@ -150,33 +161,39 @@ export default function HQDashboardPage({
         </Typography.Text>
       </div>
 
-      {showStoreOverview && <HQSummaryCards data={summary} loading={summaryLoading} />}
+      {showStoreOverview && (
+        <HQSummaryCards
+          data={summary}
+          loading={summaryLoading}
+          showTotalUserCard={showUsersCardInSummaryGrid}
+          totalUsers={totalUserCount}
+          totalUsersLoading={usersCountLoading && canViewTotalUsers}
+        />
+      )}
+      {showUsersCardOnly && (
+        <div className="summary-grid summary-grid-1" style={{ maxWidth: 360 }}>
+          <TotalUserSummaryCard
+            value={totalUserCount}
+            loading={usersCountLoading && canViewTotalUsers}
+          />
+        </div>
+      )}
 
-      {(showIndoorAir || showStoreOverview) && (
-        <Row gutter={[16, 16]}>
-          {showIndoorAir && (
-            <Col xs={24} lg={showStoreOverview ? 12 : 24}>
-              <IAQOverview storeIds={storeIds} />
-            </Col>
+      {showStoreOverview && (
+        <Card title="소속 매장 목록" size="small" loading={storesLoading} style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
+          {stores && stores.length > 0 ? (
+            <Table
+              dataSource={stores}
+              columns={storeColumns(onNavigateToStore)}
+              rowKey="storeId"
+              size="small"
+              pagination={false}
+              className="dashboard-table"
+            />
+          ) : (
+            <Empty description="소속 매장이 없습니다." image={Empty.PRESENTED_IMAGE_SIMPLE} />
           )}
-          {showStoreOverview && (
-            <Col xs={24} lg={showIndoorAir ? 12 : 24}>
-              <Card title="소속 매장 목록" size="small" loading={storesLoading}>
-                {stores && stores.length > 0 ? (
-                  <Table
-                    dataSource={stores}
-                    columns={storeColumns(onNavigateToStore)}
-                    rowKey="storeId"
-                    size="small"
-                    pagination={false}
-                  />
-                ) : (
-                  <Empty description="소속 매장이 없습니다." image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                )}
-              </Card>
-            </Col>
-          )}
-        </Row>
+        </Card>
       )}
 
       {(showStoreOverview || showAsPanel) && (
