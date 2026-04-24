@@ -3,6 +3,7 @@ import {
   ShopOutlined,
   DesktopOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import {
   useRoleDashboardSummary,
@@ -120,6 +121,7 @@ export default function HQDashboardPage({
   onNavigateToStore,
   onNavigateToEquipment,
 }: HQDashboardPageProps) {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const storeIds = user?.storeIds ?? [];
 
@@ -134,6 +136,7 @@ export default function HQDashboardPage({
     useFeaturePermission('dashboard.total_stores');
   const showStoreOverview = storeOverviewPermLoading || canViewStoreOverview;
   const { isAllowed: canViewAsList, isLoading: asViewPermLoading } = useFeaturePermission('as.view');
+  const { isAllowed: canCreateAs } = useFeaturePermission('as.create');
   const showAsPanel = asViewPermLoading || canViewAsList;
 
   return (
@@ -176,15 +179,29 @@ export default function HQDashboardPage({
         </Row>
       )}
 
-      {showStoreOverview && (
-        <IssuePanel
-          categories={issues}
-          loading={issuesLoading}
-          onEquipmentClick={onNavigateToEquipment}
-        />
+      {(showStoreOverview || showAsPanel) && (
+        <Row gutter={[16, 16]}>
+          {showAsPanel && (
+            <Col xs={24} lg={showStoreOverview ? 12 : 24}>
+              <ASRequestPanel
+                data={pendingAs}
+                loading={asLoading}
+                showCreateButton={canCreateAs}
+                onCreateClick={() => navigate('/as-service/request')}
+              />
+            </Col>
+          )}
+          {showStoreOverview && (
+            <Col xs={24} lg={showAsPanel ? 12 : 24}>
+              <IssuePanel
+                categories={issues}
+                loading={issuesLoading}
+                onEquipmentClick={onNavigateToEquipment}
+              />
+            </Col>
+          )}
+        </Row>
       )}
-
-      {showAsPanel && <ASRequestPanel data={pendingAs} loading={asLoading} />}
     </Space>
   );
 }

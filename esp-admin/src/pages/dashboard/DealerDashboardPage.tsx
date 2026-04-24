@@ -1,4 +1,5 @@
-import { Typography, Space, Card, Table, Empty } from 'antd';
+import { Typography, Space, Card, Table, Empty, Row, Col } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import {
   ShopOutlined,
   DesktopOutlined,
@@ -96,6 +97,7 @@ export default function DealerDashboardPage({
   onNavigateToStore,
   onNavigateToEquipment,
 }: DealerDashboardPageProps) {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const storeIds = user?.storeIds ?? [];
 
@@ -109,6 +111,7 @@ export default function DealerDashboardPage({
     useFeaturePermission('dashboard.total_stores');
   const showStoreOverview = storeOverviewPermLoading || canViewStoreOverview;
   const { isAllowed: canViewAsList, isLoading: asViewPermLoading } = useFeaturePermission('as.view');
+  const { isAllowed: canCreateAs } = useFeaturePermission('as.create');
   const showAsPanel = asViewPermLoading || canViewAsList;
 
   return (
@@ -126,12 +129,28 @@ export default function DealerDashboardPage({
         <DealerSummaryCards data={summary} loading={summaryLoading} />
       )}
 
-      {showStoreOverview && (
-        <IssuePanel
-          categories={issues}
-          loading={issuesLoading}
-          onEquipmentClick={onNavigateToEquipment}
-        />
+      {(showStoreOverview || showAsPanel) && (
+        <Row gutter={[16, 16]}>
+          {showAsPanel && (
+            <Col xs={24} lg={showStoreOverview ? 12 : 24}>
+              <ASRequestPanel
+                data={pendingAs}
+                loading={asLoading}
+                showCreateButton={canCreateAs}
+                onCreateClick={() => navigate('/as-service/request')}
+              />
+            </Col>
+          )}
+          {showStoreOverview && (
+            <Col xs={24} lg={showAsPanel ? 12 : 24}>
+              <IssuePanel
+                categories={issues}
+                loading={issuesLoading}
+                onEquipmentClick={onNavigateToEquipment}
+              />
+            </Col>
+          )}
+        </Row>
       )}
 
       {showStoreOverview && (
@@ -149,8 +168,6 @@ export default function DealerDashboardPage({
           )}
         </Card>
       )}
-
-      {showAsPanel && <ASRequestPanel data={pendingAs} loading={asLoading} />}
     </Space>
   );
 }

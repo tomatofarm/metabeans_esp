@@ -2461,3 +2461,49 @@ body {
 /* Permission matrix allowed/denied icons */
 .perm-allowed { color: var(--color-success); font-size: 1.1rem; }
 .perm-denied  { color: var(--color-light); font-size: 1.1rem; }
+
+/* Dashboard: A/S 요청 현황(카드 목록) */
+.as-request-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.as-request-status-item {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-white);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.as-request-status-item:hover {
+  background: var(--color-bg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+.as-request-status-item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.as-request-status-store {
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+.as-request-status-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.as-request-status-title {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+}
+.as-request-status-meta {
+  font-size: 0.8rem;
+}

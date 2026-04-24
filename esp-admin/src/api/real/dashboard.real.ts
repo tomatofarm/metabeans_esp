@@ -391,6 +391,8 @@ type AsRequestApi = {
   createdAt: string;
   updatedAt: string;
   preferredVisitDatetime?: string | null;
+  visitScheduledDatetime?: string | null;
+  completedAt?: string | null;
   dealerId?: number | null;
   store?: { storeName: string };
   equipment?: { equipmentName: string | null } | null;
@@ -421,31 +423,33 @@ function mapAsToListItem(r: AsRequestApi): ASRequestListItem {
     createdAt: isoAt(r.createdAt as unknown as string),
     updatedAt: isoAt(r.updatedAt as unknown as string),
     preferredVisitDatetime: r.preferredVisitDatetime ?? undefined,
+    visitScheduledDatetime: r.visitScheduledDatetime
+      ? isoAt(r.visitScheduledDatetime as unknown as string)
+      : undefined,
+    completedAt: r.completedAt ? isoAt(r.completedAt as unknown as string) : undefined,
   };
 }
 
-const PENDING_AS_STATUSES = new Set<ASStatus>([
-  'PENDING',
-  'ACCEPTED',
-  'ASSIGNED',
-  'VISIT_SCHEDULED',
-  'IN_PROGRESS',
-]);
+function sortAsByCreatedDesc(a: AsRequestApi, b: AsRequestApi) {
+  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+}
 
-export async function fetchDashboardPendingAs(limit = 10): Promise<ASRequestListItem[]> {
+/** 대시보드 «A/S 요청 현황» — **최근** 요청(상태 무관) 정렬, 접근 가능 매장만(역할용). */
+export async function fetchDashboardPendingAs(limit = 15): Promise<ASRequestListItem[]> {
   const rows = await apiRequest<AsRequestApi[]>({ method: 'get', url: '/as-service/requests' });
   return rows
-    .filter((r) => PENDING_AS_STATUSES.has(r.status as ASStatus))
+    .sort(sortAsByCreatedDesc)
     .slice(0, limit)
     .map(mapAsToListItem);
 }
 
-export async function fetchRoleDashboardPendingAs(storeIds: string[], limit = 10): Promise<ASRequestListItem[]> {
+export async function fetchRoleDashboardPendingAs(storeIds: string[], limit = 15): Promise<ASRequestListItem[]> {
   const resolved = resolveRoleStoreIds(storeIds, await loadAllStoreIds());
   const rows = await apiRequest<AsRequestApi[]>({ method: 'get', url: '/as-service/requests' });
   const set = new Set(resolved);
   return rows
-    .filter((r) => set.has(r.storeId) && PENDING_AS_STATUSES.has(r.status as ASStatus))
+    .filter((r) => set.has(r.storeId))
+    .sort(sortAsByCreatedDesc)
     .slice(0, limit)
     .map(mapAsToListItem);
 }

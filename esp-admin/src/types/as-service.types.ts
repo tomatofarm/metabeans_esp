@@ -125,6 +125,10 @@ export interface ASRequestListItem {
   dealerId?: number;
   dealerName?: string;
   preferredVisitDatetime?: string;
+  /** 방문 일정 (API `visitScheduledDatetime` 등) */
+  visitScheduledDatetime?: string;
+  /** 완료 시각 */
+  completedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

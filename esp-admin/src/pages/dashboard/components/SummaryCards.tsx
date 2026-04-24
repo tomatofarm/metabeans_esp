@@ -1,11 +1,9 @@
 import {
   ShopOutlined,
   DesktopOutlined,
-  ToolOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
 import type { DashboardSummary } from '../../../types/dashboard.types';
-import { STATUS_COLORS } from '../../../utils/constants';
 
 interface SummaryCardsProps {
   data?: DashboardSummary;
@@ -16,10 +14,9 @@ interface SummaryCardsProps {
 }
 
 export default function SummaryCards({ data, showTotalStores = true, totalUsers }: SummaryCardsProps) {
-  const pendingAs = data?.pendingAsRequests ?? 0;
   const showTotalUsers = totalUsers !== undefined;
-  const visibleCount =
-    (showTotalStores ? 1 : 0) + 2 + (showTotalUsers ? 1 : 0);
+  /** A/S 건수 카드 제거 — 본문 `ASRequestPanel` 목록 사용 */
+  const visibleCount = (showTotalStores ? 1 : 0) + 1 + (showTotalUsers ? 1 : 0);
   const gridCols = Math.min(4, Math.max(2, visibleCount));
 
   return (
@@ -46,22 +43,6 @@ export default function SummaryCards({ data, showTotalStores = true, totalUsers 
           <div className="summary-card-value">{data?.totalEquipments ?? 0}</div>
           <div className="summary-card-label">전체 장비</div>
           <div className="summary-card-sub">정상 {data?.normalEquipments ?? 0}</div>
-        </div>
-      </div>
-
-      {/* Card 3: A/S 요청 */}
-      <div className="summary-card">
-        <div className="summary-card-icon" style={{ background: 'linear-gradient(135deg, #F59E0B, #FBBF24)' }}>
-          <ToolOutlined />
-        </div>
-        <div>
-          <div
-            className="summary-card-value"
-            style={pendingAs > 0 ? { color: STATUS_COLORS.WARNING.color } : undefined}
-          >
-            {pendingAs}
-          </div>
-          <div className="summary-card-label">A/S 요청 (미처리)</div>
         </div>
       </div>
 

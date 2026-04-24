@@ -216,6 +216,8 @@ const mockASRequests: ASRequestListItem[] = [
     dealerId: 1,
     dealerName: '서울환경테크',
     preferredVisitDatetime: '2026-02-10T11:00:00Z',
+    visitScheduledDatetime: '2026-02-10T11:00:00Z',
+    completedAt: now.subtract(2, 'day').toISOString(),
     createdAt: now.subtract(5, 'day').toISOString(),
     updatedAt: now.subtract(2, 'day').toISOString(),
   },

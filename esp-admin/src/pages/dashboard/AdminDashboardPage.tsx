@@ -1,4 +1,4 @@
-import { Typography, Space } from 'antd';
+import { Typography, Space, Row, Col } from 'antd';
 import {
   useDashboardSummary,
   useDashboardIssues,
@@ -46,13 +46,18 @@ export default function AdminDashboardPage({
         totalUsers={canViewTotalUsers ? totalUsers : undefined}
       />
 
-      <IssuePanel
-        categories={issues}
-        loading={issuesLoading}
-        onEquipmentClick={onNavigateToEquipment}
-      />
-
-      <ASRequestPanel data={pendingAs} loading={asLoading} />
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={12}>
+          <ASRequestPanel data={pendingAs} loading={asLoading} />
+        </Col>
+        <Col xs={24} lg={12}>
+          <IssuePanel
+            categories={issues}
+            loading={issuesLoading}
+            onEquipmentClick={onNavigateToEquipment}
+          />
+        </Col>
+      </Row>
 
       <EsgSummaryCard data={esg} loading={esgLoading} />
 

@@ -13,7 +13,7 @@
  * | useEquipmentDashboard | equipment + monitoring latest/history |
  * | useEsgSummary | GET /dashboard/esg-summary |
  * | useEmergencyAlarms | GET /dashboard/alarms |
- * | useDashboardPendingAs | GET /as-service/requests |
+ * | useDashboardPendingAs / useRoleDashboardPendingAs | `GET /as-service/requests` → 최신순·접근 매장만(역할). 대시보드 «A/S 요청 현황» 목록 |
  */
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';

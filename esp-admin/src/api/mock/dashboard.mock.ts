@@ -696,28 +696,24 @@ export async function mockGetRoleEmergencyAlarms(storeIds: string[]): Promise<Em
   return mockGetEmergencyAlarms(resolved);
 }
 
-// 대시보드용 미처리 A/S 목록 (전체 — ADMIN용)
-const PENDING_AS_STATUSES = new Set(['PENDING', 'ACCEPTED', 'ASSIGNED', 'VISIT_SCHEDULED', 'IN_PROGRESS']);
-
-export async function mockGetDashboardPendingAs(limit = 10): Promise<ASRequestListItem[]> {
-  // as-service.mock의 데이터를 동적으로 import하여 최신 상태 반영
+// 대시보드 «A/S 요청 현황» — 최근 요청(상태 무관), 최신순
+export async function mockGetDashboardPendingAs(limit = 15): Promise<ASRequestListItem[]> {
   const { mockGetASRequests } = await import('./as-service.mock');
-  const res = await mockGetASRequests({ pageSize: 100, authorizedStoreIds: null });
-  const pending = res.data
-    .filter((r) => PENDING_AS_STATUSES.has(r.status))
-    .slice(0, limit);
-  return mockDelay(pending, 300);
+  const res = await mockGetASRequests({ pageSize: 200, authorizedStoreIds: null });
+  const sorted = [...res.data].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  return mockDelay(sorted.slice(0, limit), 300);
 }
 
-// 역할별 대시보드 미처리 A/S 목록 (storeIds 필터)
-export async function mockGetRoleDashboardPendingAs(storeIds: string[], limit = 10): Promise<ASRequestListItem[]> {
+export async function mockGetRoleDashboardPendingAs(storeIds: string[], limit = 15): Promise<ASRequestListItem[]> {
   const resolved = resolveStoreIds(storeIds);
   const { mockGetASRequests } = await import('./as-service.mock');
-  const res = await mockGetASRequests({ pageSize: 100, authorizedStoreIds: resolved });
-  const pending = res.data
-    .filter((r) => PENDING_AS_STATUSES.has(r.status) && resolved.includes(r.storeId))
-    .slice(0, limit);
-  return mockDelay(pending, 300);
+  const res = await mockGetASRequests({ pageSize: 200, authorizedStoreIds: resolved });
+  const sorted = res.data
+    .filter((r) => resolved.includes(r.storeId))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return mockDelay(sorted.slice(0, limit), 300);
 }
 
 // 7. 긴급 알람 목록 (Red만)
