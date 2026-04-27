@@ -14,7 +14,8 @@ const refreshClient = axios.create({
 
 let refreshPromise: Promise<string> | null = null;
 
-async function fetchNewAccessToken(): Promise<string> {
+/** 401뿐 아니라 **부팅** 시 `POST /auth/refresh`(쿠키)에도 사용 — 인터셉터·Bearer 없이 호출. */
+export async function fetchNewAccessToken(): Promise<string> {
   const { data } = await refreshClient.post<{ success: boolean; data?: { accessToken: string } }>(
     '/auth/refresh',
     {},

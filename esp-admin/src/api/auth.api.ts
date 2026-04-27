@@ -10,6 +10,7 @@
  * | changePassword | PUT | /auth/password (Bearer) |
  * | checkLoginId | GET | /auth/check-login-id?loginId= |
  * | checkBusinessNumber | GET | /registration/check-business-number?number= |
+ * | getCurrentUser | GET | /auth/me (Bearer) — 부팅 복원 |
  * | getDealerList | GET | /registration/dealer-list?region= |
  * | registerOwner/HQ/Admin/Dealer | POST | /registration/owner, /hq, /admin, /dealer |
  *
@@ -19,6 +20,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   LoginRequest,
   LoginResponse,
+  LoginUser,
   PasswordResetRequest,
   ChangePasswordRequest,
   RegisterOwnerRequest,
@@ -49,6 +51,14 @@ const useRealApi =
 
 export async function login(request: LoginRequest): Promise<LoginResponse> {
   return useRealApi ? authReal.login(request) : mockLogin(request);
+}
+
+/** 실 API만. Mock은 세션 snapshot으로 복원(`runAuthRestore`). */
+export async function getCurrentUser(): Promise<LoginUser> {
+  if (!useRealApi) {
+    throw new Error('getCurrentUser: mock mode uses session only');
+  }
+  return authReal.getCurrentUser();
 }
 
 export async function logout(): Promise<void> {
