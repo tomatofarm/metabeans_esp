@@ -18,6 +18,8 @@ import CustomerEditModal from './CustomerEditModal';
 
 const LIST_FETCH_PAGE_SIZE = 500;
 const TABLE_PAGE_SIZE = 10;
+/** Photon 연속 호출 간 최소 간격(ms) — 첫 번째 호출에는 대기 없음 */
+const PHOTON_REQUEST_GAP_MS = 120;
 
 const EMPTY_CUSTOMERS: CustomerListItem[] = [];
 
@@ -147,7 +149,7 @@ export default function CustomerListPage() {
     pageSize: LIST_FETCH_PAGE_SIZE,
   };
 
-  const { data: listData, isLoading } = useCustomerList(listParams);
+  const { data: listData, isLoading, isFetching } = useCustomerList(listParams);
   const { data: dealerOptions } = useCustomerDealerOptions();
 
   const allCustomers = listData?.data ?? EMPTY_CUSTOMERS;
@@ -162,6 +164,17 @@ export default function CustomerListPage() {
         return [{ ...c, latitude: g.lat, longitude: g.lng }];
       return [];
     });
+  }, [allCustomers, geocodeOverrides]);
+
+  /** API 좌표 없이 지오코딩 대기 중인 매장 수(로딩 힌트용) */
+  const geoStillPendingCount = useMemo(() => {
+    return allCustomers.filter((c) => {
+      if (isPlottableLatLng(c.latitude, c.longitude)) return false;
+      const ak = normalizeCustomerAddressKey(c.address);
+      if (ak.length < 4) return false;
+      const g = geocodeOverrides[c.storeId];
+      return !(g && g.addressKey === ak);
+    }).length;
   }, [allCustomers, geocodeOverrides]);
 
   const geocodeWorkKey = useMemo(
@@ -183,19 +196,33 @@ export default function CustomerListPage() {
     let cancelled = false;
 
     (async () => {
-      const need = allCustomers.filter(
+      let need = allCustomers.filter(
         (c) =>
           !isPlottableLatLng(c.latitude, c.longitude) &&
           normalizeCustomerAddressKey(c.address).length >= 4,
       );
+      /** 테이블/지도에서 선택한 매장부터 처리 → 클릭 직후 핀이 더 빨리 뜸 */
+      need = [...need].sort((a, b) => {
+        if (selectedStoreId == null) return 0;
+        if (a.storeId === selectedStoreId) return -1;
+        if (b.storeId === selectedStoreId) return 1;
+        return 0;
+      });
+
+      let gapBeforeNextPhoton = false;
+
       for (const c of need) {
         if (cancelled) return;
 
         const normAddr = normalizeCustomerAddressKey(c.address);
         let pos = addressGeocodeDedupeRef.current.get(normAddr);
         if (!pos) {
+          if (gapBeforeNextPhoton) {
+            await new Promise((r) => setTimeout(r, PHOTON_REQUEST_GAP_MS));
+            if (cancelled) return;
+          }
           const hit = await geocodeAddressToLatLng(normAddr);
-          await new Promise((r) => setTimeout(r, 450));
+          gapBeforeNextPhoton = true;
           if (cancelled) return;
           if (hit && isPlottableLatLng(hit.lat, hit.lng)) {
             addressGeocodeDedupeRef.current.set(normAddr, hit);
@@ -214,9 +241,7 @@ export default function CustomerListPage() {
     return () => {
       cancelled = true;
     };
-    // geocodeWorkKey 는 allCustomers 기반 — 키가 바뀔 때 클로저의 allCustomers 는 최신 목록과 일치함
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geocodeWorkKey]);
+  }, [geocodeWorkKey, selectedStoreId]);
 
   useEffect(() => {
     setSelectedStoreId((prev) => {
@@ -446,6 +471,14 @@ export default function CustomerListPage() {
               비활성
             </span>
           </div>
+          {(isFetching || geoStillPendingCount > 0) && (
+            <div className="customer-map-hint" style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 8 }}>
+              {isFetching ? '고객 목록을 갱신 중입니다. ' : null}
+              {geoStillPendingCount > 0
+                ? `위·경도 없는 매장 ${geoStillPendingCount}곳 — 주소로 위치를 찾는 중입니다(잠시 후 지도에 표시).`
+                : null}
+            </div>
+          )}
           <div className="customer-map-container-split">
             <MapContainer
               center={[37.5326, 126.9786]}

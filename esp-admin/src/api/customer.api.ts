@@ -56,9 +56,10 @@ export function useUpdateCustomer() {
   return useMutation({
     mutationFn: ({ storeId, data }: { storeId: number; data: CustomerUpdateRequest }) =>
       useRealApi ? customerReal.updateCustomer(storeId, data) : mockUpdateCustomer(storeId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-detail'] });
+    onSuccess: async (_, { storeId }) => {
+      // staleTime 때문에 저장 직후 목록이 안 바뀌는 체감을 줄임
+      await queryClient.refetchQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-detail', storeId] });
       queryClient.invalidateQueries({ queryKey: ['customer-map'] });
     },
   });
