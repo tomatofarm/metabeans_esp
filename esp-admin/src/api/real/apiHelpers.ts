@@ -33,6 +33,23 @@ function axiosErrorMessage(err: unknown): string {
   return '요청에 실패했습니다.';
 }
 
+/** Axios 실패 시 `status`(HTTP 코드)를 보존 — React Query에서 403 재시도 생략 등에 사용 */
+export class EspApiRequestError extends Error {
+  readonly status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'EspApiRequestError';
+    this.status = status;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+function throwFromAxios(e: unknown): never {
+  const ax = e as AxiosError<unknown>;
+  throw new EspApiRequestError(axiosErrorMessage(e), ax.response?.status);
+}
+
 export async function apiRequest<T>(cfg: {
   method: 'get' | 'post' | 'put' | 'patch' | 'delete';
   url: string;
@@ -51,10 +68,10 @@ export async function apiRequest<T>(cfg: {
       try {
         return unwrap<T>(ax.response.data);
       } catch {
-        throw new Error(axiosErrorMessage(e));
+        throwFromAxios(e);
       }
     }
-    throw new Error(axiosErrorMessage(e));
+    throwFromAxios(e);
   }
 }
 
@@ -97,9 +114,9 @@ export async function apiRequestWithMeta<T>(cfg: {
         const env = unwrapEnvelope<T>(ax.response.data);
         return { data: env.data, meta: env.meta };
       } catch {
-        throw new Error(axiosErrorMessage(e));
+        throwFromAxios(e);
       }
     }
-    throw new Error(axiosErrorMessage(e));
+    throwFromAxios(e);
   }
 }

@@ -7,8 +7,11 @@ import {
   Switch,
   message,
   Spin,
+  Alert,
+  Button as AntButton,
 } from 'antd';
 import { useCustomerDetail, useUpdateCustomer, useCustomerDealerOptions } from '../../api/customer.api';
+import { EspApiRequestError } from '../../api/real/apiHelpers';
 import { BUSINESS_TYPES } from '../../types/auth.types';
 
 interface CustomerEditModalProps {
@@ -19,7 +22,14 @@ interface CustomerEditModalProps {
 
 export default function CustomerEditModal({ storeId, open, onClose }: CustomerEditModalProps) {
   const [form] = Form.useForm();
-  const { data: detailData, isLoading } = useCustomerDetail(open ? storeId : null);
+  const {
+    data: detailData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useCustomerDetail(open ? storeId : null);
   const { data: dealerOptions } = useCustomerDealerOptions();
   const updateMutation = useUpdateCustomer();
 
@@ -62,6 +72,12 @@ export default function CustomerEditModal({ storeId, open, onClose }: CustomerEd
     }
   };
 
+  const detailErrorDescription =
+    isError &&
+    error instanceof EspApiRequestError &&
+    error.status === 403 &&
+    `서버가 이 매장 상세(GET /customers/stores/${storeId ?? ''}) 접근을 거절했습니다. 로그인 계정 역할과 매장 매핑을 확인하고, 목록에는 보이는데 상세만 막히면 백엔드에서 목록과 동일 규칙으로 상세 조회가 허용되는지 검토해야 합니다.`;
+
   return (
     <Modal
       className="customer-modal"
@@ -75,6 +91,23 @@ export default function CustomerEditModal({ storeId, open, onClose }: CustomerEd
       width={700}
       destroyOnClose
     >
+      {isError ? (
+        <Alert
+          type="error"
+          showIcon
+          style={{ marginTop: 16 }}
+          message="매장 정보를 불러오지 못했습니다."
+          description={
+            detailErrorDescription ||
+            (error instanceof Error ? error.message : '네트워크 또는 서버 오류입니다.')
+          }
+          action={
+            <AntButton type="link" size="small" onClick={() => refetch()} disabled={isFetching}>
+              다시 시도
+            </AntButton>
+          }
+        />
+      ) : null}
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: 40 }}>
           <Spin />

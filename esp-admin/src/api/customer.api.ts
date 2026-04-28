@@ -21,6 +21,7 @@ import {
 } from './mock/customer.mock';
 import * as customerReal from './real/customer.real';
 import type { CustomerListParams, CustomerUpdateRequest } from '../types/customer.types';
+import { EspApiRequestError } from './real/apiHelpers';
 
 const useRealApi =
   import.meta.env.VITE_USE_MOCK_API !== 'true' && Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
@@ -42,6 +43,10 @@ export function useCustomerDetail(storeId: number | null) {
       useRealApi ? customerReal.fetchCustomerDetail(storeId!) : mockGetCustomerDetail(storeId!),
     enabled: storeId !== null,
     staleTime: 30 * 1000,
+    /** 권한 거절·없음은 재시도해도 동일하므로 생략(콘솔에 GET 반복 노출 방지) */
+    retry: (failureCount, err) =>
+      !(err instanceof EspApiRequestError && [401, 403, 404].includes(err.status ?? 0)) &&
+      failureCount < 2,
   });
 }
 

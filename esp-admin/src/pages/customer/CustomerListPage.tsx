@@ -33,6 +33,11 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'INACTIVE', label: '비활성' },
 ];
 
+/** 지오코드 캐시·주소 비교용 — 반드시 Photon 루프의 `normAddr`와 동일 규칙 */
+function normalizeCustomerAddressKey(address: string | undefined): string {
+  return (address ?? '').trim().replace(/\s+/g, ' ');
+}
+
 /** API가 위·경도를 안 주면 실 API 매핑에서 (0,0)이 됨 → 대서양으로 찍히는 것처럼 보임. 지도에는 유효 좌표만 사용. */
 function isPlottableLatLng(lat: number, lng: number): boolean {
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
@@ -71,12 +76,13 @@ function MapSync({
   markerRefs: React.MutableRefObject<Map<number, L.Marker>>;
 }) {
   const map = useMap();
+  /** ID뿐 아니라 좌표까지 바뀌면 fitBounds 재실행 — 주소/지오코드 수정 후 마커가 옮겨질 때 대응 */
   const boundsKey = useMemo(
     () =>
       customers
-        .map((c) => c.storeId)
-        .sort((a, b) => a - b)
-        .join(','),
+        .map((c) => `${c.storeId}:${c.latitude.toFixed(5)},${c.longitude.toFixed(5)}`)
+        .sort()
+        .join('|'),
     [customers],
   );
   const prevBoundsKey = useRef<string>('');
@@ -125,9 +131,9 @@ export default function CustomerListPage() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const markerRefs = useRef<Map<number, L.Marker>>(new Map());
-  /** API 좌표가 없을 때 Photon( 무료 OSM 검색 엔진) 주소 → 좌표 캐시 */
+  /** API 좌표가 없을 때 Photon 주소 → 좌표. `addressKey` 가 현재 매장 주소와 다르면 예전 좌표를 쓰지 않음(주소 수정 후 지도 반영). */
   const [geocodeOverrides, setGeocodeOverrides] = useState<
-    Record<number, { lat: number; lng: number }>
+    Record<number, { lat: number; lng: number; addressKey: string }>
   >({});
   const addressGeocodeDedupeRef = useRef<Map<string, { lat: number; lng: number }>>(new Map());
 
@@ -150,8 +156,9 @@ export default function CustomerListPage() {
   const customersForMap = useMemo(() => {
     return allCustomers.flatMap((c) => {
       if (isPlottableLatLng(c.latitude, c.longitude)) return [c];
+      const addrKey = normalizeCustomerAddressKey(c.address);
       const g = geocodeOverrides[c.storeId];
-      if (g && isPlottableLatLng(g.lat, g.lng))
+      if (g && g.addressKey === addrKey && isPlottableLatLng(g.lat, g.lng))
         return [{ ...c, latitude: g.lat, longitude: g.lng }];
       return [];
     });
@@ -160,8 +167,12 @@ export default function CustomerListPage() {
   const geocodeWorkKey = useMemo(
     () =>
       allCustomers
-        .filter((c) => !isPlottableLatLng(c.latitude, c.longitude) && (c.address?.trim() ?? '').length >= 4)
-        .map((c) => `${c.storeId}:${c.address?.trim() ?? ''}`)
+        .filter(
+          (c) =>
+            !isPlottableLatLng(c.latitude, c.longitude) &&
+            normalizeCustomerAddressKey(c.address).length >= 4,
+        )
+        .map((c) => `${c.storeId}:${normalizeCustomerAddressKey(c.address)}`)
         .sort()
         .join('|'),
     [allCustomers],
@@ -175,12 +186,12 @@ export default function CustomerListPage() {
       const need = allCustomers.filter(
         (c) =>
           !isPlottableLatLng(c.latitude, c.longitude) &&
-          (c.address?.trim() ?? '').length >= 4,
+          normalizeCustomerAddressKey(c.address).length >= 4,
       );
       for (const c of need) {
         if (cancelled) return;
 
-        const normAddr = (c.address ?? '').trim().replace(/\s+/g, ' ');
+        const normAddr = normalizeCustomerAddressKey(c.address);
         let pos = addressGeocodeDedupeRef.current.get(normAddr);
         if (!pos) {
           const hit = await geocodeAddressToLatLng(normAddr);
@@ -192,9 +203,10 @@ export default function CustomerListPage() {
           }
         }
         if (pos && isPlottableLatLng(pos.lat, pos.lng)) {
-          setGeocodeOverrides((prev) =>
-            prev[c.storeId] ? prev : { ...prev, [c.storeId]: { lat: pos.lat, lng: pos.lng } },
-          );
+          setGeocodeOverrides((prev) => ({
+            ...prev,
+            [c.storeId]: { lat: pos.lat, lng: pos.lng, addressKey: normAddr },
+          }));
         }
       }
     })();
