@@ -27,7 +27,7 @@ function timelineSubText(item: ASRequestListItem): string {
   }
   const doneAt =
     item.completedAt ??
-    (['COMPLETED', 'REPORT_SUBMITTED', 'CLOSED'].includes(item.status) ? item.updatedAt : undefined);
+    (['COMPLETED', 'CLOSED'].includes(item.status) ? item.updatedAt : undefined);
   if (doneAt) {
     s += ` | 완료: ${dayjs(doneAt).format('YYYY-MM-DD')}`;
   }
@@ -35,7 +35,7 @@ function timelineSubText(item: ASRequestListItem): string {
 }
 
 function statusChip(status: ASStatus): { label: string; color: string } {
-  if (['COMPLETED', 'REPORT_SUBMITTED', 'CLOSED'].includes(status)) {
+  if (['COMPLETED', 'CLOSED'].includes(status)) {
     return { label: '완료', color: 'success' };
   }
   if (['CANCELLED'].includes(status)) {

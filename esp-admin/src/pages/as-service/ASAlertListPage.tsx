@@ -1,13 +1,30 @@
 import { useState } from 'react';
-import { Select, DatePicker, Button, Spin, Empty } from 'antd';
+import { Select, DatePicker, Button, Spin, Empty, Table, Typography } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { ToolOutlined, WarningOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { useASAlerts, useASStoreOptions } from '../../api/as-service.api';
+import { useASAlerts, useASRequests, useASStoreOptions } from '../../api/as-service.api';
 import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import StatusBadge from '../../components/common/StatusBadge';
-import { formatDateTime, formatRelativeTime } from '../../utils/formatters';
-import type { ASAlert, AlertType, AlertSeverity } from '../../types/as-service.types';
+import { formatDateTime, formatRelativeTime, formatDate, formatDateCompact } from '../../utils/formatters';
+import { AS_STATUS_LABELS, FAULT_TYPE_LABELS } from '../../utils/constants';
+import type { BadgeStatus } from '../../components/common/StatusBadge';
+import type { ASAlert, AlertType, AlertSeverity, ASRequestListItem, ASStatus, FaultType } from '../../types/as-service.types';
+
+const useRealApi =
+  import.meta.env.VITE_USE_MOCK_API !== 'true' && Boolean(import.meta.env.VITE_API_BASE_URL?.trim());
+
+const AS_STATUS_BADGE: Record<string, BadgeStatus> = {
+  PENDING: 'default',
+  ACCEPTED: 'info',
+  ASSIGNED: 'warning',
+  VISIT_SCHEDULED: 'info',
+  IN_PROGRESS: 'warning',
+  COMPLETED: 'success',
+  CLOSED: 'default',
+  CANCELLED: 'default',
+};
 
 const { RangePicker } = DatePicker;
 
@@ -24,7 +41,8 @@ const SEVERITY_CLASS_MAP: Record<AlertSeverity, string> = {
   CRITICAL: 'critical',
 };
 
-export default function ASAlertListPage() {
+/** Mock: 장비 실시간 알림 카드(설계 `GET /as-service/alerts` — 실 API는 미연동). */
+function EquipmentAlertsMockView() {
   const navigate = useNavigate();
   const { isAllowed: canCreateAs } = useFeaturePermission('as.create');
   const { data: storeOptions = [] } = useASStoreOptions();
@@ -56,7 +74,6 @@ export default function ASAlertListPage() {
 
   return (
     <div>
-      {/* 필터 바 */}
       <div className="as-filter">
         <Select
           placeholder="매장 선택"
@@ -146,4 +163,119 @@ export default function ASAlertListPage() {
       </div>
     </div>
   );
+}
+
+/** 실 API: A/S **접수** 목록 — 대시보드 A/S 위젯과 동일 (`GET /as-service/requests` + 권한 매장 필터). */
+function ASRequestInquiryRealView() {
+  const { data: storeOptions = [] } = useASStoreOptions();
+  const storeSelectOptions = storeOptions.map((s) => ({ value: s.storeId, label: s.storeName }));
+  const [storeId, setStoreId] = useState<number | undefined>();
+  const [statusFilter, setStatusFilter] = useState<ASStatus | undefined>();
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+
+  const { data, isLoading } = useASRequests({
+    storeId,
+    status: statusFilter,
+    from: dateRange?.[0]?.toISOString(),
+    to: dateRange?.[1]?.toISOString(),
+  });
+
+  const requests = data?.data ?? [];
+  const totalCount = data?.meta?.totalCount ?? 0;
+
+  const columns: ColumnsType<ASRequestListItem> = [
+    {
+      title: '접수번호',
+      key: 'requestId',
+      width: 160,
+      render: (_: unknown, record) => {
+        const dateStr = formatDateCompact(record.createdAt);
+        return `AS-${dateStr}-${String(record.requestId).slice(-3).padStart(3, '0')}`;
+      },
+    },
+    { title: '매장명', dataIndex: 'storeName', key: 'storeName', width: 160 },
+    {
+      title: '장비명',
+      dataIndex: 'equipmentName',
+      key: 'equipmentName',
+      width: 180,
+      render: (val: string) => val ?? '-',
+    },
+    {
+      title: '고장 유형',
+      dataIndex: 'faultType',
+      key: 'faultType',
+      width: 120,
+      render: (val: FaultType) => FAULT_TYPE_LABELS[val] ?? val,
+    },
+    {
+      title: '상태',
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      render: (val: ASStatus) => (
+        <StatusBadge status={AS_STATUS_BADGE[val] ?? 'default'} label={AS_STATUS_LABELS[val] ?? val} />
+      ),
+    },
+    {
+      title: '신청일',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 120,
+      render: (val: string) => formatDate(val),
+    },
+  ];
+
+  return (
+    <div>
+      <Typography.Paragraph type="secondary" style={{ marginBottom: 12, fontSize: 13 }}>
+        권한이 있는 매장의 A/S 접수 목록입니다. 대시보드 «A/S 요청 현황»과 동일한 데이터를 사용합니다.
+      </Typography.Paragraph>
+      <div className="as-filter">
+        <Select
+          placeholder="상태"
+          allowClear
+          style={{ width: 140 }}
+          options={Object.entries(AS_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+          value={statusFilter}
+          onChange={(val) => setStatusFilter(val as ASStatus | undefined)}
+        />
+        <Select
+          placeholder="매장 선택"
+          allowClear
+          style={{ width: 180 }}
+          options={storeSelectOptions}
+          value={storeId}
+          onChange={(val) => setStoreId(val)}
+        />
+        <RangePicker
+          onChange={(dates) =>
+            setDateRange(dates as [dayjs.Dayjs | null, dayjs.Dayjs | null] | null)
+          }
+        />
+      </div>
+      <div className="as-table-container">
+        <Table<ASRequestListItem>
+          className="as-table"
+          rowKey="requestId"
+          columns={columns}
+          dataSource={requests}
+          loading={isLoading}
+          pagination={{
+            total: totalCount,
+            pageSize: 20,
+            showTotal: (total) => `총 ${total}건`,
+            showSizeChanger: false,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default function ASAlertListPage() {
+  if (useRealApi) {
+    return <ASRequestInquiryRealView />;
+  }
+  return <EquipmentAlertsMockView />;
 }

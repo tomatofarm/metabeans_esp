@@ -44,17 +44,16 @@ const URGENCY_LABELS: Record<string, string> = {
 
 const AS_STATUS_BADGE: Record<string, BadgeStatus> = {
   PENDING: 'default', ACCEPTED: 'info', ASSIGNED: 'warning', VISIT_SCHEDULED: 'info',
-  IN_PROGRESS: 'warning', COMPLETED: 'success', REPORT_SUBMITTED: 'info', CLOSED: 'default', CANCELLED: 'default',
+  IN_PROGRESS: 'warning', COMPLETED: 'success', CLOSED: 'default', CANCELLED: 'default',
 };
 
-// 상태 전이 규칙
+// 상태 전이 규칙(보고서 제출·종결은 `POST .../report` 로만)
 const STATUS_TRANSITIONS: Record<string, Record<string, ASStatus[]>> = {
   ADMIN: {
     PENDING: ['ACCEPTED'],
     ACCEPTED: ['ASSIGNED'],
     ASSIGNED: ['IN_PROGRESS'],
     IN_PROGRESS: ['COMPLETED'],
-    REPORT_SUBMITTED: ['CLOSED'],
   },
   DEALER: {
     PENDING: ['ACCEPTED'],
@@ -154,7 +153,7 @@ export default function ASDetailPage({
   const dateStr = formatDateCompact(detail.createdAt);
   const requestNumber = `AS-${dateStr}-${String(detail.requestId).slice(-3).padStart(3, '0')}`;
 
-  const hasReport = detail.status === 'COMPLETED' || detail.status === 'REPORT_SUBMITTED' || detail.status === 'CLOSED';
+  const isProcessingLocked = detail.status === 'CLOSED' || detail.status === 'CANCELLED';
   const canWriteReport = detail.status === 'COMPLETED' && (role === 'DEALER' || role === 'ADMIN');
 
   return (
@@ -243,11 +242,20 @@ export default function ASDetailPage({
         />
       </div>
 
-      {/* 처리 정보 (ADMIN/DEALER만) */}
-      {(role === 'ADMIN' || role === 'DEALER') && (
+      {/* 종결(보고서 있음): 처리 정보 없이 보고서 조회만 (ADMIN/DEALER) */}
+      {(role === 'ADMIN' || role === 'DEALER') && isProcessingLocked && detail.status === 'CLOSED' && detail.report && (
+        <div className="as-detail-card">
+          <div className="as-detail-card-title">완료 보고서</div>
+          <Button type="primary" icon={<FileTextOutlined />} onClick={() => onViewReport?.(requestId)}>
+            보고서 조회
+          </Button>
+        </div>
+      )}
+
+      {/* 처리 정보 (진행 중 — ADMIN/DEALER) */}
+      {(role === 'ADMIN' || role === 'DEALER') && !isProcessingLocked && (
         <div className="as-detail-card">
           <div className="as-detail-card-title">처리 정보</div>
-          {/* 대리점 배정 */}
           <div style={{ marginBottom: 16 }}>
             <Text strong style={{ display: 'block', marginBottom: 8 }}>
               담당 대리점 배정
@@ -267,14 +275,13 @@ export default function ASDetailPage({
                 type="primary"
                 onClick={handleAssignDealer}
                 loading={assignDealer.isPending}
-                disabled={detail.status === 'COMPLETED' || detail.status === 'REPORT_SUBMITTED' || detail.status === 'CLOSED'}
+                disabled={detail.status === 'COMPLETED' || detail.status === 'CLOSED'}
               >
                 배정
               </Button>
             </Space>
           </div>
 
-          {/* 방문 예정 일시 */}
           <div style={{ marginBottom: 16 }}>
             <Text strong style={{ display: 'block', marginBottom: 8 }}>
               방문 예정 일시
@@ -289,7 +296,6 @@ export default function ASDetailPage({
             />
           </div>
 
-          {/* 처리 메모 */}
           <div style={{ marginBottom: 16 }}>
             <Text strong style={{ display: 'block', marginBottom: 8 }}>
               처리 메모
@@ -303,7 +309,6 @@ export default function ASDetailPage({
             />
           </div>
 
-          {/* 상태 변경 버튼 */}
           {allowedTransitions.length > 0 && (
             <div>
               <Divider />
@@ -325,8 +330,7 @@ export default function ASDetailPage({
             </div>
           )}
 
-          {/* 보고서 작성/조회 버튼 */}
-          {canWriteReport && (
+          {canWriteReport && !detail.report && (
             <>
               <Divider />
               <Button
@@ -338,14 +342,10 @@ export default function ASDetailPage({
               </Button>
             </>
           )}
-          {hasReport && detail.report && (
+          {detail.report && (
             <>
-              {!canWriteReport && <Divider />}
-              <Button
-                icon={<FileTextOutlined />}
-                onClick={() => onViewReport?.(requestId)}
-                style={{ marginLeft: canWriteReport ? 8 : 0 }}
-              >
+              <Divider />
+              <Button type="primary" icon={<FileTextOutlined />} onClick={() => onViewReport?.(requestId)}>
                 보고서 조회
               </Button>
             </>
@@ -354,7 +354,7 @@ export default function ASDetailPage({
       )}
 
       {/* HQ/OWNER: 읽기 전용 보고서 링크 */}
-      {(role === 'HQ' || role === 'OWNER') && hasReport && detail.report && (
+      {(role === 'HQ' || role === 'OWNER') && detail.report && (
         <div className="as-detail-card">
           <Button
             type="primary"

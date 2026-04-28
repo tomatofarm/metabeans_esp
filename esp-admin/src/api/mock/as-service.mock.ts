@@ -261,7 +261,7 @@ const mockASRequests: ASRequestListItem[] = [
     urgency: 'HIGH',
     faultType: 'TEMPERATURE',
     description: '유입 온도가 비정상적으로 높아 즉시 점검이 필요합니다.',
-    status: 'REPORT_SUBMITTED',
+    status: 'CLOSED',
     dealerId: 1,
     dealerName: '서울환경테크',
     preferredVisitDatetime: '2026-02-08T09:00:00Z',
@@ -293,7 +293,7 @@ const mockASRequests: ASRequestListItem[] = [
     urgency: 'NORMAL',
     faultType: 'COMM_ERROR',
     description: '게이트웨이 통신이 간헐적으로 끊겨 통신 모듈 교체가 필요했습니다.',
-    status: 'REPORT_SUBMITTED',
+    status: 'CLOSED',
     dealerId: 1,
     dealerName: '서울환경테크',
     preferredVisitDatetime: '2026-02-03T13:00:00Z',
@@ -522,7 +522,7 @@ export async function mockGetDealerOptions(): Promise<DealerOption[]> {
 // --- Mock 보고서 데이터 ---
 
 const mockReports: Record<number, ASReport & { attachments: ASReportAttachment[]; result: string; remarks?: string; laborCost?: number; totalCost?: number }> = {
-  /** 9004: 처리 완료(COMPLETED)만 두고 보고서는 없음 → 대리점이 「완료 보고서 작성」 후 REPORT_SUBMITTED + mockCreateASReport로 채워짐 */
+  /** 9004: COMPLETED + 보고서 없음 → 「완료 보고서 작성」 후 `CLOSED` + mockCreateASReport */
   9007: {
     reportId: 1002,
     requestId: 9007,
@@ -625,7 +625,7 @@ function buildASDetail(requestId: number): ASDetail | null {
     description: request.description,
     preferredVisitDatetime: request.preferredVisitDatetime,
     visitScheduledDatetime:
-      request.status === 'IN_PROGRESS' || request.status === 'COMPLETED' || request.status === 'REPORT_SUBMITTED' || request.status === 'CLOSED'
+      request.status === 'IN_PROGRESS' || request.status === 'COMPLETED' || request.status === 'CLOSED'
         ? request.preferredVisitDatetime
         : undefined,
     contactName: '이점주',
@@ -762,10 +762,10 @@ export async function mockCreateASReport(
     attachments: [],
   };
 
-  // 상태를 REPORT_SUBMITTED로 변경
+  // 보고서 제출 시 곧바로 종결
   const request = mockASRequests.find((r) => r.requestId === requestId);
   if (request) {
-    request.status = 'REPORT_SUBMITTED';
+    request.status = 'CLOSED';
     request.updatedAt = new Date().toISOString();
   }
 
@@ -778,7 +778,7 @@ export async function mockGetASStatusList(params?: {
   urgency?: Urgency;
   storeId?: number;
   dealerId?: number;
-  /** true면 완료 보고서 탭 전용: 보고서 제출(REPORT_SUBMITTED)·종료(CLOSED)이면서 보고서 레코드가 있는 건만 */
+  /** true면 완료 보고서 탭: `CLOSED` 이고 보고서 레코드가 있는 건만 */
   reportOnly?: boolean;
   from?: string;
   to?: string;
@@ -803,9 +803,7 @@ export async function mockGetASStatusList(params?: {
   }
   if (params?.reportOnly) {
     filtered = filtered.filter(
-      (r) =>
-        !!mockReports[r.requestId] &&
-        (r.status === 'REPORT_SUBMITTED' || r.status === 'CLOSED'),
+      (r) => r.status === 'CLOSED' && !!mockReports[r.requestId],
     );
   }
   if (params?.from) {

@@ -73,7 +73,7 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
 
 /**
  * `Bearer`로 현재 로그인 사용자 조회(부팅 시 refresh 직후).
- * @see `docs/ESP_백엔드_요청_세션_부트스트랩_GET_me.md` — 응답 `data`는 로그인 `user`와 동일 키.
+ * @see `docs/ESP_백엔드_요청_추가_세션_복원.md` §2 — 응답 `data`는 로그인 `user`와 동일 키.
  */
 export async function getCurrentUser(): Promise<LoginUser> {
   const raw = await apiRequest<Parameters<typeof mapApiUser>[0]>({

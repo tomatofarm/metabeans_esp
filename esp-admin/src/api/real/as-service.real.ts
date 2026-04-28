@@ -241,9 +241,7 @@ export async function fetchASStatusList(params?: {
     data = data.filter((r) => r.dealerId === params.dealerId);
   }
   if (params?.reportOnly) {
-    data = data.filter((r) =>
-      ['COMPLETED', 'REPORT_SUBMITTED', 'CLOSED'].includes(r.status),
-    );
+    data = data.filter((r) => r.status === 'CLOSED');
   }
   const page = params?.page ?? 1;
   const pageSize = params?.pageSize ?? 20;

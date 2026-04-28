@@ -15,7 +15,7 @@ const { RangePicker } = DatePicker;
 
 const AS_STATUS_BADGE: Record<string, BadgeStatus> = {
   PENDING: 'default', ACCEPTED: 'info', ASSIGNED: 'warning', VISIT_SCHEDULED: 'info',
-  IN_PROGRESS: 'warning', COMPLETED: 'success', REPORT_SUBMITTED: 'info', CLOSED: 'default', CANCELLED: 'default',
+  IN_PROGRESS: 'warning', COMPLETED: 'success', CLOSED: 'default', CANCELLED: 'default',
 };
 
 const DEALER_OPTIONS = [
@@ -62,6 +62,9 @@ export default function ASStatusPage({ onRowClick, mode = 'status' }: ASStatusPa
 
   const requests = data?.data ?? [];
   const totalCount = data?.meta?.totalCount ?? 0;
+
+  const isListViewAction = (s: ASStatus) =>
+    mode === 'report' || s === 'CLOSED' || s === 'CANCELLED';
 
   const columns: ColumnsType<ASRequestListItem> = [
     {
@@ -135,16 +138,19 @@ export default function ASStatusPage({ onRowClick, mode = 'status' }: ASStatusPa
             width: 96,
             fixed: 'right' as const,
             align: 'right' as const,
-            render: (_: unknown, record: ASRequestListItem) => (
-              <Button
-                type="primary"
-                size="small"
-                disabled={processEditDisabled}
-                onClick={() => onRowClick(record.requestId)}
-              >
-                수정
-              </Button>
-            ),
+            render: (_: unknown, record: ASRequestListItem) => {
+              const viewOnly = isListViewAction(record.status);
+              return (
+                <Button
+                  type="primary"
+                  size="small"
+                  disabled={!viewOnly && processEditDisabled}
+                  onClick={() => onRowClick(record.requestId)}
+                >
+                  {viewOnly ? '조회' : '수정'}
+                </Button>
+              );
+            },
           },
         ]
       : []),

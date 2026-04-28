@@ -9,7 +9,6 @@ export type ASStatus =
   | 'VISIT_SCHEDULED'
   | 'IN_PROGRESS'
   | 'COMPLETED'
-  | 'REPORT_SUBMITTED'
   | 'CLOSED'
   | 'CANCELLED';
 

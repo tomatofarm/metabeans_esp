@@ -40,7 +40,7 @@ const RESULT_LABELS: Record<string, { label: string; status: BadgeStatus }> = {
 
 const AS_STATUS_BADGE: Record<string, BadgeStatus> = {
   PENDING: 'default', ACCEPTED: 'info', ASSIGNED: 'warning', VISIT_SCHEDULED: 'info',
-  IN_PROGRESS: 'warning', COMPLETED: 'success', REPORT_SUBMITTED: 'info', CLOSED: 'default', CANCELLED: 'default',
+  IN_PROGRESS: 'warning', COMPLETED: 'success', CLOSED: 'default', CANCELLED: 'default',
 };
 
 interface ASReportPageProps {
