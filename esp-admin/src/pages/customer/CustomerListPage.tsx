@@ -13,6 +13,7 @@ import type { StoreStatus } from '../../types/store.types';
 import StatusBadge from '../../components/common/StatusBadge';
 import type { BadgeStatus } from '../../components/common/StatusBadge';
 import { STATUS_COLORS } from '../../utils/constants';
+import { geocodeAddressToLatLng } from '../../utils/geocodePhoton';
 import CustomerEditModal from './CustomerEditModal';
 
 const LIST_FETCH_PAGE_SIZE = 500;
@@ -31,6 +32,14 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'PENDING', label: '대기' },
   { value: 'INACTIVE', label: '비활성' },
 ];
+
+/** API가 위·경도를 안 주면 실 API 매핑에서 (0,0)이 됨 → 대서양으로 찍히는 것처럼 보임. 지도에는 유효 좌표만 사용. */
+function isPlottableLatLng(lat: number, lng: number): boolean {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  if (lat === 0 && lng === 0) return false;
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return false;
+  return true;
+}
 
 function createCustomerMarkerIcon(status: StoreStatus): L.DivIcon {
   const color =
@@ -79,7 +88,11 @@ function MapSync({
     }
     if (boundsKey === prevBoundsKey.current) return;
     prevBoundsKey.current = boundsKey;
-    const bounds = L.latLngBounds(customers.map((c) => [c.latitude, c.longitude] as L.LatLngTuple));
+    const plotPoints = customers.filter((c) => isPlottableLatLng(c.latitude, c.longitude));
+    if (plotPoints.length === 0) return;
+    const bounds = L.latLngBounds(
+      plotPoints.map((c) => [c.latitude, c.longitude] as L.LatLngTuple),
+    );
     if (bounds.isValid()) {
       map.fitBounds(bounds.pad(0.12));
     }
@@ -89,6 +102,7 @@ function MapSync({
     if (selectedStoreId == null) return;
     const c = customers.find((x) => x.storeId === selectedStoreId);
     if (!c) return;
+    if (!isPlottableLatLng(c.latitude, c.longitude)) return;
     map.flyTo([c.latitude, c.longitude], 15, { duration: 0.4 });
     const m = markerRefs.current.get(selectedStoreId);
     window.setTimeout(() => m?.openPopup(), 450);
@@ -111,6 +125,11 @@ export default function CustomerListPage() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const markerRefs = useRef<Map<number, L.Marker>>(new Map());
+  /** API 좌표가 없을 때 Photon( 무료 OSM 검색 엔진) 주소 → 좌표 캐시 */
+  const [geocodeOverrides, setGeocodeOverrides] = useState<
+    Record<number, { lat: number; lng: number }>
+  >({});
+  const addressGeocodeDedupeRef = useRef<Map<string, { lat: number; lng: number }>>(new Map());
 
   const listParams: CustomerListParams = {
     search: search || undefined,
@@ -127,6 +146,65 @@ export default function CustomerListPage() {
 
   const allCustomers = listData?.data ?? EMPTY_CUSTOMERS;
   const totalCount = listData?.meta?.totalCount ?? allCustomers.length;
+
+  const customersForMap = useMemo(() => {
+    return allCustomers.flatMap((c) => {
+      if (isPlottableLatLng(c.latitude, c.longitude)) return [c];
+      const g = geocodeOverrides[c.storeId];
+      if (g && isPlottableLatLng(g.lat, g.lng))
+        return [{ ...c, latitude: g.lat, longitude: g.lng }];
+      return [];
+    });
+  }, [allCustomers, geocodeOverrides]);
+
+  const geocodeWorkKey = useMemo(
+    () =>
+      allCustomers
+        .filter((c) => !isPlottableLatLng(c.latitude, c.longitude) && (c.address?.trim() ?? '').length >= 4)
+        .map((c) => `${c.storeId}:${c.address?.trim() ?? ''}`)
+        .sort()
+        .join('|'),
+    [allCustomers],
+  );
+
+  useEffect(() => {
+    if (!geocodeWorkKey) return;
+    let cancelled = false;
+
+    (async () => {
+      const need = allCustomers.filter(
+        (c) =>
+          !isPlottableLatLng(c.latitude, c.longitude) &&
+          (c.address?.trim() ?? '').length >= 4,
+      );
+      for (const c of need) {
+        if (cancelled) return;
+
+        const normAddr = (c.address ?? '').trim().replace(/\s+/g, ' ');
+        let pos = addressGeocodeDedupeRef.current.get(normAddr);
+        if (!pos) {
+          const hit = await geocodeAddressToLatLng(normAddr);
+          await new Promise((r) => setTimeout(r, 450));
+          if (cancelled) return;
+          if (hit && isPlottableLatLng(hit.lat, hit.lng)) {
+            addressGeocodeDedupeRef.current.set(normAddr, hit);
+            pos = hit;
+          }
+        }
+        if (pos && isPlottableLatLng(pos.lat, pos.lng)) {
+          setGeocodeOverrides((prev) =>
+            prev[c.storeId] ? prev : { ...prev, [c.storeId]: { lat: pos.lat, lng: pos.lng } },
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // geocodeWorkKey 는 allCustomers 기반 — 키가 바뀔 때 클로저의 allCustomers 는 최신 목록과 일치함
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geocodeWorkKey]);
 
   useEffect(() => {
     setSelectedStoreId((prev) => {
@@ -368,11 +446,11 @@ export default function CustomerListPage() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               <MapSync
-                customers={allCustomers}
+                customers={customersForMap}
                 selectedStoreId={selectedStoreId}
                 markerRefs={markerRefs}
               />
-              {allCustomers.map((store) => (
+              {customersForMap.map((store) => (
                 <Marker
                   key={store.storeId}
                   ref={(el) => {
