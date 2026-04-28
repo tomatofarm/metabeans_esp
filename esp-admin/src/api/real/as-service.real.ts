@@ -263,12 +263,21 @@ export async function fetchASDetail(
     method: 'get',
     url: `/as-service/requests/${requestId}`,
   });
-  const reportData = await apiRequest<Record<string, unknown> | null>({
-    method: 'get',
-    url: `/as-service/requests/${requestId}/report`,
-  });
 
   const item = mapListItem(row);
+
+  /** 완료 보고서는 종결(`CLOSED`) 후에만 존재. 미작성 구간에서 `GET .../report` 를 호출하면 서버가 404를 주어 콘솔에 불필요한 오류로 찍힘. */
+  let reportData: Record<string, unknown> | null = null;
+  if (item.status === 'CLOSED') {
+    try {
+      reportData = await apiRequest<Record<string, unknown> | null>({
+        method: 'get',
+        url: `/as-service/requests/${requestId}/report`,
+      });
+    } catch {
+      reportData = null;
+    }
+  }
   const detail: ASDetail = {
     requestId: item.requestId,
     store: { storeId: item.storeId, storeName: item.storeName },
