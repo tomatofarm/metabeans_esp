@@ -75,10 +75,7 @@ export default function DashboardPage() {
       );
     default:
       return (
-        <AdminDashboardPage
-          onNavigateToStore={handleNavigateToStore}
-          onNavigateToEquipment={handleNavigateToEquipment}
-        />
+        <AdminDashboardPage onNavigateToEquipment={handleNavigateToEquipment} />
       );
   }
 }

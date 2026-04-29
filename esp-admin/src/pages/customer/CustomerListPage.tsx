@@ -12,13 +12,15 @@ import type { StoreStatus } from '../../types/store.types';
 import StatusBadge from '../../components/common/StatusBadge';
 import type { BadgeStatus } from '../../components/common/StatusBadge';
 import { STATUS_COLORS } from '../../utils/constants';
-import { geocodeAddressToLatLng } from '../../utils/geocodePhoton';
+import {
+  isPlottableLatLng,
+  createCustomerMarkerIcon,
+} from '../../utils/customerMapGeo';
+import { useCustomerMapGeocode } from '../../hooks/useCustomerMapGeocode';
 import CustomerEditModal from './CustomerEditModal';
 
 const LIST_FETCH_PAGE_SIZE = 500;
 const TABLE_PAGE_SIZE = 10;
-/** Photon 연속 호출 간 최소 간격(ms) — 첫 번째 호출에는 대기 없음 */
-const PHOTON_REQUEST_GAP_MS = 120;
 
 const EMPTY_CUSTOMERS: CustomerListItem[] = [];
 
@@ -33,38 +35,6 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'PENDING', label: '대기' },
   { value: 'INACTIVE', label: '비활성' },
 ];
-
-/** 지오코드 캐시·주소 비교용 — 반드시 Photon 루프의 `normAddr`와 동일 규칙 */
-function normalizeCustomerAddressKey(address: string | undefined): string {
-  return (address ?? '').trim().replace(/\s+/g, ' ');
-}
-
-/** API가 위·경도를 안 주면 실 API 매핑에서 (0,0)이 됨 → 대서양으로 찍히는 것처럼 보임. 지도에는 유효 좌표만 사용. */
-function isPlottableLatLng(lat: number, lng: number): boolean {
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
-  if (lat === 0 && lng === 0) return false;
-  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return false;
-  return true;
-}
-
-function createCustomerMarkerIcon(status: StoreStatus): L.DivIcon {
-  const color =
-    status === 'ACTIVE'
-      ? STATUS_COLORS.GOOD.color
-      : status === 'PENDING'
-        ? STATUS_COLORS.WARNING.color
-        : '#bfbfbf';
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="
-      width: 24px; height: 24px; border-radius: 50%;
-      background: ${color}; border: 3px solid white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    "></div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
-}
 
 /** 필터 결과가 바뀔 때 bounds 맞춤 / 행 선택 시 이동·팝업 */
 function MapSync({
@@ -131,11 +101,6 @@ export default function CustomerListPage() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const markerRefs = useRef<Map<number, L.Marker>>(new Map());
-  /** API 좌표가 없을 때 Photon 주소 → 좌표. `addressKey` 가 현재 매장 주소와 다르면 예전 좌표를 쓰지 않음(주소 수정 후 지도 반영). */
-  const [geocodeOverrides, setGeocodeOverrides] = useState<
-    Record<number, { lat: number; lng: number; addressKey: string }>
-  >({});
-  const addressGeocodeDedupeRef = useRef<Map<string, { lat: number; lng: number }>>(new Map());
 
   const listParams: CustomerListParams = {
     search: search || undefined,
@@ -154,93 +119,7 @@ export default function CustomerListPage() {
   const allCustomers = listData?.data ?? EMPTY_CUSTOMERS;
   const totalCount = listData?.meta?.totalCount ?? allCustomers.length;
 
-  const customersForMap = useMemo(() => {
-    return allCustomers.flatMap((c) => {
-      if (isPlottableLatLng(c.latitude, c.longitude)) return [c];
-      const addrKey = normalizeCustomerAddressKey(c.address);
-      const g = geocodeOverrides[c.storeId];
-      if (g && g.addressKey === addrKey && isPlottableLatLng(g.lat, g.lng))
-        return [{ ...c, latitude: g.lat, longitude: g.lng }];
-      return [];
-    });
-  }, [allCustomers, geocodeOverrides]);
-
-  /** API 좌표 없이 지오코딩 대기 중인 매장 수(로딩 힌트용) */
-  const geoStillPendingCount = useMemo(() => {
-    return allCustomers.filter((c) => {
-      if (isPlottableLatLng(c.latitude, c.longitude)) return false;
-      const ak = normalizeCustomerAddressKey(c.address);
-      if (ak.length < 4) return false;
-      const g = geocodeOverrides[c.storeId];
-      return !(g && g.addressKey === ak);
-    }).length;
-  }, [allCustomers, geocodeOverrides]);
-
-  const geocodeWorkKey = useMemo(
-    () =>
-      allCustomers
-        .filter(
-          (c) =>
-            !isPlottableLatLng(c.latitude, c.longitude) &&
-            normalizeCustomerAddressKey(c.address).length >= 4,
-        )
-        .map((c) => `${c.storeId}:${normalizeCustomerAddressKey(c.address)}`)
-        .sort()
-        .join('|'),
-    [allCustomers],
-  );
-
-  useEffect(() => {
-    if (!geocodeWorkKey) return;
-    let cancelled = false;
-
-    (async () => {
-      let need = allCustomers.filter(
-        (c) =>
-          !isPlottableLatLng(c.latitude, c.longitude) &&
-          normalizeCustomerAddressKey(c.address).length >= 4,
-      );
-      /** 테이블/지도에서 선택한 매장부터 처리 → 클릭 직후 핀이 더 빨리 뜸 */
-      need = [...need].sort((a, b) => {
-        if (selectedStoreId == null) return 0;
-        if (a.storeId === selectedStoreId) return -1;
-        if (b.storeId === selectedStoreId) return 1;
-        return 0;
-      });
-
-      let gapBeforeNextPhoton = false;
-
-      for (const c of need) {
-        if (cancelled) return;
-
-        const normAddr = normalizeCustomerAddressKey(c.address);
-        let pos = addressGeocodeDedupeRef.current.get(normAddr);
-        if (!pos) {
-          if (gapBeforeNextPhoton) {
-            await new Promise((r) => setTimeout(r, PHOTON_REQUEST_GAP_MS));
-            if (cancelled) return;
-          }
-          const hit = await geocodeAddressToLatLng(normAddr);
-          gapBeforeNextPhoton = true;
-          if (cancelled) return;
-          if (hit && isPlottableLatLng(hit.lat, hit.lng)) {
-            addressGeocodeDedupeRef.current.set(normAddr, hit);
-            pos = hit;
-          }
-        }
-        if (pos && isPlottableLatLng(pos.lat, pos.lng)) {
-          setGeocodeOverrides((prev) => ({
-            ...prev,
-            [c.storeId]: { lat: pos.lat, lng: pos.lng, addressKey: normAddr },
-          }));
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [geocodeWorkKey, selectedStoreId]);
+  const { customersForMap, geoStillPendingCount } = useCustomerMapGeocode(allCustomers, selectedStoreId);
 
   useEffect(() => {
     setSelectedStoreId((prev) => {

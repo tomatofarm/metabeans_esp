@@ -1,4 +1,5 @@
 import { Typography, Space, Row, Col } from 'antd';
+import { useMemo } from 'react';
 import {
   useDashboardSummary,
   useDashboardIssues,
@@ -6,6 +7,7 @@ import {
   useEsgSummary,
   useDashboardPendingAs,
 } from '../../api/dashboard.api';
+import { useCustomerList } from '../../api/customer.api';
 import { useSystemUsers } from '../../api/system.api';
 import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import SummaryCards from './components/SummaryCards';
@@ -15,19 +17,30 @@ import EsgSummaryCard from './components/EsgSummaryCard';
 import StoreMap from './components/StoreMap';
 
 interface AdminDashboardPageProps {
-  onNavigateToStore: (storeId: number) => void;
   onNavigateToEquipment: (equipmentId: number) => void;
 }
 
-export default function AdminDashboardPage({
-  onNavigateToStore,
-  onNavigateToEquipment,
-}: AdminDashboardPageProps) {
+export default function AdminDashboardPage({ onNavigateToEquipment }: AdminDashboardPageProps) {
   const { data: summary, isLoading: summaryLoading } = useDashboardSummary();
   const { data: issues, isLoading: issuesLoading } = useDashboardIssues();
-  const { data: storeMap, isLoading: mapLoading } = useStoreMapData();
+  const { data: storeMap } = useStoreMapData();
   const { data: esg, isLoading: esgLoading } = useEsgSummary();
   const { data: pendingAs, isLoading: asLoading } = useDashboardPendingAs();
+
+  /** 고객현황과 동일 매장 목록 출처로 지도 표시(Mock: 전체 페이지 1·충분한 pageSize) */
+  const dashboardStoreListParams = useMemo(() => ({ page: 1, pageSize: 500 }), []);
+  const { data: customerListRes, isLoading: dashboardStoresLoading } = useCustomerList(
+    dashboardStoreListParams,
+  );
+  const dashboardCustomers = customerListRes?.data ?? [];
+  const issueCountByStoreId = useMemo(() => {
+    const m: Record<number, number> = {};
+    storeMap?.forEach((s) => {
+      m[s.storeId] = s.issueCount;
+    });
+    return m;
+  }, [storeMap]);
+
   const { isAllowed: canViewTotalUsers, isLoading: totalUsersPermLoading } =
     useFeaturePermission('dashboard.total_users');
   const { data: usersRes } = useSystemUsers(
@@ -66,9 +79,10 @@ export default function AdminDashboardPage({
       <EsgSummaryCard data={esg} loading={esgLoading} />
 
       <StoreMap
-        stores={storeMap}
-        loading={mapLoading}
-        onStoreClick={onNavigateToStore}
+        customers={dashboardCustomers}
+        /** 지도 매장 목록만 `useCustomerList` — 이슈 API(`mapLoading`)까지 기다리면 지도 노출이 늦어짐 */
+        loading={dashboardStoresLoading}
+        issueCountByStoreId={issueCountByStoreId}
       />
     </Space>
   );
