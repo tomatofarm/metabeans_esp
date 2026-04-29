@@ -1,11 +1,10 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Table, Select, Input, Button, Modal, Space } from 'antd';
-import { SearchOutlined, ReloadOutlined, EditOutlined, UserAddOutlined } from '@ant-design/icons';
+import { Table, Select, Input, Button, Space } from 'antd';
+import { SearchOutlined, ReloadOutlined, EditOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useNavigate } from 'react-router-dom';
 import { useCustomerList, useCustomerDealerOptions } from '../../api/customer.api';
 import { REGION_OPTIONS, CUSTOMER_HQ_OPTIONS } from '../../api/mock/customer.mock';
 import type { CustomerListItem, CustomerListParams } from '../../types/customer.types';
@@ -120,7 +119,6 @@ function MapSync({
 }
 
 export default function CustomerListPage() {
-  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StoreStatus | undefined>();
   const [hqFilter, setHqFilter] = useState<string | undefined>();
@@ -301,17 +299,6 @@ export default function CustomerListPage() {
     setSelectedStoreId(null);
   };
 
-  const handleRegisterClick = () => {
-    Modal.confirm({
-      title: '고객 등록',
-      content:
-        '새 매장(점주)은 점주 회원가입 절차를 통해 등록됩니다. 점주 회원가입 화면으로 이동할까요?',
-      okText: '이동',
-      cancelText: '취소',
-      onOk: () => navigate('/register/owner'),
-    });
-  };
-
   const hqSelectOptions = CUSTOMER_HQ_OPTIONS.map((name) => ({ value: name, label: name }));
 
   const columns: ColumnsType<CustomerListItem> = [
@@ -450,9 +437,6 @@ export default function CustomerListPage() {
             초기화
           </Button>
         </Space>
-        <Button type="primary" icon={<UserAddOutlined />} onClick={handleRegisterClick}>
-          고객등록
-        </Button>
       </div>
 
       <div className="customer-page-layout">
