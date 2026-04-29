@@ -273,3 +273,14 @@ export async function fetchCustomerDealerOptions(): Promise<{ dealerId: number; 
   });
   return rows.map((r) => ({ dealerId: r.dealerId, dealerName: r.name }));
 }
+
+/** 가입 매장 정보에 존재하는 매장본사명 목록만(등록 안 된 문자열 노출 금지) — `fetchAllStoreRows`와 동일 출처 */
+export async function fetchCustomerHqOptions(): Promise<string[]> {
+  const rows = await fetchAllStoreRows();
+  const seen = new Set<string>();
+  for (const row of rows) {
+    const h = mapListRow(row).hqName?.trim();
+    if (h) seen.add(h);
+  }
+  return Array.from(seen).sort((a, b) => a.localeCompare(b, 'ko'));
+}

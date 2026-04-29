@@ -5,8 +5,8 @@ import type { ColumnsType } from 'antd/es/table';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useCustomerList, useCustomerDealerOptions } from '../../api/customer.api';
-import { REGION_OPTIONS, CUSTOMER_HQ_OPTIONS } from '../../api/mock/customer.mock';
+import { useCustomerList, useCustomerDealerOptions, useCustomerHqOptions } from '../../api/customer.api';
+import { REGION_OPTIONS } from '../../api/mock/customer.mock';
 import type { CustomerListItem, CustomerListParams } from '../../types/customer.types';
 import type { StoreStatus } from '../../types/store.types';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -149,6 +149,7 @@ export default function CustomerListPage() {
 
   const { data: listData, isLoading, isFetching } = useCustomerList(listParams);
   const { data: dealerOptions } = useCustomerDealerOptions();
+  const { data: hqOptionsFromApi = [], isLoading: hqOptionsLoading } = useCustomerHqOptions();
 
   const allCustomers = listData?.data ?? EMPTY_CUSTOMERS;
   const totalCount = listData?.meta?.totalCount ?? allCustomers.length;
@@ -299,7 +300,7 @@ export default function CustomerListPage() {
     setSelectedStoreId(null);
   };
 
-  const hqSelectOptions = CUSTOMER_HQ_OPTIONS.map((name) => ({ value: name, label: name }));
+  const hqSelectOptions = hqOptionsFromApi.map((name) => ({ value: name, label: name }));
 
   const columns: ColumnsType<CustomerListItem> = [
     {
@@ -389,6 +390,7 @@ export default function CustomerListPage() {
           <Select
             placeholder="매장본사"
             allowClear
+            loading={hqOptionsLoading}
             style={{ width: 150 }}
             options={hqSelectOptions}
             value={hqFilter}

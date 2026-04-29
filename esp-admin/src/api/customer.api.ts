@@ -7,7 +7,8 @@
  * | useCustomerDetail | GET /customers/stores/:storeId |
  * | useUpdateCustomer | PUT /customers/stores/:storeId |
  * | useCustomerMapData | GET /customers/stores/map |
- * | useCustomerDealerOptions | (별도 경로) 대리점 목록 — §2 registration dealer-list 등과 통일 권장 |
+ * | useCustomerDealerOptions | 대리점 목록 `/registration/dealer-list` 등 |
+ * | useCustomerHqOptions | 매장에 연결된 매장본사명만(GET 스토어 전체에서 유니크) |
  *
  * 미구현: POST /customers/stores, §8.6 floors CRUD — 필요 시 훅·화면 추가.
  */
@@ -18,6 +19,7 @@ import {
   mockUpdateCustomer,
   mockGetCustomerMapData,
   mockGetCustomerDealerOptions,
+  mockGetCustomerHqOptions,
 } from './mock/customer.mock';
 import * as customerReal from './real/customer.real';
 import type { CustomerListParams, CustomerUpdateRequest } from '../types/customer.types';
@@ -61,6 +63,7 @@ export function useUpdateCustomer() {
       await queryClient.refetchQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customer-detail', storeId] });
       queryClient.invalidateQueries({ queryKey: ['customer-map'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-hq-options'] });
     },
   });
 }
@@ -79,6 +82,15 @@ export function useCustomerDealerOptions() {
   return useQuery({
     queryKey: ['customer-dealer-options'],
     queryFn: () => (useRealApi ? customerReal.fetchCustomerDealerOptions() : mockGetCustomerDealerOptions()),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** 고객에 실제 매핑된 매장본사명 목록만(가입·스토어 데이터 기준 — Mock 고정 배열 미사용) */
+export function useCustomerHqOptions() {
+  return useQuery({
+    queryKey: ['customer-hq-options'],
+    queryFn: () => (useRealApi ? customerReal.fetchCustomerHqOptions() : mockGetCustomerHqOptions()),
     staleTime: 5 * 60 * 1000,
   });
 }

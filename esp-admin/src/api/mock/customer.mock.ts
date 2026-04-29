@@ -264,10 +264,19 @@ const mockCustomersRaw: CustomerListItem[] = [
 
 const mockCustomers: CustomerListItem[] = mockCustomersRaw.map(enrichListItem);
 
-/** 고객현황 필터용 매장본사 옵션 */
-export const CUSTOMER_HQ_OPTIONS = Array.from(
-  new Set(Object.values(STORE_HQ_MAP)),
-).sort((a, b) => a.localeCompare(b));
+/** 현재 목록 매장 기준 매장본사명 목록(Mock — 실패 시 fetchCustomerHqOptions와 동일 출처 패턴). */
+export async function mockGetCustomerHqOptions(): Promise<string[]> {
+  return mockDelay(
+    Array.from(
+      new Set(
+        mockCustomers
+          .map((c) => c.hqName?.trim())
+          .filter((name): name is string => Boolean(name)),
+      ),
+    ).sort((a, b) => a.localeCompare(b, 'ko')),
+    180,
+  );
+}
 
 // --- Mock 대리점 옵션 ---
 
