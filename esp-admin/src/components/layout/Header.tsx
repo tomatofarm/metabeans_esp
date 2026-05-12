@@ -34,7 +34,7 @@ export default function Header() {
   const handleMenuClick = ({ key }: { key: string }) => {
     const item = MENU_ITEMS.find((m) => m.key === key);
     if (item) {
-      if (key === 'dashboard') clearSelection();
+      if (key !== 'equipment') clearSelection();
       navigate(item.path);
     }
   };
