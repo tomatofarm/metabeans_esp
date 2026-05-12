@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Table, Select, Input, Button, Space, Spin } from 'antd';
 import { SearchOutlined, ReloadOutlined, EditOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, OverlayViewF, useJsApiLoader } from '@react-google-maps/api';
 import { useCustomerList, useCustomerDealerOptions, useCustomerHqOptions } from '../../api/customer.api';
 import { REGION_OPTIONS } from '../../api/mock/customer.mock';
 import type { CustomerListItem, CustomerListParams } from '../../types/customer.types';
@@ -10,7 +10,8 @@ import type { StoreStatus } from '../../types/store.types';
 import StatusBadge from '../../components/common/StatusBadge';
 import type { BadgeStatus } from '../../components/common/StatusBadge';
 import { STATUS_COLORS } from '../../utils/constants';
-import { isPlottableLatLng, createCustomerMarkerIcon } from '../../utils/customerMapGeo';
+import { useCustomerMapGeocode } from '../../hooks/useCustomerMapGeocode';
+import { useBackfillStoreCoords } from '../../hooks/useBackfillStoreCoords';
 import CustomerEditModal from './CustomerEditModal';
 
 const LIST_FETCH_PAGE_SIZE = 500;
@@ -46,7 +47,7 @@ export default function CustomerListPage() {
   const [editStoreId, setEditStoreId] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -73,10 +74,8 @@ export default function CustomerListPage() {
   const allCustomers = listData?.data ?? EMPTY_CUSTOMERS;
   const totalCount = listData?.meta?.totalCount ?? allCustomers.length;
 
-  const customersForMap = useMemo(
-    () => allCustomers.filter((c) => isPlottableLatLng(c.latitude, c.longitude)),
-    [allCustomers],
-  );
+  useBackfillStoreCoords(allCustomers);
+  const { customersForMap, geoStillPendingCount } = useCustomerMapGeocode(allCustomers, selectedStoreId);
 
   // 필터 변경 시 선택 해제
   useEffect(() => {
@@ -97,13 +96,13 @@ export default function CustomerListPage() {
 
   // 행 선택 시 지도 이동 + 팝업 열기
   useEffect(() => {
-    if (!isLoaded || !mapRef.current || selectedStoreId == null) return;
+    if (!isLoaded || !mapInstance || selectedStoreId == null) return;
     const c = customersForMap.find((x) => x.storeId === selectedStoreId);
     if (!c) return;
-    mapRef.current.panTo({ lat: c.latitude, lng: c.longitude });
-    mapRef.current.setZoom(15);
+    mapInstance.panTo({ lat: c.latitude, lng: c.longitude });
+    mapInstance.setZoom(15);
     setActiveInfoStoreId(selectedStoreId);
-  }, [isLoaded, selectedStoreId, customersForMap]);
+  }, [isLoaded, mapInstance, selectedStoreId, customersForMap]);
 
   // fitBounds: 필터 결과 변경 시
   const boundsKey = useMemo(
@@ -117,15 +116,15 @@ export default function CustomerListPage() {
   const prevBoundsKey = useRef('');
 
   useEffect(() => {
-    if (!isLoaded || !mapRef.current || customersForMap.length === 0) return;
+    if (!isLoaded || !mapInstance || customersForMap.length === 0) return;
     if (selectedStoreId != null) return;
     if (boundsKey === prevBoundsKey.current) return;
     prevBoundsKey.current = boundsKey;
 
     const bounds = new window.google.maps.LatLngBounds();
     customersForMap.forEach((c) => bounds.extend({ lat: c.latitude, lng: c.longitude }));
-    if (!bounds.isEmpty()) mapRef.current.fitBounds(bounds);
-  }, [isLoaded, boundsKey, customersForMap, selectedStoreId]);
+    if (!bounds.isEmpty()) mapInstance.fitBounds(bounds);
+  }, [isLoaded, mapInstance, boundsKey, customersForMap, selectedStoreId]);
 
   const selectStoreFromMap = useCallback(
     (storeId: number) => {
@@ -307,9 +306,12 @@ export default function CustomerListPage() {
               비활성
             </span>
           </div>
-          {isFetching && (
+          {(isFetching || geoStillPendingCount > 0) && (
             <div className="customer-map-hint" style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 8 }}>
-              고객 목록을 갱신 중입니다.
+              {isFetching ? '고객 목록을 갱신 중입니다. ' : null}
+              {geoStillPendingCount > 0
+                ? `위·경도 없는 매장 ${geoStillPendingCount}곳 — 주소로 위치를 찾는 중입니다(잠시 후 지도에 표시).`
+                : null}
             </div>
           )}
           <div className="customer-map-container-split">
@@ -322,25 +324,62 @@ export default function CustomerListPage() {
                 mapContainerStyle={{ height: '100%', width: '100%', borderRadius: 12 }}
                 center={DEFAULT_CENTER}
                 zoom={DEFAULT_ZOOM}
-                onLoad={(map) => { mapRef.current = map; }}
-                onUnmount={() => { mapRef.current = null; }}
-                options={{ gestureHandling: 'greedy' }}
+                onLoad={setMapInstance}
+                onUnmount={() => setMapInstance(null)}
+                options={{ gestureHandling: 'greedy', clickableIcons: false }}
               >
-                {customersForMap.map((store) => (
-                  <Marker
-                    key={store.storeId}
-                    position={{ lat: store.latitude, lng: store.longitude }}
-                    icon={createCustomerMarkerIcon(store.status)}
-                    onClick={() => selectStoreFromMap(store.storeId)}
-                  />
-                ))}
+                {customersForMap.map((store) => {
+                  const mc =
+                    store.status === 'ACTIVE'
+                      ? STATUS_COLORS.GOOD.color
+                      : store.status === 'PENDING'
+                        ? STATUS_COLORS.WARNING.color
+                        : '#bfbfbf';
+                  return (
+                    <OverlayViewF
+                      key={store.storeId}
+                      position={{ lat: store.latitude, lng: store.longitude }}
+                      mapPaneName="overlayMouseTarget"
+                    >
+                      <div
+                        onClick={(e) => { e.stopPropagation(); selectStoreFromMap(store.storeId); }}
+                        style={{
+                          width: 20, height: 20, borderRadius: '50%',
+                          background: mc, border: '3px solid white',
+                          boxShadow: '0 2px 6px rgba(0,0,0,.3)',
+                          cursor: 'pointer', transform: 'translate(-50%,-50%)',
+                        }}
+                      />
+                    </OverlayViewF>
+                  );
+                })}
                 {activeInfoStore ? (
-                  <InfoWindow
+                  <OverlayViewF
                     position={{ lat: activeInfoStore.latitude, lng: activeInfoStore.longitude }}
-                    onCloseClick={() => setActiveInfoStoreId(null)}
-                    options={{ pixelOffset: new window.google.maps.Size(0, -12) }}
+                    mapPaneName="floatPane"
                   >
-                    <div className="customer-map-popup">
+                    <div
+                      className="customer-map-popup"
+                      style={{
+                        transform: 'translate(-50%, calc(-100% - 14px))',
+                        position: 'relative',
+                        background: 'white',
+                        borderRadius: 8,
+                        boxShadow: '0 2px 12px rgba(0,0,0,.25)',
+                        padding: '10px 14px 8px',
+                        minWidth: 180,
+                        pointerEvents: 'auto',
+                        cursor: 'default',
+                      }}
+                    >
+                      <button
+                        onClick={() => setActiveInfoStoreId(null)}
+                        style={{
+                          position: 'absolute', top: 4, right: 6,
+                          background: 'none', border: 'none',
+                          cursor: 'pointer', fontSize: 16, lineHeight: 1, color: '#666',
+                        }}
+                      >×</button>
                       <strong>{activeInfoStore.storeName}</strong>
                       {activeInfoStore.hqName ? (
                         <div className="customer-map-popup-sub">{activeInfoStore.hqName}</div>
@@ -363,7 +402,7 @@ export default function CustomerListPage() {
                         수정
                       </Button>
                     </div>
-                  </InfoWindow>
+                  </OverlayViewF>
                 ) : null}
               </GoogleMap>
             )}
