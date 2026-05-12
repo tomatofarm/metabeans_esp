@@ -1,10 +1,8 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Table, Select, Input, Button, Space } from 'antd';
+import { Table, Select, Input, Button, Space, Spin } from 'antd';
 import { SearchOutlined, ReloadOutlined, EditOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from '@react-google-maps/api';
 import { useCustomerList, useCustomerDealerOptions, useCustomerHqOptions } from '../../api/customer.api';
 import { REGION_OPTIONS } from '../../api/mock/customer.mock';
 import type { CustomerListItem, CustomerListParams } from '../../types/customer.types';
@@ -12,17 +10,16 @@ import type { StoreStatus } from '../../types/store.types';
 import StatusBadge from '../../components/common/StatusBadge';
 import type { BadgeStatus } from '../../components/common/StatusBadge';
 import { STATUS_COLORS } from '../../utils/constants';
-import {
-  isPlottableLatLng,
-  createCustomerMarkerIcon,
-} from '../../utils/customerMapGeo';
-import { useCustomerMapGeocode } from '../../hooks/useCustomerMapGeocode';
+import { isPlottableLatLng, createCustomerMarkerIcon } from '../../utils/customerMapGeo';
 import CustomerEditModal from './CustomerEditModal';
 
 const LIST_FETCH_PAGE_SIZE = 500;
 const TABLE_PAGE_SIZE = 10;
 
 const EMPTY_CUSTOMERS: CustomerListItem[] = [];
+const GOOGLE_MAPS_LIBRARIES: ('maps' | 'places')[] = ['maps'];
+const DEFAULT_CENTER = { lat: 37.5326, lng: 126.9786 };
+const DEFAULT_ZOOM = 11;
 
 const STATUS_CONFIG: Record<StoreStatus, { status: BadgeStatus; label: string }> = {
   ACTIVE: { status: 'success', label: '정상' },
@@ -36,58 +33,6 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'INACTIVE', label: '비활성' },
 ];
 
-/** 필터 결과가 바뀔 때 bounds 맞춤 / 행 선택 시 이동·팝업 */
-function MapSync({
-  customers,
-  selectedStoreId,
-  markerRefs,
-}: {
-  customers: CustomerListItem[];
-  selectedStoreId: number | null;
-  markerRefs: React.MutableRefObject<Map<number, L.Marker>>;
-}) {
-  const map = useMap();
-  /** ID뿐 아니라 좌표까지 바뀌면 fitBounds 재실행 — 주소/지오코드 수정 후 마커가 옮겨질 때 대응 */
-  const boundsKey = useMemo(
-    () =>
-      customers
-        .map((c) => `${c.storeId}:${c.latitude.toFixed(5)},${c.longitude.toFixed(5)}`)
-        .sort()
-        .join('|'),
-    [customers],
-  );
-  const prevBoundsKey = useRef<string>('');
-
-  useEffect(() => {
-    if (customers.length === 0) {
-      prevBoundsKey.current = boundsKey;
-      return;
-    }
-    if (boundsKey === prevBoundsKey.current) return;
-    prevBoundsKey.current = boundsKey;
-    const plotPoints = customers.filter((c) => isPlottableLatLng(c.latitude, c.longitude));
-    if (plotPoints.length === 0) return;
-    const bounds = L.latLngBounds(
-      plotPoints.map((c) => [c.latitude, c.longitude] as L.LatLngTuple),
-    );
-    if (bounds.isValid()) {
-      map.fitBounds(bounds.pad(0.12));
-    }
-  }, [boundsKey, customers, map]);
-
-  useEffect(() => {
-    if (selectedStoreId == null) return;
-    const c = customers.find((x) => x.storeId === selectedStoreId);
-    if (!c) return;
-    if (!isPlottableLatLng(c.latitude, c.longitude)) return;
-    map.flyTo([c.latitude, c.longitude], 15, { duration: 0.4 });
-    const m = markerRefs.current.get(selectedStoreId);
-    window.setTimeout(() => m?.openPopup(), 450);
-  }, [selectedStoreId, customers, map, markerRefs]);
-
-  return null;
-}
-
 export default function CustomerListPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StoreStatus | undefined>();
@@ -97,10 +42,19 @@ export default function CustomerListPage() {
   const [tablePage, setTablePage] = useState(1);
 
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
+  const [activeInfoStoreId, setActiveInfoStoreId] = useState<number | null>(null);
   const [editStoreId, setEditStoreId] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const markerRefs = useRef<Map<number, L.Marker>>(new Map());
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
+    libraries: GOOGLE_MAPS_LIBRARIES,
+    language: 'ko',
+    region: 'KR',
+  });
 
   const listParams: CustomerListParams = {
     search: search || undefined,
@@ -119,8 +73,12 @@ export default function CustomerListPage() {
   const allCustomers = listData?.data ?? EMPTY_CUSTOMERS;
   const totalCount = listData?.meta?.totalCount ?? allCustomers.length;
 
-  const { customersForMap, geoStillPendingCount } = useCustomerMapGeocode(allCustomers, selectedStoreId);
+  const customersForMap = useMemo(
+    () => allCustomers.filter((c) => isPlottableLatLng(c.latitude, c.longitude)),
+    [allCustomers],
+  );
 
+  // 필터 변경 시 선택 해제
   useEffect(() => {
     setSelectedStoreId((prev) => {
       if (prev == null) return null;
@@ -128,7 +86,7 @@ export default function CustomerListPage() {
     });
   }, [allCustomers]);
 
-  /** 선택·목록이 바뀔 때 해당 행이 있는 페이지로 맞춤 (필터/정렬 등 목록 변화) */
+  // 선택된 행이 있는 테이블 페이지로 이동
   useEffect(() => {
     if (selectedStoreId == null) return;
     const idx = allCustomers.findIndex((c) => c.storeId === selectedStoreId);
@@ -137,14 +95,44 @@ export default function CustomerListPage() {
     setTablePage((prev) => (prev === targetPage ? prev : targetPage));
   }, [selectedStoreId, allCustomers]);
 
-  /** 지도 핀: 같은 고객을 다시 눌러도 selectedStoreId가 그대로일 수 있으므로 페이지는 항상 여기서 동기화 */
+  // 행 선택 시 지도 이동 + 팝업 열기
+  useEffect(() => {
+    if (!isLoaded || !mapRef.current || selectedStoreId == null) return;
+    const c = customersForMap.find((x) => x.storeId === selectedStoreId);
+    if (!c) return;
+    mapRef.current.panTo({ lat: c.latitude, lng: c.longitude });
+    mapRef.current.setZoom(15);
+    setActiveInfoStoreId(selectedStoreId);
+  }, [isLoaded, selectedStoreId, customersForMap]);
+
+  // fitBounds: 필터 결과 변경 시
+  const boundsKey = useMemo(
+    () =>
+      customersForMap
+        .map((c) => `${c.storeId}:${c.latitude.toFixed(5)},${c.longitude.toFixed(5)}`)
+        .sort()
+        .join('|'),
+    [customersForMap],
+  );
+  const prevBoundsKey = useRef('');
+
+  useEffect(() => {
+    if (!isLoaded || !mapRef.current || customersForMap.length === 0) return;
+    if (selectedStoreId != null) return;
+    if (boundsKey === prevBoundsKey.current) return;
+    prevBoundsKey.current = boundsKey;
+
+    const bounds = new window.google.maps.LatLngBounds();
+    customersForMap.forEach((c) => bounds.extend({ lat: c.latitude, lng: c.longitude }));
+    if (!bounds.isEmpty()) mapRef.current.fitBounds(bounds);
+  }, [isLoaded, boundsKey, customersForMap, selectedStoreId]);
+
   const selectStoreFromMap = useCallback(
     (storeId: number) => {
       const idx = allCustomers.findIndex((c) => c.storeId === storeId);
-      if (idx !== -1) {
-        setTablePage(Math.floor(idx / TABLE_PAGE_SIZE) + 1);
-      }
+      if (idx !== -1) setTablePage(Math.floor(idx / TABLE_PAGE_SIZE) + 1);
       setSelectedStoreId(storeId);
+      setActiveInfoStoreId(storeId);
     },
     [allCustomers],
   );
@@ -172,14 +160,17 @@ export default function CustomerListPage() {
     setDealerFilter(undefined);
     setTablePage(1);
     setSelectedStoreId(null);
+    setActiveInfoStoreId(null);
   };
 
   const onFilterChange = () => {
     setTablePage(1);
     setSelectedStoreId(null);
+    setActiveInfoStoreId(null);
   };
 
   const hqSelectOptions = hqOptionsFromApi.map((name) => ({ value: name, label: name }));
+  const activeInfoStore = customersForMap.find((s) => s.storeId === activeInfoStoreId) ?? null;
 
   const columns: ColumnsType<CustomerListItem> = [
     {
@@ -259,10 +250,7 @@ export default function CustomerListPage() {
             placeholder="매장명·주소·연락처 검색"
             prefix={<SearchOutlined />}
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              onFilterChange();
-            }}
+            onChange={(e) => { setSearch(e.target.value); onFilterChange(); }}
             style={{ width: 220 }}
             allowClear
           />
@@ -273,24 +261,15 @@ export default function CustomerListPage() {
             style={{ width: 150 }}
             options={hqSelectOptions}
             value={hqFilter}
-            onChange={(val) => {
-              setHqFilter(val);
-              onFilterChange();
-            }}
+            onChange={(val) => { setHqFilter(val); onFilterChange(); }}
           />
           <Select
             placeholder="담당 대리점"
             allowClear
             style={{ width: 160 }}
-            options={dealerOptions?.map((d) => ({
-              value: d.dealerId,
-              label: d.dealerName,
-            }))}
+            options={dealerOptions?.map((d) => ({ value: d.dealerId, label: d.dealerName }))}
             value={dealerFilter}
-            onChange={(val) => {
-              setDealerFilter(val);
-              onFilterChange();
-            }}
+            onChange={(val) => { setDealerFilter(val); onFilterChange(); }}
           />
           <Select
             placeholder="상태"
@@ -298,10 +277,7 @@ export default function CustomerListPage() {
             style={{ width: 120 }}
             options={STATUS_FILTER_OPTIONS}
             value={statusFilter}
-            onChange={(val) => {
-              setStatusFilter(val as StoreStatus | undefined);
-              onFilterChange();
-            }}
+            onChange={(val) => { setStatusFilter(val as StoreStatus | undefined); onFilterChange(); }}
           />
           <Select
             placeholder="지역"
@@ -309,14 +285,9 @@ export default function CustomerListPage() {
             style={{ width: 120 }}
             options={REGION_OPTIONS}
             value={regionFilter}
-            onChange={(val) => {
-              setRegionFilter(val);
-              onFilterChange();
-            }}
+            onChange={(val) => { setRegionFilter(val); onFilterChange(); }}
           />
-          <Button icon={<ReloadOutlined />} onClick={resetFilters}>
-            초기화
-          </Button>
+          <Button icon={<ReloadOutlined />} onClick={resetFilters}>초기화</Button>
         </Space>
       </div>
 
@@ -336,71 +307,66 @@ export default function CustomerListPage() {
               비활성
             </span>
           </div>
-          {(isFetching || geoStillPendingCount > 0) && (
+          {isFetching && (
             <div className="customer-map-hint" style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 8 }}>
-              {isFetching ? '고객 목록을 갱신 중입니다. ' : null}
-              {geoStillPendingCount > 0
-                ? `위·경도 없는 매장 ${geoStillPendingCount}곳 — 주소로 위치를 찾는 중입니다(잠시 후 지도에 표시).`
-                : null}
+              고객 목록을 갱신 중입니다.
             </div>
           )}
           <div className="customer-map-container-split">
-            <MapContainer
-              center={[37.5326, 126.9786]}
-              zoom={11}
-              style={{ height: '100%', width: '100%', borderRadius: 12 }}
-              scrollWheelZoom
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <MapSync
-                customers={customersForMap}
-                selectedStoreId={selectedStoreId}
-                markerRefs={markerRefs}
-              />
-              {customersForMap.map((store) => (
-                <Marker
-                  key={store.storeId}
-                  ref={(el) => {
-                    if (el) markerRefs.current.set(store.storeId, el);
-                    else markerRefs.current.delete(store.storeId);
-                  }}
-                  position={[store.latitude, store.longitude]}
-                  icon={createCustomerMarkerIcon(store.status)}
-                  eventHandlers={{
-                    click: () => selectStoreFromMap(store.storeId),
-                  }}
-                >
-                  <Popup>
+            {!isLoaded ? (
+              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Spin />
+              </div>
+            ) : (
+              <GoogleMap
+                mapContainerStyle={{ height: '100%', width: '100%', borderRadius: 12 }}
+                center={DEFAULT_CENTER}
+                zoom={DEFAULT_ZOOM}
+                onLoad={(map) => { mapRef.current = map; }}
+                onUnmount={() => { mapRef.current = null; }}
+                options={{ gestureHandling: 'greedy' }}
+              >
+                {customersForMap.map((store) => (
+                  <Marker
+                    key={store.storeId}
+                    position={{ lat: store.latitude, lng: store.longitude }}
+                    icon={createCustomerMarkerIcon(store.status)}
+                    onClick={() => selectStoreFromMap(store.storeId)}
+                  />
+                ))}
+                {activeInfoStore ? (
+                  <InfoWindow
+                    position={{ lat: activeInfoStore.latitude, lng: activeInfoStore.longitude }}
+                    onCloseClick={() => setActiveInfoStoreId(null)}
+                    options={{ pixelOffset: new window.google.maps.Size(0, -12) }}
+                  >
                     <div className="customer-map-popup">
-                      <strong>{store.storeName}</strong>
-                      {store.hqName ? (
-                        <div className="customer-map-popup-sub">{store.hqName}</div>
+                      <strong>{activeInfoStore.storeName}</strong>
+                      {activeInfoStore.hqName ? (
+                        <div className="customer-map-popup-sub">{activeInfoStore.hqName}</div>
                       ) : null}
-                      <div className="customer-map-popup-sub">{store.address}</div>
+                      <div className="customer-map-popup-sub">{activeInfoStore.address}</div>
                       <div className="customer-map-popup-meta">
-                        장비 {store.equipmentCount}대 ·{' '}
+                        장비 {activeInfoStore.equipmentCount}대 ·{' '}
                         <StatusBadge
-                          status={STATUS_CONFIG[store.status].status}
-                          label={STATUS_CONFIG[store.status].label}
+                          status={STATUS_CONFIG[activeInfoStore.status].status}
+                          label={STATUS_CONFIG[activeInfoStore.status].label}
                         />
                       </div>
-                      <div className="customer-map-popup-meta">담당 {store.dealerName}</div>
+                      <div className="customer-map-popup-meta">담당 {activeInfoStore.dealerName}</div>
                       <Button
                         type="link"
                         size="small"
                         style={{ paddingLeft: 0 }}
-                        onClick={() => openEdit(store.storeId)}
+                        onClick={() => openEdit(activeInfoStore.storeId)}
                       >
                         수정
                       </Button>
                     </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+                  </InfoWindow>
+                ) : null}
+              </GoogleMap>
+            )}
           </div>
         </div>
 
