@@ -20,6 +20,7 @@ import {
   mockGetCustomerMapData,
   mockGetCustomerDealerOptions,
   mockGetCustomerHqOptions,
+  mockGetHQList,
 } from './mock/customer.mock';
 import * as customerReal from './real/customer.real';
 import type { CustomerListParams, CustomerUpdateRequest } from '../types/customer.types';
@@ -91,6 +92,15 @@ export function useCustomerHqOptions() {
   return useQuery({
     queryKey: ['customer-hq-options'],
     queryFn: () => (useRealApi ? customerReal.fetchCustomerHqOptions() : mockGetCustomerHqOptions()),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** 본사 ID+이름 목록 — 고객 수정 모달에서 본사 선택용 */
+export function useHQList() {
+  return useQuery({
+    queryKey: ['hq-list'],
+    queryFn: () => (useRealApi ? customerReal.fetchHQList() : mockGetHQList()),
     staleTime: 5 * 60 * 1000,
   });
 }

@@ -64,6 +64,8 @@ export interface CustomerUpdateRequest {
   businessType?: string;
   status?: StoreStatus;
   dealerId?: number;
+  /** 소속 본사 변경 — null이면 본사 해제 */
+  hqId?: number | null;
   memo?: string;
 }
 

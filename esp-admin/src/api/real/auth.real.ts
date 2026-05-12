@@ -9,6 +9,7 @@ import type {
   RegisterDealerRequest,
   RegisterResponse,
   DealerListItem,
+  HQListItem,
   AccountStatus,
   LoginUser,
 } from '../../types/auth.types';
@@ -123,6 +124,14 @@ export async function checkBusinessNumber(
   return { isValid: true, isDuplicate: !data.available };
 }
 
+export async function getHQList(): Promise<HQListItem[]> {
+  const list = await apiRequest<{ hqId: number; hqName: string; brandName: string }[]>({
+    method: 'get',
+    url: '/registration/hq-list',
+  });
+  return list.map((h) => ({ hqId: h.hqId, hqName: h.hqName, brandName: h.brandName }));
+}
+
 export async function getDealerList(region?: string): Promise<DealerListItem[]> {
   const q = region ? `?region=${encodeURIComponent(region)}` : '';
   const list = await apiRequest<{ dealerId: number; name: string; serviceRegions: string[] }[]>({
@@ -160,7 +169,7 @@ export async function registerOwner(body: RegisterOwnerRequest): Promise<Registe
         address: storeAddr,
       },
       affiliation: {
-        hqId: null,
+        hqId: body.hqId ?? null,
         dealerId: Number.isFinite(body.dealerId) ? body.dealerId : null,
       },
       termsAgreed: true as const,

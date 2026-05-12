@@ -9,6 +9,7 @@ import type {
   RegisterDealerRequest,
   RegisterResponse,
   DealerListItem,
+  HQListItem,
 } from '../../types/auth.types';
 import { mockUsers, mockDelay } from './common.mock';
 
@@ -89,6 +90,27 @@ export async function mockGetDealerList(
     { dealerId: 3, dealerName: '경기환경시스템', serviceRegions: ['경기 서부', '경기 동부', '인천'] },
     { dealerId: 4, dealerName: '부산클린에어', serviceRegions: ['부산', '경남'] },
     { dealerId: 5, dealerName: '대전환경서비스', serviceRegions: ['대전', '충남', '충북', '세종'] },
+  ], 300);
+}
+
+/**
+ * Mock 본사 목록 조회
+ */
+export async function mockGetHQList(): Promise<HQListItem[]> {
+  return mockDelay([
+    { hqId: 1, hqName: '김밥천국 본사', brandName: '김밥천국' },
+    { hqId: 2, hqName: '빈스커피 본사', brandName: '빈스커피' },
+    { hqId: 3, hqName: '우동천하 본사', brandName: '우동천하' },
+    { hqId: 4, hqName: '화덕피자 본사', brandName: '화덕피자' },
+    { hqId: 5, hqName: '떡볶이 명가', brandName: '떡볶이 명가' },
+    { hqId: 6, hqName: '바비큐빌리지 본사', brandName: '바비큐빌리지' },
+    { hqId: 7, hqName: '더버거 본사', brandName: '더버거' },
+    { hqId: 8, hqName: '해물찜 본사', brandName: '해물찜 본사' },
+    { hqId: 9, hqName: '라멘공방 본사', brandName: '라멘공방' },
+    { hqId: 10, hqName: '뷔페월드 본사', brandName: '뷔페월드' },
+    { hqId: 11, hqName: '카페모카 본사', brandName: '카페모카' },
+    { hqId: 12, hqName: '치킨마을 본사', brandName: '치킨마을' },
+    { hqId: 13, hqName: '로스터리 본사', brandName: '로스터리' },
   ], 300);
 }
 

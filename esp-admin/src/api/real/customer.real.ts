@@ -7,6 +7,7 @@ import type {
   CustomerUpdateRequest,
   CustomerMapItem,
 } from '../../types/customer.types';
+import type { HQListItem } from '../../types/auth.types';
 import type { StoreStatus } from '../../types/store.types';
 import type { BusinessType } from '../../types/store.types';
 
@@ -241,6 +242,7 @@ export async function updateCustomer(
   }
   if (data.status !== undefined) body.status = data.status;
   if (data.dealerId !== undefined) body.dealerId = data.dealerId;
+  if (data.hqId !== undefined) body.hqId = data.hqId;
   if (data.latitude !== undefined) body.latitude = data.latitude;
   if (data.longitude !== undefined) body.longitude = data.longitude;
 
@@ -264,6 +266,14 @@ export async function fetchCustomerMapData(): Promise<ApiResponse<CustomerMapIte
     };
   });
   return { success: true, data: mapped };
+}
+
+export async function fetchHQList(): Promise<HQListItem[]> {
+  const list = await apiRequest<{ hqId: number; hqName: string; brandName: string }[]>({
+    method: 'get',
+    url: '/registration/hq-list',
+  });
+  return list.map((h) => ({ hqId: h.hqId, hqName: h.hqName, brandName: h.brandName }));
 }
 
 export async function fetchCustomerDealerOptions(): Promise<{ dealerId: number; dealerName: string }[]> {

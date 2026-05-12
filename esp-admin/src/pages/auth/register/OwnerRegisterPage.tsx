@@ -23,9 +23,9 @@ import {
 import BusinessCertUpload from '../../../components/common/BusinessCertUpload';
 import { useNavigate, Link } from 'react-router-dom';
 import { useKakaoPostcodePopup } from 'react-daum-postcode';
-import { registerOwner, checkLoginId, getDealerList } from '../../../api/auth.api';
+import { registerOwner, checkLoginId, getDealerList, getHQList } from '../../../api/auth.api';
 import { BUSINESS_TYPES } from '../../../types/auth.types';
-import type { DealerListItem } from '../../../types/auth.types';
+import type { DealerListItem, HQListItem } from '../../../types/auth.types';
 import StepIndicator from '../../../components/common/StepIndicator';
 
 const { Title, Text, Paragraph } = Typography;
@@ -47,11 +47,13 @@ export default function OwnerRegisterPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [dealers, setDealers] = useState<DealerListItem[]>([]);
+  const [hqList, setHqList] = useState<HQListItem[]>([]);
   const navigate = useNavigate();
   const openPostcode = useKakaoPostcodePopup();
 
   useEffect(() => {
     getDealerList().then(setDealers);
+    getHQList().then(setHqList);
   }, []);
 
   const handleNext = async () => {
@@ -105,6 +107,7 @@ export default function OwnerRegisterPage() {
           floorCount: 1,
         },
         dealerId: values.dealerId,
+        hqId: values.hqId ?? null,
         termsAgreed: values.termsAgreed,
         marketingAgreed: values.marketingAgreed ?? false,
       });
@@ -307,6 +310,15 @@ export default function OwnerRegisterPage() {
                 {BUSINESS_TYPES.map((type) => (
                   <Select.Option key={type} value={type}>
                     {type}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item label="소속 본사 (선택)" name="hqId">
+              <Select allowClear placeholder="선택 안함 (개인 매장)">
+                {hqList.map((h) => (
+                  <Select.Option key={h.hqId} value={h.hqId}>
+                    {h.brandName}
                   </Select.Option>
                 ))}
               </Select>

@@ -7,7 +7,31 @@ import type {
   CustomerUpdateRequest,
   CustomerEquipmentItem,
 } from '../../types/customer.types';
+import type { HQListItem } from '../../types/auth.types';
 import { mockDelay, wrapResponse, type ApiResponse } from './common.mock';
+
+// --- Mock: 본사 목록 ---
+export const mockHQList: HQListItem[] = [
+  { hqId: 1, hqName: '김밥천국 본사', brandName: '김밥천국' },
+  { hqId: 2, hqName: '빈스커피 본사', brandName: '빈스커피' },
+  { hqId: 3, hqName: '우동천하 본사', brandName: '우동천하' },
+  { hqId: 4, hqName: '화덕피자 본사', brandName: '화덕피자' },
+  { hqId: 5, hqName: '떡볶이 명가', brandName: '떡볶이 명가' },
+  { hqId: 6, hqName: '바비큐빌리지 본사', brandName: '바비큐빌리지' },
+  { hqId: 7, hqName: '더버거 본사', brandName: '더버거' },
+  { hqId: 8, hqName: '해물찜 본사', brandName: '해물찜 본사' },
+  { hqId: 9, hqName: '라멘공방 본사', brandName: '라멘공방' },
+  { hqId: 10, hqName: '뷔페월드 본사', brandName: '뷔페월드' },
+  { hqId: 11, hqName: '카페모카 본사', brandName: '카페모카' },
+  { hqId: 12, hqName: '치킨마을 본사', brandName: '치킨마을' },
+  { hqId: 13, hqName: '로스터리 본사', brandName: '로스터리' },
+];
+
+// --- Mock: storeId → 본사 ID (런타임 변경 가능) ---
+const STORE_HQ_ID_MAP: Record<number, number | null> = {
+  1: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 7,
+  10: 8, 11: 9, 12: 10, 13: 11, 14: 12, 15: 13,
+};
 
 // --- Mock: storeId → 매장본사(프랜차이즈)명 ---
 const STORE_HQ_MAP: Record<number, string> = {
@@ -264,6 +288,10 @@ const mockCustomersRaw: CustomerListItem[] = [
 
 const mockCustomers: CustomerListItem[] = mockCustomersRaw.map(enrichListItem);
 
+export async function mockGetHQList(): Promise<HQListItem[]> {
+  return mockDelay(mockHQList, 300);
+}
+
 /** 현재 목록 매장 기준 매장본사명 목록(Mock — 실패 시 fetchCustomerHqOptions와 동일 출처 패턴). */
 export async function mockGetCustomerHqOptions(): Promise<string[]> {
   return mockDelay(
@@ -481,6 +509,8 @@ export async function mockGetCustomerDetail(
     return mockDelay(wrapResponse(null), 300);
   }
 
+  const hqId = STORE_HQ_ID_MAP[customer.storeId] ?? null;
+  const hqItem = hqId !== null ? mockHQList.find((h) => h.hqId === hqId) : undefined;
   const detail: CustomerDetail = {
     storeId: customer.storeId,
     siteId: customer.siteId,
@@ -494,6 +524,8 @@ export async function mockGetCustomerDetail(
     status: customer.status,
     dealerId: getDealerIdByName(customer.dealerName),
     dealerName: customer.dealerName,
+    hqId: hqId ?? undefined,
+    hqName: hqItem?.brandName,
     memo: mockMemos[customer.storeId],
     registeredAt: customer.registeredAt,
     updatedAt: dayjs(customer.registeredAt).add(30, 'day').toISOString(),
@@ -521,6 +553,11 @@ export async function mockUpdateCustomer(
     if (data.dealerId !== undefined) {
       const dealer = mockDealerOptions.find((d) => d.dealerId === data.dealerId);
       if (dealer) customer.dealerName = dealer.dealerName;
+    }
+    if (data.hqId !== undefined) {
+      STORE_HQ_ID_MAP[storeId] = data.hqId;
+      const hqItem = data.hqId !== null ? mockHQList.find((h) => h.hqId === data.hqId) : undefined;
+      STORE_HQ_MAP[storeId] = hqItem?.brandName ?? '기타';
     }
     if (data.memo !== undefined) {
       mockMemos[storeId] = data.memo;

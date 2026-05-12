@@ -29,6 +29,7 @@ import type {
   RegisterDealerRequest,
   RegisterResponse,
   DealerListItem,
+  HQListItem,
 } from '../types/auth.types';
 import {
   mockLogin,
@@ -38,6 +39,7 @@ import {
   mockCheckLoginId,
   mockCheckBusinessNumber,
   mockGetDealerList,
+  mockGetHQList,
   mockRegisterOwner,
   mockRegisterHQ,
   mockRegisterAdmin,
@@ -117,6 +119,10 @@ export async function getDealerList(region?: string): Promise<DealerListItem[]> 
   return useRealApi ? authReal.getDealerList(region) : mockGetDealerList(region);
 }
 
+export async function getHQList(): Promise<HQListItem[]> {
+  return useRealApi ? authReal.getHQList() : mockGetHQList();
+}
+
 export async function registerOwner(request: RegisterOwnerRequest): Promise<RegisterResponse> {
   return useRealApi ? authReal.registerOwner(request) : mockRegisterOwner(request);
 }
@@ -147,6 +153,14 @@ export function useDealerList(region?: string) {
   return useQuery({
     queryKey: ['dealerList', region],
     queryFn: () => getDealerList(region),
+  });
+}
+
+export function useHQList() {
+  return useQuery({
+    queryKey: ['hq-list'],
+    queryFn: () => getHQList(),
+    staleTime: 5 * 60 * 1000,
   });
 }
 

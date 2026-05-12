@@ -10,7 +10,7 @@ import {
   Alert,
   Button as AntButton,
 } from 'antd';
-import { useCustomerDetail, useUpdateCustomer, useCustomerDealerOptions } from '../../api/customer.api';
+import { useCustomerDetail, useUpdateCustomer, useCustomerDealerOptions, useHQList } from '../../api/customer.api';
 import { EspApiRequestError } from '../../api/real/apiHelpers';
 import { BUSINESS_TYPES } from '../../types/auth.types';
 
@@ -31,6 +31,7 @@ export default function CustomerEditModal({ storeId, open, onClose }: CustomerEd
     isFetching,
   } = useCustomerDetail(open ? storeId : null);
   const { data: dealerOptions } = useCustomerDealerOptions();
+  const { data: hqList } = useHQList();
   const updateMutation = useUpdateCustomer();
 
   const detail = detailData?.data;
@@ -44,6 +45,7 @@ export default function CustomerEditModal({ storeId, open, onClose }: CustomerEd
         businessType: detail.businessType,
         isActive: detail.status === 'ACTIVE',
         dealerId: detail.dealerId,
+        hqId: detail.hqId ?? null,
         memo: detail.memo ?? '',
       });
     }
@@ -62,6 +64,7 @@ export default function CustomerEditModal({ storeId, open, onClose }: CustomerEd
           businessType: values.businessType,
           status: values.isActive ? 'ACTIVE' : 'INACTIVE',
           dealerId: values.dealerId,
+          hqId: values.hqId ?? null,
           memo: values.memo,
         },
       });
@@ -149,6 +152,15 @@ export default function CustomerEditModal({ storeId, open, onClose }: CustomerEd
                 {dealerOptions?.map((d) => (
                   <Select.Option key={d.dealerId} value={d.dealerId}>
                     {d.dealerName}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="hqId" label="소속 본사">
+              <Select allowClear placeholder="선택 안함 (본사 해제)">
+                {hqList?.map((h) => (
+                  <Select.Option key={h.hqId} value={h.hqId}>
+                    {h.brandName}
                   </Select.Option>
                 ))}
               </Select>

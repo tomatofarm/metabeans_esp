@@ -137,6 +137,8 @@ export interface RegisterOwnerRequest {
   businessCertFile?: unknown;
   store: RegisterStoreInfo;
   dealerId: number;
+  /** 소속 본사 ID — 선택 안함 시 null */
+  hqId?: number | null;
   termsAgreed: boolean;
   marketingAgreed: boolean;
 }
@@ -212,6 +214,13 @@ export interface DealerListItem {
   dealerId: number;
   dealerName: string;
   serviceRegions: string[];
+}
+
+// 본사 목록 (오너 가입·고객 수정 시 선택용)
+export interface HQListItem {
+  hqId: number;
+  hqName: string;
+  brandName: string;
 }
 
 // 업종 목록
