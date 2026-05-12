@@ -4,7 +4,6 @@ import {
   useDashboardSummary,
   useDashboardIssues,
   useStoreMapData,
-  useEsgSummary,
   useDashboardPendingAs,
 } from '../../api/dashboard.api';
 import { useCustomerList } from '../../api/customer.api';
@@ -13,7 +12,6 @@ import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import SummaryCards from './components/SummaryCards';
 import IssuePanel from './components/IssuePanel';
 import ASRequestPanel from './components/ASRequestPanel';
-import EsgSummaryCard from './components/EsgSummaryCard';
 import StoreMap from './components/StoreMap';
 
 interface AdminDashboardPageProps {
@@ -24,7 +22,6 @@ export default function AdminDashboardPage({ onNavigateToEquipment }: AdminDashb
   const { data: summary, isLoading: summaryLoading } = useDashboardSummary();
   const { data: issues, isLoading: issuesLoading } = useDashboardIssues();
   const { data: storeMap } = useStoreMapData();
-  const { data: esg, isLoading: esgLoading } = useEsgSummary();
   const { data: pendingAs, isLoading: asLoading } = useDashboardPendingAs();
 
   /** 고객현황과 동일 매장 목록 출처로 지도 표시(Mock: 전체 페이지 1·충분한 pageSize) */
@@ -75,8 +72,6 @@ export default function AdminDashboardPage({ onNavigateToEquipment }: AdminDashb
           />
         </Col>
       </Row>
-
-      <EsgSummaryCard data={esg} loading={esgLoading} />
 
       <StoreMap
         customers={dashboardCustomers}
