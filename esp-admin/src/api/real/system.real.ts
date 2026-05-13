@@ -429,19 +429,20 @@ function inferMetricUnit(metricName: string): string {
   return UNIT_BY_METRIC_NAME.find((x) => metricName.includes(x.includes))?.unit ?? "";
 }
 
-export async function fetchThresholdSettings(): Promise<ApiResponse<ThresholdSettings>> {
+export async function fetchThresholdSettings(storeId: number | null = null): Promise<ApiResponse<ThresholdSettings>> {
+  const qs = storeId != null ? `?storeId=${storeId}` : '';
   const [cleaningRows, monitoringRows, damperRows, sparkBase] = await Promise.all([
     apiRequest<ApiCleaningThresholdRow[]>({
       method: 'get',
-      url: '/system/thresholds/cleaning',
+      url: `/system/thresholds/cleaning${qs}`,
     }),
     apiRequest<ApiMonitoringThresholdRow[]>({
       method: 'get',
-      url: '/system/thresholds/monitoring',
+      url: `/system/thresholds/monitoring${qs}`,
     }),
     apiRequest<ApiDamperAutoRow[]>({
       method: 'get',
-      url: '/system/thresholds/damper-auto',
+      url: `/system/thresholds/damper-auto${qs}`,
     }),
     apiRequest<{ sparkBaseTime: number }>({
       method: 'get',
@@ -487,6 +488,9 @@ export async function fetchThresholdSettings(): Promise<ApiResponse<ThresholdSet
 export async function updateThresholds(
   data: Partial<ThresholdSettings>,
 ): Promise<ApiResponse<{ success: boolean }>> {
+  const storeId = data.storeId ?? null;
+  const qs = storeId != null ? `?storeId=${storeId}` : '';
+
   if (data.sparkBaseTime !== undefined) {
     await apiRequest<unknown>({
       method: 'put',
@@ -495,46 +499,40 @@ export async function updateThresholds(
     });
   }
   if (data.monitoringThresholds?.length) {
-    for (const m of data.monitoringThresholds) {
-      await apiRequest<unknown>({
-        method: 'put',
-        url: '/system/thresholds/monitoring',
-        data: {
-          thresholdId: m.thresholdId,
-          yellowMin: m.yellowMin ?? null,
-          redMin: m.redMin ?? null,
-          description: m.description ?? null,
-        },
-      });
-    }
+    await apiRequest<unknown>({
+      method: 'put',
+      url: `/system/thresholds/monitoring${qs}`,
+      data: { thresholds: data.monitoringThresholds.map((m) => ({
+        thresholdId: m.thresholdId,
+        yellowMin: m.yellowMin ?? null,
+        redMin: m.redMin ?? null,
+        description: m.description ?? null,
+      })) },
+    });
   }
   if (data.cleaningThresholds?.length) {
-    for (const c of data.cleaningThresholds) {
-      await apiRequest<unknown>({
-        method: 'put',
-        url: '/system/thresholds/cleaning',
-        data: {
-          equipmentId: c.equipmentId,
-          sparkThreshold: c.sparkThreshold,
-          sparkTimeWindow: c.sparkTimeWindow,
-          pressureBase: c.pressureBase,
-          pressureRate: c.pressureRate,
-        },
-      });
-    }
+    await apiRequest<unknown>({
+      method: 'put',
+      url: `/system/thresholds/cleaning${qs}`,
+      data: { thresholds: data.cleaningThresholds.map((c) => ({
+        equipmentId: c.equipmentId,
+        sparkThreshold: c.sparkThreshold,
+        sparkTimeWindow: c.sparkTimeWindow,
+        pressureBase: c.pressureBase,
+        pressureRate: c.pressureRate,
+      })) },
+    });
   }
   if (data.damperAutoSettings?.length) {
-    for (const s of data.damperAutoSettings) {
-      await apiRequest<unknown>({
-        method: 'put',
-        url: '/system/thresholds/damper-auto',
-        data: {
-          equipmentId: s.equipmentId,
-          targetFlowCmh: s.targetFlowCmh,
-          targetVelocity: s.targetVelocity,
-        },
-      });
-    }
+    await apiRequest<unknown>({
+      method: 'put',
+      url: `/system/thresholds/damper-auto${qs}`,
+      data: { settings: data.damperAutoSettings.map((s) => ({
+        equipmentId: s.equipmentId,
+        targetFlowCmh: s.targetFlowCmh,
+        targetVelocity: s.targetVelocity,
+      })) },
+    });
   }
   return { success: true, data: { success: true } };
 }

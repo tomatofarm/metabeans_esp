@@ -540,7 +540,8 @@ function buildDamperAutoSettingsFromStoreTree(): DamperAutoSetting[] {
           rows.push({
             settingId: eq.equipmentId,
             equipmentId: eq.equipmentId,
-            equipmentName: `${store.storeName} · ${eq.equipmentName}`,
+            storeId: store.storeId,
+            equipmentName: eq.equipmentName,
             targetFlowCmh: DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
             targetVelocity: DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
             updatedAt: new Date().toISOString(),
@@ -572,12 +573,18 @@ let mockDamperAutoSettings: DamperAutoSetting[] = [];
 
 let mockSparkBaseTime = 600; // 기본 10분 (초)
 
-export async function mockGetThresholds(): Promise<ApiResponse<ThresholdSettings>> {
+export async function mockGetThresholds(storeId: number | null = null): Promise<ApiResponse<ThresholdSettings>> {
+  const allDamper = getDamperAutoSettingsSnapshot();
+  const damperAutoSettings = storeId != null
+    ? allDamper.filter((d) => d.storeId === storeId)
+    : allDamper;
+
   return mockDelay(
     wrapResponse({
-      monitoringThresholds: [...mockMonitoringThresholds],
-      cleaningThresholds: [...mockCleaningThresholds],
-      damperAutoSettings: getDamperAutoSettingsSnapshot(),
+      storeId,
+      monitoringThresholds: mockMonitoringThresholds.map((t) => ({ ...t, storeId: storeId ?? undefined })),
+      cleaningThresholds: mockCleaningThresholds.map((t) => ({ ...t, storeId: storeId ?? undefined })),
+      damperAutoSettings,
       sparkBaseTime: mockSparkBaseTime,
     }),
     400,
@@ -608,10 +615,16 @@ export async function mockUpdateThresholds(
     }
   }
   if (data.damperAutoSettings) {
-    mockDamperAutoSettings = data.damperAutoSettings.map((s) => ({
+    const incoming = data.damperAutoSettings.map((s) => ({
       ...s,
       updatedAt: new Date().toISOString(),
     }));
+    if (data.storeId != null) {
+      const otherStores = mockDamperAutoSettings.filter((s) => s.storeId !== data.storeId);
+      mockDamperAutoSettings = [...otherStores, ...incoming];
+    } else {
+      mockDamperAutoSettings = incoming;
+    }
   }
   if (data.sparkBaseTime !== undefined) {
     mockSparkBaseTime = data.sparkBaseTime;

@@ -215,13 +215,13 @@ export function useDeleteUserPermissionOverride() {
 
 // ===== 기준수치 관리 =====
 
-export function useThresholdSettings(enabled = true) {
+export function useThresholdSettings(storeId: number | 'all' = 'all', enabled = true) {
+  const sid = storeId === 'all' ? null : storeId;
   return useQuery({
-    queryKey: ['system-thresholds'],
-    queryFn: () => (useRealApi ? systemReal.fetchThresholdSettings() : mockGetThresholds()),
+    queryKey: ['system-thresholds', storeId],
+    queryFn: () => (useRealApi ? systemReal.fetchThresholdSettings(sid) : mockGetThresholds(sid)),
     enabled,
     staleTime: 5 * 60 * 1000,
-    // 시스템 탭 재진입 시 최신 기준값을 항상 다시 읽는다.
     refetchOnMount: 'always',
   });
 }

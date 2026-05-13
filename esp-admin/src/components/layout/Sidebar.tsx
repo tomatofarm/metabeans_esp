@@ -193,6 +193,7 @@ function resolveEquipmentPathOnTreeSelect(currentPath: string): string {
 
 export default function Sidebar() {
   const [searchText, setSearchText] = useState('');
+  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const {
     sidebarCollapsed,
     selectedStoreId,
@@ -234,6 +235,7 @@ export default function Sidebar() {
     return [];
   }, [selectedControllerId, selectedEquipmentId, selectedStoreId]);
 
+
   const handleSelect = (selectedKeys: React.Key[]) => {
     // 같은 매장/장비/컨트롤러를 다시 눌러 선택 해제된 경우 → 역할별 기본 대시보드로 복귀
     if (selectedKeys.length === 0) {
@@ -253,16 +255,50 @@ export default function Sidebar() {
     switch (type) {
       case 'store':
         selectStore(numId);
+        // 해당 매장 펼치기 (이미 있으면 유지, 없으면 추가)
+        setExpandedKeys((prev) => {
+          const storeKey = `store-${numId}`;
+          return prev.includes(storeKey) ? prev : [...prev, storeKey];
+        });
         navigate('/dashboard');
         break;
-      case 'equipment':
+      case 'equipment': {
         selectEquipment(numId);
+        // 부모 매장 + 해당 집진기 펼치기
+        const equipKeys: React.Key[] = [`equipment-${numId}`];
+        for (const store of roleFilteredStores) {
+          for (const fl of store.floors) {
+            for (const eq of floorEquipments(fl)) {
+              if (eq.equipmentId === numId) equipKeys.push(`store-${store.storeId}`);
+            }
+          }
+        }
+        setExpandedKeys((prev) => {
+          const next = [...prev];
+          for (const k of equipKeys) if (!next.includes(k)) next.push(k);
+          return next;
+        });
         navigate(equipPath);
         break;
+      }
       case 'controller': {
         const parentEquipmentId = controllerToEquipment[numId];
         if (parentEquipmentId) {
           selectEquipment(parentEquipmentId);
+          // 부모 매장 + 부모 집진기 펼치기
+          const ctrlKeys: React.Key[] = [`equipment-${parentEquipmentId}`];
+          for (const store of roleFilteredStores) {
+            for (const fl of store.floors) {
+              for (const eq of floorEquipments(fl)) {
+                if (eq.equipmentId === parentEquipmentId) ctrlKeys.push(`store-${store.storeId}`);
+              }
+            }
+          }
+          setExpandedKeys((prev) => {
+            const next = [...prev];
+            for (const k of ctrlKeys) if (!next.includes(k)) next.push(k);
+            return next;
+          });
         }
         selectController(numId);
         navigate(equipPath);
@@ -298,7 +334,8 @@ export default function Sidebar() {
       {isLoading ? null : treeData.length > 0 ? (
         <Tree
           showIcon
-          defaultExpandAll
+          expandedKeys={expandedKeys}
+          onExpand={(keys) => setExpandedKeys(keys)}
           treeData={treeData}
           selectedKeys={selectedTreeKeys}
           onSelect={handleSelect}

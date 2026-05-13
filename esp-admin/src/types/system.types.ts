@@ -185,6 +185,7 @@ export interface SystemUserUpdateRequest {
 export interface CleaningThreshold {
   thresholdId: number;
   equipmentId: number;
+  storeId?: number;
   /** 기준수치 탭 표시용 (API가 내려주면 사용) */
   equipmentDisplayName?: string;
   sparkThreshold: number;
@@ -198,6 +199,7 @@ export interface CleaningThreshold {
 // 모니터링 지표 기준값 (monitoring_thresholds 테이블)
 export interface MonitoringThreshold {
   thresholdId: number;
+  storeId?: number;
   metricName: string;
   unit: string;
   yellowMin?: number;
@@ -211,6 +213,7 @@ export interface MonitoringThreshold {
 export interface DamperAutoSetting {
   settingId: number;
   equipmentId: number;
+  storeId: number;
   equipmentName: string;
   targetFlowCmh: number;
   targetVelocity: number;
@@ -223,6 +226,7 @@ export const DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS = 3.5;
 
 // 전체 기준수치 묶음
 export interface ThresholdSettings {
+  storeId?: number | null;
   monitoringThresholds: MonitoringThreshold[];
   cleaningThresholds: CleaningThreshold[];
   damperAutoSettings: DamperAutoSetting[];

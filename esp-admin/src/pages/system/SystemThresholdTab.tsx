@@ -8,6 +8,8 @@ import {
   Spin,
   Typography,
   Space,
+  Select,
+  Alert,
 } from 'antd';
 import {
   SaveOutlined,
@@ -23,6 +25,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useThresholdSettings, useUpdateThresholds } from '../../api/system.api';
+import { useCustomerList } from '../../api/customer.api';
 import type { DamperAutoSetting, ThresholdSettings } from '../../types/system.types';
 import {
   DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
@@ -46,7 +49,6 @@ const DEFAULT_MONITORING_BY_NAME: Record<string, { yellowMin?: number; redMin?: 
   '유입 온도': { yellowMin: 70, redMin: 100 },
 };
 
-// Icon mapping for threshold metric names
 const METRIC_ICON_MAP: Record<string, { icon: ReactNode; className: string }> = {
   '스파크':       { icon: <ThunderboltOutlined />, className: 'spark' },
   '차압':         { icon: <DashboardOutlined />,   className: 'pressure' },
@@ -64,16 +66,29 @@ function getMetricIcon(name: string) {
 }
 
 export default function SystemThresholdTab() {
-  const { data: response, isLoading } = useThresholdSettings();
+  const [selectedStoreId, setSelectedStoreId] = useState<number | 'all'>('all');
+
+  const { data: response, isLoading } = useThresholdSettings(selectedStoreId);
   const updateMutation = useUpdateThresholds();
 
+  const { data: customerListData } = useCustomerList({ pageSize: 500 });
+  const storeOptions = [
+    { value: 'all' as number | 'all', label: '전체 매장' },
+    ...(customerListData?.data ?? []).map((s) => ({
+      value: s.storeId as number | 'all',
+      label: s.storeName,
+    })),
+  ];
+
   const [localData, setLocalData] = useState<ThresholdSettings | null>(null);
-  const [bulkDamperFlow, setBulkDamperFlow] = useState<number>(
-    DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
-  );
-  const [bulkDamperVelocity, setBulkDamperVelocity] = useState<number>(
-    DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
-  );
+  const [bulkDamperFlow, setBulkDamperFlow] = useState<number>(DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH);
+  const [bulkDamperVelocity, setBulkDamperVelocity] = useState<number>(DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS);
+
+  useEffect(() => {
+    setLocalData(null);
+    setBulkDamperFlow(DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH);
+    setBulkDamperVelocity(DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS);
+  }, [selectedStoreId]);
 
   useEffect(() => {
     if (response?.data) {
@@ -130,40 +145,6 @@ export default function SystemThresholdTab() {
     });
   };
 
-  const applyBulkDamperToAll = () => {
-    const flow = bulkDamperFlow ?? DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH;
-    const vel = bulkDamperVelocity ?? DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS;
-    setLocalData((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        damperAutoSettings: prev.damperAutoSettings.map((s) => ({
-          ...s,
-          targetFlowCmh: flow,
-          targetVelocity: vel,
-        })),
-      };
-    });
-    message.success('입력한 값을 모든 집진기에 적용했습니다.');
-  };
-
-  const resetAllDamperToSystemDefault = () => {
-    setLocalData((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        damperAutoSettings: prev.damperAutoSettings.map((s) => ({
-          ...s,
-          targetFlowCmh: DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
-          targetVelocity: DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
-        })),
-      };
-    });
-    message.info(
-      '모든 집진기를 시스템 기본값으로 되돌렸습니다. 저장 시 서버에 반영됩니다.',
-    );
-  };
-
   const resetOneDamperToSystemDefault = (settingId: number) => {
     setLocalData((prev) => {
       if (!prev) return prev;
@@ -183,8 +164,20 @@ export default function SystemThresholdTab() {
   };
 
   const handleSave = async () => {
+    if (!localData) return;
     try {
-      await updateMutation.mutateAsync(localData);
+      const payload: Partial<ThresholdSettings> = {
+        ...localData,
+        storeId: selectedStoreId === 'all' ? null : selectedStoreId,
+      };
+      if (selectedStoreId === 'all') {
+        payload.damperAutoSettings = localData.damperAutoSettings.map((s) => ({
+          ...s,
+          targetFlowCmh: bulkDamperFlow,
+          targetVelocity: bulkDamperVelocity,
+        }));
+      }
+      await updateMutation.mutateAsync(payload);
       message.success('기준수치가 저장되었습니다.');
     } catch {
       message.error('기준수치 저장에 실패했습니다.');
@@ -199,11 +192,7 @@ export default function SystemThresholdTab() {
         monitoringThresholds: prev.monitoringThresholds.map((t) => {
           const d = DEFAULT_MONITORING_BY_NAME[t.metricName];
           if (!d) return t;
-          return {
-            ...t,
-            yellowMin: d.yellowMin,
-            redMin: d.redMin,
-          };
+          return { ...t, yellowMin: d.yellowMin, redMin: d.redMin };
         }),
         sparkBaseTime: DEFAULT_SPARK_BASE_TIME_SEC,
         damperAutoSettings: prev.damperAutoSettings.map((s) => ({
@@ -225,10 +214,10 @@ export default function SystemThresholdTab() {
 
   const damperColumns: ColumnsType<DamperAutoSetting> = [
     {
-      title: '매장 · 집진기',
+      title: '집진기',
       dataIndex: 'equipmentName',
       key: 'equipmentName',
-      width: 280,
+      width: 220,
       render: (text: string) => <Text>{text}</Text>,
     },
     {
@@ -284,9 +273,22 @@ export default function SystemThresholdTab() {
 
   return (
     <div>
-      {/* Header with action buttons */}
+      {/* 헤더 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <Text type="secondary">장비 상태 판정에 사용되는 기준값을 관리합니다.</Text>
+        <Space wrap>
+          <Text type="secondary">장비 상태 판정에 사용되는 기준값을 관리합니다.</Text>
+          <Select
+            showSearch
+            style={{ width: 240 }}
+            placeholder="매장 선택"
+            value={selectedStoreId}
+            onChange={(val) => setSelectedStoreId(val)}
+            options={storeOptions}
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+          />
+        </Space>
         <Space>
           <Button icon={<UndoOutlined />} onClick={handleReset}>
             기본값 복원
@@ -303,7 +305,7 @@ export default function SystemThresholdTab() {
         </Space>
       </div>
 
-      {/* 모니터링 지표 기준값 — 카드 그리드 */}
+      {/* 모니터링 지표 기준값 */}
       <div className="threshold-grid">
         {localData.monitoringThresholds.map((t) => {
           const iconInfo = getMetricIcon(t.metricName);
@@ -399,7 +401,7 @@ export default function SystemThresholdTab() {
         </div>
       </div>
 
-      {/* 댐퍼 자동제어 기본값 */}
+      {/* 댐퍼/팬 자동제어 기본값 */}
       <div className="threshold-card" style={{ marginBottom: 20 }}>
         <div className="threshold-card-header">
           <div className="threshold-icon damper">
@@ -408,59 +410,55 @@ export default function SystemThresholdTab() {
           <div>
             <div className="threshold-card-name">댐퍼/팬 자동제어 기본값</div>
             <div className="threshold-card-desc">
-              집진기별로 값을 바꿀 수 있고, 위 일괄 입력으로 전체에 동일 값을 한 번에 넣을 수 있습니다. 행의 「기본값으로」는 해당 집진기만 시스템 기본(
-              {DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH} CMH / {DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS}{' '}
-              m/s)으로 되돌립니다.
+              {selectedStoreId === 'all'
+                ? '저장하면 현재 등록된 모든 매장의 모든 집진기에 입력한 값이 일괄 적용됩니다.'
+                : `집진기별로 목표 풍량·풍속을 설정합니다. 「기본값으로」는 해당 집진기만 시스템 기본(${DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH} CMH / ${DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS} m/s)으로 되돌립니다.`}
             </div>
           </div>
         </div>
-        <div
-          style={{
-            marginBottom: 16,
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 12,
-            alignItems: 'center',
-          }}
-        >
-          <Text strong>일괄 적용</Text>
-          <Space size={8} wrap>
-            <InputNumber
-              value={bulkDamperFlow}
-              onChange={(v) => setBulkDamperFlow(v ?? DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH)}
-              min={0}
-              max={2000}
-              step={10}
-              style={{ width: 150 }}
-              addonBefore="풍량"
-              addonAfter="CMH"
+
+        {selectedStoreId === 'all' ? (
+          <div>
+            <Alert
+              type="info"
+              showIcon
+              message="전체 매장 선택 중"
+              description="아래 값을 입력하고 저장하면 모든 매장의 모든 집진기에 일괄 적용됩니다."
+              style={{ marginBottom: 16 }}
             />
-            <InputNumber
-              value={bulkDamperVelocity}
-              onChange={(v) =>
-                setBulkDamperVelocity(v ?? DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS)
-              }
-              min={0}
-              max={20}
-              step={0.1}
-              style={{ width: 150 }}
-              addonBefore="풍속"
-              addonAfter="m/s"
-            />
-            <Button type="primary" onClick={applyBulkDamperToAll}>
-              모든 집진기에 적용
-            </Button>
-            <Button onClick={resetAllDamperToSystemDefault}>전체 시스템 기본값</Button>
-          </Space>
-        </div>
-        <Table
-          className="system-table"
-          columns={damperColumns}
-          dataSource={localData.damperAutoSettings}
-          rowKey="settingId"
-          pagination={false}
-          size="small"
-        />
+            <Space size={12} wrap>
+              <InputNumber
+                value={bulkDamperFlow}
+                onChange={(v) => setBulkDamperFlow(v ?? DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH)}
+                min={0}
+                max={2000}
+                step={10}
+                style={{ width: 160 }}
+                addonBefore="풍량"
+                addonAfter="CMH"
+              />
+              <InputNumber
+                value={bulkDamperVelocity}
+                onChange={(v) => setBulkDamperVelocity(v ?? DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS)}
+                min={0}
+                max={20}
+                step={0.1}
+                style={{ width: 160 }}
+                addonBefore="풍속"
+                addonAfter="m/s"
+              />
+            </Space>
+          </div>
+        ) : (
+          <Table
+            className="system-table"
+            columns={damperColumns}
+            dataSource={localData.damperAutoSettings}
+            rowKey="settingId"
+            pagination={false}
+            size="small"
+          />
+        )}
       </div>
 
       {/* 청소/필터 판단 기준 */}
