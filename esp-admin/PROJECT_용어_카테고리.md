@@ -82,7 +82,7 @@
 | `pages/dashboard/DealerDashboardPage.tsx` | DEALER 대시보드 |
 | `pages/dashboard/HQDashboardPage.tsx` | HQ 대시보드 |
 | `pages/dashboard/OwnerDashboardPage.tsx` | OWNER 대시보드 |
-| `pages/dashboard/StoreDashboardPage.tsx` | 개별 매장 대시보드 |
+| `pages/dashboard/SelectedStoreDashboardPage.tsx` | 매장 선택 후 단일 매장 대시보드(점주 `OWNER` 외 딜러·HQ·어드민도 동일 화면) |
 | `pages/dashboard/EquipmentDashboardPage.tsx` | 개별 장비 대시보드 |
 | `pages/dashboard/components/SummaryCards.tsx` | 상단 요약 카드 (매장/장비/A/S/긴급알람) |
 | `pages/dashboard/components/IssuePanel.tsx` | 문제 발생 이슈 패널 (4개 카테고리) |

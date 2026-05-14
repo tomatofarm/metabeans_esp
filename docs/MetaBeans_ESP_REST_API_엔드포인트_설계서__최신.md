@@ -833,6 +833,8 @@ GET /equipment/:equipmentId
 🔒 인증 필요 | 역할: ALL
 ```
 
+`floor`, `gateway` 는 장비 등록 직후에는 `null` 일 수 있으며, MQTT 수신(토픽의 층 세그먼트·게이트웨이 ID)으로 백엔드가 매핑한 뒤 채워진다.
+
 **Response 200**
 ```json
 {
@@ -905,7 +907,6 @@ POST /equipment
   "equipmentSerial": "MB-ESP-2024-00099",
   "mqttEquipmentId": "esp-099",
   "storeId": 101,
-  "floorId": 1001,
   "equipmentName": "ESP-099",
   "modelId": 1,
   "cellType": "SUS304 평판형",
@@ -914,11 +915,13 @@ POST /equipment
   "warrantyEndDate": "2028-02-12",
   "dealerId": 5,
   "controllers": [
-    { "ctrlDeviceId": "ctrl-001", "gatewayId": 10 },
-    { "ctrlDeviceId": "ctrl-002", "gatewayId": 10 }
+    { "ctrlDeviceId": "ctrl-001" },
+    { "ctrlDeviceId": "ctrl-002" }
   ]
 }
 ```
+
+층(`floorId`) 및 컨트롤러별 게이트웨이(`gatewayId`)는 요청에 포함하지 않는다. 층은 MQTT 토픽 `metabeans/{site_id}/{floor_id}/gateway/{gw_id}/sensor` 의 `{floor_id}` 세그먼트에서, 게이트웨이 연결은 동일 토픽의 `{gw_id}` 및 페이로드로 백엔드가 반영한다.
 
 **비즈니스 규칙**:
 - `powerpackCount` ≤ 4 (피드백 p.50)
@@ -931,6 +934,22 @@ POST /equipment
 PUT /equipment/:equipmentId
 🔒 인증 필요 | 역할: ADMIN, DEALER
 ```
+
+**Body** (부분 갱신 — 전송한 필드만 변경)
+```json
+{
+  "equipmentName": "ESP-099",
+  "modelId": 1,
+  "cellType": "SUS304 평판형",
+  "dealerId": 5,
+  "controllers": [
+    { "ctrlDeviceId": "ctrl-001" },
+    { "ctrlDeviceId": "ctrl-002" }
+  ]
+}
+```
+
+`controllers` 를 보낼 때는 `ctrlDeviceId` 만 사용한다(게이트웨이 선택 값 없음).
 
 ### 4.5 장비 삭제
 

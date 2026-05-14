@@ -68,7 +68,7 @@
 | `GET /dashboard/stores/:storeId` | `useStoreDashboard` | ✅ |
 | 장비 단위 대시보드 | `useEquipmentDashboard` | ⚠️ REST §3 단일 엔드포인트 없음 — 백엔드 합의 |
 
-**2.2 역할 분기**: `DashboardPage.tsx` — `selectedStoreId` 시 `StoreDashboardPage`, 장비 선택 시 장비 모니터링으로 이동, 그 외 `ADMIN`/`DEALER`/`HQ`/`OWNER` 각 전용 페이지. ✅
+**2.2 역할 분기**: `DashboardPage.tsx` — `selectedStoreId` 시 `SelectedStoreDashboardPage`(구 StoreDashboard; 역할 `STORE` 없음, 매장 선택 UI), 장비 선택 시 장비 모니터링으로 이동, 그 외 `ADMIN`/`DEALER`/`HQ`/`OWNER` 각 전용 페이지. ✅
 
 **인수인계 정리**: `RoleDashboardSummary` 타입을 `types/dashboard.types.ts`로 이동(이전에는 mock에서 import). `dashboard.api.ts` 상단에 REST 매핑 주석 추가.
 

@@ -282,14 +282,6 @@ export default function OwnerRegisterPage() {
               name="businessCertFile"
               valuePropName="fileList"
               getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList ?? [])}
-              rules={[
-                {
-                  validator: (_: unknown, fileList: { length?: number }[]) =>
-                    fileList && fileList.length > 0
-                      ? Promise.resolve()
-                      : Promise.reject(new Error('사업자등록증을 첨부해주세요')),
-                },
-              ]}
             >
               <BusinessCertUpload />
             </Form.Item>
@@ -515,7 +507,7 @@ function getFieldsForStep(step: number): string[] {
     case 1:
       return ['name', 'loginId', 'password', 'passwordConfirm'];
     case 2:
-      return ['businessNumber', 'businessName', 'businessCertFile', 'storeName', 'businessType'];
+      return ['businessNumber', 'businessName', 'storeName', 'businessType'];
     case 3:
       return [
         'storeAddress',
