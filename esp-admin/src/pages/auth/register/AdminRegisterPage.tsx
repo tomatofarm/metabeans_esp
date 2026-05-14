@@ -30,11 +30,16 @@ export default function AdminRegisterPage() {
   const [current, setCurrent] = useState(0);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [loginIdVerified, setLoginIdVerified] = useState(false);
   const navigate = useNavigate();
 
   const handleNext = async () => {
     try {
       await form.validateFields(getFieldsForStep(current));
+      if (current === 0 && !loginIdVerified) {
+        message.error('아이디 중복 확인을 완료해주세요.');
+        return;
+      }
       setCurrent(current + 1);
     } catch {
       // validation errors shown by form
@@ -87,11 +92,14 @@ export default function AdminRegisterPage() {
       const result = await checkLoginId(loginId);
       if (result.available) {
         message.success('사용 가능한 아이디입니다.');
+        setLoginIdVerified(true);
       } else {
         message.error('이미 사용 중인 아이디입니다.');
+        setLoginIdVerified(false);
       }
     } catch {
       message.error('중복 확인 중 오류가 발생했습니다.');
+      setLoginIdVerified(false);
     }
   };
 
@@ -147,7 +155,16 @@ export default function AdminRegisterPage() {
           </Text>
         </div>
 
-        <Form form={form} layout="vertical" autoComplete="off" size="large" className="auth-form">
+        <Form
+          form={form}
+          layout="vertical"
+          autoComplete="off"
+          size="large"
+          className="auth-form"
+          onValuesChange={(changed) => {
+            if ('loginId' in changed) setLoginIdVerified(false);
+          }}
+        >
           {/* Step 0: 기본 정보 */}
           <div style={{ display: current === 0 ? 'block' : 'none' }}>
             <Form.Item

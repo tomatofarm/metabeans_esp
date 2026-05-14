@@ -46,6 +46,7 @@ export default function OwnerRegisterPage() {
   const [current, setCurrent] = useState(1);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [loginIdVerified, setLoginIdVerified] = useState(false);
   const [dealers, setDealers] = useState<DealerListItem[]>([]);
   const [hqList, setHqList] = useState<HQListItem[]>([]);
   const navigate = useNavigate();
@@ -59,6 +60,10 @@ export default function OwnerRegisterPage() {
   const handleNext = async () => {
     try {
       await form.validateFields(getFieldsForStep(current));
+      if (current === 1 && !loginIdVerified) {
+        message.error('아이디 중복 확인을 완료해주세요.');
+        return;
+      }
       setCurrent(current + 1);
     } catch {
       // validation errors shown by form
@@ -130,11 +135,14 @@ export default function OwnerRegisterPage() {
       const result = await checkLoginId(loginId);
       if (result.available) {
         message.success('사용 가능한 아이디입니다.');
+        setLoginIdVerified(true);
       } else {
         message.error('이미 사용 중인 아이디입니다.');
+        setLoginIdVerified(false);
       }
     } catch {
       message.error('중복 확인 중 오류가 발생했습니다.');
+      setLoginIdVerified(false);
     }
   };
 
@@ -206,6 +214,9 @@ export default function OwnerRegisterPage() {
           autoComplete="off"
           size="large"
           className="auth-form"
+          onValuesChange={(changed) => {
+            if ('loginId' in changed) setLoginIdVerified(false);
+          }}
         >
           {/* Step 1: 기본 정보 */}
           <div style={{ display: current === 1 ? 'block' : 'none' }}>
