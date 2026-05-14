@@ -179,6 +179,7 @@ export interface RegisterAdminRequest {
   password: string;
   name: string;
   email: string;
+  phone: string;
   termsAgreed: boolean;
   marketingAgreed: boolean;
 }

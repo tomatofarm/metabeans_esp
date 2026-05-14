@@ -13,6 +13,7 @@ import {
   UserOutlined,
   LockOutlined,
   MailOutlined,
+  PhoneOutlined,
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
@@ -70,6 +71,7 @@ export default function AdminRegisterPage() {
         password: values.password,
         name: values.name,
         email: values.email,
+        phone: values.phone,
         termsAgreed: values.termsAgreed,
         marketingAgreed: values.marketingAgreed ?? false,
       });
@@ -228,6 +230,13 @@ export default function AdminRegisterPage() {
             >
               <Input prefix={<MailOutlined />} placeholder="이메일 입력" />
             </Form.Item>
+            <Form.Item
+              label="연락처"
+              name="phone"
+              rules={[{ required: true, message: '연락처를 입력하세요' }]}
+            >
+              <Input prefix={<PhoneOutlined />} placeholder="010-0000-0000" />
+            </Form.Item>
           </div>
 
           {/* Step 1: 약관 동의 */}
@@ -346,7 +355,7 @@ export default function AdminRegisterPage() {
 function getFieldsForStep(step: number): string[] {
   switch (step) {
     case 0:
-      return ['name', 'loginId', 'password', 'passwordConfirm', 'email'];
+      return ['name', 'loginId', 'password', 'passwordConfirm', 'email', 'phone'];
     case 1:
       return ['termsAgreed', 'privacyAgreed'];
     default:

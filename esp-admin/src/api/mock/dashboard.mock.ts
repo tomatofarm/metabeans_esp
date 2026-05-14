@@ -87,9 +87,11 @@ function generateGatewaySensorData(gatewayId: number): GatewaySensorData {
 // 1. 대시보드 요약
 export async function mockGetDashboardSummary(): Promise<DashboardSummary> {
   const data: DashboardSummary = {
-    totalStores: 3,
+    totalStores: 5,
     activeStores: 3,
-    totalEquipments: 5,
+    pendingStores: 1,
+    inactiveStores: 1,
+    totalEquipments: 7,
     normalEquipments: 3,
     pendingAsRequests: 2,
     emergencyAlarms: 2,

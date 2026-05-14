@@ -71,7 +71,7 @@ export const mockUsers: Record<string, { user: LoginUser; password: string }> = 
 export const mockStoreTree: StoreTreeNode[] = [
   {
     storeId: 1,
-    storeName: '바삭치킨 강남점',
+    storeName: '김밥천국 강남점',
     siteId: 'site-001',
     status: 'ACTIVE',
     floors: [
@@ -112,7 +112,7 @@ export const mockStoreTree: StoreTreeNode[] = [
   },
   {
     storeId: 2,
-    storeName: '숯불갈비 홍대점',
+    storeName: '맛있는 중화 홍대점',
     siteId: 'site-002',
     status: 'ACTIVE',
     floors: [
@@ -167,7 +167,7 @@ export const mockStoreTree: StoreTreeNode[] = [
   },
   {
     storeId: 3,
-    storeName: '로스팅하우스 신촌점',
+    storeName: '빈스카페 신촌점',
     siteId: 'site-003',
     status: 'ACTIVE',
     floors: [
@@ -188,6 +188,45 @@ export const mockStoreTree: StoreTreeNode[] = [
                 connectionStatus: 'ONLINE',
                 controllers: [
                   { controllerId: 7, ctrlDeviceId: 'ctrl-001', connectionStatus: 'ONLINE' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    storeId: 4,
+    storeName: '우동천하 종로점',
+    siteId: 'site-004',
+    status: 'PENDING',
+    floors: [],
+  },
+  {
+    storeId: 5,
+    storeName: '화덕피자 이태원점',
+    siteId: 'site-005',
+    status: 'INACTIVE',
+    floors: [
+      {
+        floorId: 5,
+        floorCode: '1F',
+        floorName: '1층 주방',
+        gateways: [
+          {
+            gatewayId: 5,
+            gwDeviceId: 'gw-005',
+            connectionStatus: 'OFFLINE',
+            equipments: [
+              {
+                equipmentId: 6,
+                equipmentName: 'ESP 집진기 #1',
+                mqttEquipmentId: 'esp-001',
+                connectionStatus: 'OFFLINE',
+                controllers: [
+                  { controllerId: 8, ctrlDeviceId: 'ctrl-001', connectionStatus: 'OFFLINE' },
+                  { controllerId: 9, ctrlDeviceId: 'ctrl-002', connectionStatus: 'OFFLINE' },
                 ],
               },
             ],

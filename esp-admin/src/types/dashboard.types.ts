@@ -7,6 +7,8 @@ import type { ASStatus, IssueType } from './as-service.types';
 export interface DashboardSummary {
   totalStores: number;
   activeStores: number;
+  pendingStores: number;
+  inactiveStores: number;
   totalEquipments: number;
   normalEquipments: number;
   pendingAsRequests: number;

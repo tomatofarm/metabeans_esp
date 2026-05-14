@@ -148,7 +148,9 @@ function buildTreeData(stores: StoreTreeNode[], searchText: string): DataNode[] 
     }
 
     const storeStatus: DotStatus =
-      store.status !== 'ACTIVE' ? 'NONE' : propagateDot(allEquipConns);
+      store.status === 'PENDING' ? 'WARNING' :
+      store.status === 'INACTIVE' ? 'NONE' :
+      'GOOD';
 
     return {
       title: <TreeTitle name={store.storeName} status={storeStatus} />,

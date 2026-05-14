@@ -602,7 +602,13 @@ body {
   color: white !important;
 }
 
-.equip-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+.equip-tabs .ant-tabs-tab.ant-tabs-tab-active:hover {
+  background: var(--color-primary) !important;
+  color: white !important;
+}
+
+.equip-tabs .ant-tabs-tab-active .ant-tabs-tab-btn,
+.equip-tabs .ant-tabs-tab.ant-tabs-tab-active:hover .ant-tabs-tab-btn {
   color: white !important;
 }
 
@@ -1336,7 +1342,13 @@ body {
   color: white !important;
 }
 
-.as-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+.as-tabs .ant-tabs-tab.ant-tabs-tab-active:hover {
+  background: var(--color-primary) !important;
+  color: white !important;
+}
+
+.as-tabs .ant-tabs-tab-active .ant-tabs-tab-btn,
+.as-tabs .ant-tabs-tab.ant-tabs-tab-active:hover .ant-tabs-tab-btn {
   color: white !important;
 }
 
@@ -1993,7 +2005,9 @@ body {
   background: var(--color-primary) !important;
   border-radius: 8px !important;
 }
-.system-tabs .ant-tabs-tab-active .ant-tabs-tab-btn { color: white !important; }
+.system-tabs .ant-tabs-tab-active:hover { background: var(--color-primary) !important; }
+.system-tabs .ant-tabs-tab-active .ant-tabs-tab-btn,
+.system-tabs .ant-tabs-tab-active:hover .ant-tabs-tab-btn { color: white !important; }
 .system-tabs .ant-tabs-ink-bar { display: none !important; }
 
 /* 사용자관리 요약 카드 */
