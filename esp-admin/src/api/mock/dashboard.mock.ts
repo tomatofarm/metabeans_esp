@@ -107,7 +107,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 1,
       storeId: 2,
-      storeName: '숯불갈비 홍대점',
+      storeName: '맛있는 중화 홍대점',
       equipmentId: 4,
       equipmentName: 'ESP 집진기 #1 (B1)',
       issueType: 'COMM_ERROR',
@@ -118,7 +118,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 2,
       storeId: 2,
-      storeName: '숯불갈비 홍대점',
+      storeName: '맛있는 중화 홍대점',
       equipmentId: 3,
       equipmentName: 'ESP 집진기 #1 (1F)',
       issueType: 'COMM_ERROR',
@@ -132,7 +132,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 3,
       storeId: 1,
-      storeName: '바삭치킨 강남점',
+      storeName: '김밥천국 강남점',
       equipmentId: 1,
       equipmentName: 'ESP 집진기 #1',
       issueType: 'INLET_TEMP',
@@ -145,7 +145,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 4,
       storeId: 3,
-      storeName: '로스팅하우스 신촌점',
+      storeName: '빈스카페 신촌점',
       equipmentId: 5,
       equipmentName: 'ESP 집진기 #1',
       issueType: 'INLET_TEMP',
@@ -161,7 +161,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 5,
       storeId: 1,
-      storeName: '바삭치킨 강남점',
+      storeName: '김밥천국 강남점',
       equipmentId: 2,
       equipmentName: 'ESP 집진기 #2',
       issueType: 'FILTER_CHECK',
@@ -177,7 +177,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       issueId: 6,
       storeId: 2,
-      storeName: '숯불갈비 홍대점',
+      storeName: '맛있는 중화 홍대점',
       equipmentId: 3,
       equipmentName: 'ESP 집진기 #1 (1F)',
       issueType: 'DUST_REMOVAL',
@@ -232,7 +232,7 @@ export async function mockGetStoreMapData(): Promise<StoreMapItem[]> {
   const data: StoreMapItem[] = [
     {
       storeId: 1,
-      storeName: '바삭치킨 강남점',
+      storeName: '김밥천국 강남점',
       address: '서울시 강남구 테헤란로 123',
       latitude: 37.4979,
       longitude: 127.0276,
@@ -242,7 +242,7 @@ export async function mockGetStoreMapData(): Promise<StoreMapItem[]> {
     },
     {
       storeId: 2,
-      storeName: '숯불갈비 홍대점',
+      storeName: '맛있는 중화 홍대점',
       address: '서울시 마포구 홍익로 45',
       latitude: 37.5563,
       longitude: 126.9234,
@@ -252,13 +252,33 @@ export async function mockGetStoreMapData(): Promise<StoreMapItem[]> {
     },
     {
       storeId: 3,
-      storeName: '로스팅하우스 신촌점',
+      storeName: '빈스카페 신촌점',
       address: '서울시 서대문구 신촌로 67',
       latitude: 37.5599,
       longitude: 126.9371,
       status: 'yellow',
       equipmentCount: 1,
       issueCount: 1,
+    },
+    {
+      storeId: 4,
+      storeName: '우동천하 종로점',
+      address: '서울시 종로구 종로 112',
+      latitude: 37.5704,
+      longitude: 126.9831,
+      status: 'green',
+      equipmentCount: 0,
+      issueCount: 0,
+    },
+    {
+      storeId: 5,
+      storeName: '화덕피자 이태원점',
+      address: '서울시 용산구 이태원로 89',
+      latitude: 37.5344,
+      longitude: 126.9944,
+      status: 'green',
+      equipmentCount: 1,
+      issueCount: 0,
     },
   ];
   return mockDelay(data, 300);
@@ -269,7 +289,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
   const storeMap: Record<number, StoreDashboard> = {
     1: {
       storeId: 1,
-      storeName: '바삭치킨 강남점',
+      storeName: '김밥천국 강남점',
       address: '서울시 강남구 테헤란로 123',
       phone: '02-1234-5678',
       businessType: '튀김',
@@ -301,7 +321,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 3,
           storeId: 1,
-          storeName: '바삭치킨 강남점',
+          storeName: '김밥천국 강남점',
           equipmentId: 1,
           equipmentName: 'ESP 집진기 #1',
           issueType: 'INLET_TEMP',
@@ -314,7 +334,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 5,
           storeId: 1,
-          storeName: '바삭치킨 강남점',
+          storeName: '김밥천국 강남점',
           equipmentId: 2,
           equipmentName: 'ESP 집진기 #2',
           issueType: 'FILTER_CHECK',
@@ -346,7 +366,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
     },
     2: {
       storeId: 2,
-      storeName: '숯불갈비 홍대점',
+      storeName: '맛있는 중화 홍대점',
       address: '서울시 마포구 홍익로 45',
       phone: '02-2345-6789',
       businessType: '굽기',
@@ -379,7 +399,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 1,
           storeId: 2,
-          storeName: '숯불갈비 홍대점',
+          storeName: '맛있는 중화 홍대점',
           equipmentId: 4,
           equipmentName: 'ESP 집진기 #1 (B1)',
           issueType: 'COMM_ERROR',
@@ -390,7 +410,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 2,
           storeId: 2,
-          storeName: '숯불갈비 홍대점',
+          storeName: '맛있는 중화 홍대점',
           equipmentId: 3,
           equipmentName: 'ESP 집진기 #1 (1F)',
           issueType: 'COMM_ERROR',
@@ -401,7 +421,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 6,
           storeId: 2,
-          storeName: '숯불갈비 홍대점',
+          storeName: '맛있는 중화 홍대점',
           equipmentId: 3,
           equipmentName: 'ESP 집진기 #1 (1F)',
           issueType: 'DUST_REMOVAL',
@@ -416,7 +436,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
     },
     3: {
       storeId: 3,
-      storeName: '로스팅하우스 신촌점',
+      storeName: '빈스카페 신촌점',
       address: '서울시 서대문구 신촌로 67',
       phone: '02-3456-7890',
       businessType: '커피로스팅',
@@ -439,7 +459,7 @@ export async function mockGetStoreDashboard(storeId: number): Promise<StoreDashb
         {
           issueId: 4,
           storeId: 3,
-          storeName: '로스팅하우스 신촌점',
+          storeName: '빈스카페 신촌점',
           equipmentId: 5,
           equipmentName: 'ESP 집진기 #1',
           issueType: 'INLET_TEMP',
@@ -483,7 +503,7 @@ export async function mockGetEquipmentDashboard(equipmentId: number): Promise<Eq
       modelName: 'MB-ESP-3000',
       installDate: '2025-06-15',
       dealerName: '서울환경테크',
-      storeName: '바삭치킨 강남점',
+      storeName: '김밥천국 강남점',
       status: 'red',
       controllers: [
         {
@@ -511,7 +531,7 @@ export async function mockGetEquipmentDashboard(equipmentId: number): Promise<Eq
       modelName: 'MB-ESP-2000',
       installDate: '2025-08-20',
       dealerName: '서울환경테크',
-      storeName: '바삭치킨 강남점',
+      storeName: '김밥천국 강남점',
       status: 'yellow',
       controllers: [
         {
@@ -531,7 +551,7 @@ export async function mockGetEquipmentDashboard(equipmentId: number): Promise<Eq
       modelName: 'MB-ESP-3000',
       installDate: '2025-07-10',
       dealerName: '경기설비',
-      storeName: '숯불갈비 홍대점',
+      storeName: '맛있는 중화 홍대점',
       status: 'yellow',
       controllers: [
         {
@@ -559,7 +579,7 @@ export async function mockGetEquipmentDashboard(equipmentId: number): Promise<Eq
       modelName: 'MB-ESP-1500',
       installDate: '2025-09-01',
       dealerName: '경기설비',
-      storeName: '숯불갈비 홍대점',
+      storeName: '맛있는 중화 홍대점',
       status: 'red',
       controllers: [
         {
@@ -579,7 +599,7 @@ export async function mockGetEquipmentDashboard(equipmentId: number): Promise<Eq
       modelName: 'MB-ESP-2000',
       installDate: '2025-10-05',
       dealerName: '서울환경테크',
-      storeName: '로스팅하우스 신촌점',
+      storeName: '빈스카페 신촌점',
       status: 'yellow',
       controllers: [
         {
@@ -612,7 +632,7 @@ export async function mockGetEsgSummary(): Promise<EsgSummary> {
 // --- 역할별 대시보드 Mock ---
 
 function resolveStoreIds(storeIds: string[]): number[] {
-  if (storeIds.includes('*')) return [1, 2, 3];
+  if (storeIds.includes('*')) return [1, 2, 3, 4, 5];
   return storeIds.map((sid) => STORE_ID_MAP[sid]).filter((id): id is number => id !== undefined);
 }
 
@@ -727,7 +747,7 @@ export async function mockGetEmergencyAlarms(
     {
       alarmId: 1,
       storeId: 2,
-      storeName: '숯불갈비 홍대점',
+      storeName: '맛있는 중화 홍대점',
       equipmentId: 4,
       equipmentName: 'ESP 집진기 #1 (B1)',
       controllerId: 6,
@@ -741,7 +761,7 @@ export async function mockGetEmergencyAlarms(
     {
       alarmId: 2,
       storeId: 1,
-      storeName: '바삭치킨 강남점',
+      storeName: '김밥천국 강남점',
       equipmentId: 1,
       equipmentName: 'ESP 집진기 #1',
       controllerId: 1,

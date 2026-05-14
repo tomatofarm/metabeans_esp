@@ -5,7 +5,7 @@ import {
   DesktopOutlined,
   ControlOutlined,
 } from '@ant-design/icons';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUiStore } from '../../stores/uiStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -237,6 +237,26 @@ export default function Sidebar() {
     return [];
   }, [selectedControllerId, selectedEquipmentId, selectedStoreId]);
 
+  // 대시보드 등 외부에서 장비가 선택될 때 부모 매장 노드 자동 펼치기
+  useEffect(() => {
+    if (selectedEquipmentId == null) return;
+    const keysToAdd: React.Key[] = [];
+    for (const store of roleFilteredStores) {
+      for (const fl of store.floors) {
+        for (const eq of floorEquipments(fl)) {
+          if (eq.equipmentId === selectedEquipmentId) {
+            keysToAdd.push(`store-${store.storeId}`);
+          }
+        }
+      }
+    }
+    if (keysToAdd.length === 0) return;
+    setExpandedKeys((prev) => {
+      const next = [...prev];
+      for (const k of keysToAdd) if (!next.includes(k)) next.push(k);
+      return next;
+    });
+  }, [selectedEquipmentId, roleFilteredStores]);
 
   const handleSelect = (selectedKeys: React.Key[]) => {
     // 같은 매장/장비/컨트롤러를 다시 눌러 선택 해제된 경우 → 역할별 기본 대시보드로 복귀

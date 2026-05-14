@@ -55,9 +55,11 @@ const mockModels: EquipmentModel[] = [
 ];
 
 const mockStoreOptions: StoreOption[] = [
-  { storeId: 1, storeName: '바삭치킨 강남점', siteId: 'site-001' },
-  { storeId: 2, storeName: '숯불갈비 홍대점', siteId: 'site-002' },
-  { storeId: 3, storeName: '로스팅하우스 신촌점', siteId: 'site-003' },
+  { storeId: 1, storeName: '김밥천국 강남점', siteId: 'site-001' },
+  { storeId: 2, storeName: '맛있는 중화 홍대점', siteId: 'site-002' },
+  { storeId: 3, storeName: '빈스카페 신촌점', siteId: 'site-003' },
+  { storeId: 4, storeName: '우동천하 종로점', siteId: 'site-004' },
+  { storeId: 5, storeName: '화덕피자 이태원점', siteId: 'site-005' },
 ];
 
 const mockFloorOptions: Record<number, FloorOption[]> = {

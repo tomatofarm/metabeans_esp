@@ -6,13 +6,17 @@ export const STORE_ID_MAP: Record<string, number> = {
   'store-001': 1,
   'store-002': 2,
   'store-003': 3,
+  'store-004': 4,
+  'store-005': 5,
 };
 
 /** Mock 전역: 매장 표시명 (사이드바 트리·A/S·장비·대시보드 통일) */
 export const MOCK_STORE_DISPLAY_NAME: Record<number, string> = {
-  1: '바삭치킨 강남점',
-  2: '숯불갈비 홍대점',
-  3: '로스팅하우스 신촌점',
+  1: '김밥천국 강남점',
+  2: '맛있는 중화 홍대점',
+  3: '빈스카페 신촌점',
+  4: '우동천하 종로점',
+  5: '화덕피자 이태원점',
 };
 
 // Mock 사용자 데이터 (역할별)

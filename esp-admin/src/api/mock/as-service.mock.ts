@@ -34,7 +34,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 1,
     storeId: 2,
-    storeName: '숯불갈비 홍대점',
+    storeName: '맛있는 중화 홍대점',
     equipmentId: 4,
     equipmentName: 'ESP 집진기 #1 (B1)',
     controllerId: 6,
@@ -48,7 +48,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 2,
     storeId: 2,
-    storeName: '숯불갈비 홍대점',
+    storeName: '맛있는 중화 홍대점',
     equipmentId: 3,
     equipmentName: 'ESP 집진기 #1 (1F)',
     controllerId: 5,
@@ -62,7 +62,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 3,
     storeId: 1,
-    storeName: '바삭치킨 강남점',
+    storeName: '김밥천국 강남점',
     equipmentId: 1,
     equipmentName: 'ESP 집진기 #1',
     controllerId: 1,
@@ -78,7 +78,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 4,
     storeId: 3,
-    storeName: '로스팅하우스 신촌점',
+    storeName: '빈스카페 신촌점',
     equipmentId: 5,
     equipmentName: 'ESP 집진기 #1',
     controllerId: 7,
@@ -94,7 +94,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 5,
     storeId: 1,
-    storeName: '바삭치킨 강남점',
+    storeName: '김밥천국 강남점',
     equipmentId: 2,
     equipmentName: 'ESP 집진기 #2',
     alertType: 'FILTER_CHECK',
@@ -108,7 +108,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 6,
     storeId: 2,
-    storeName: '숯불갈비 홍대점',
+    storeName: '맛있는 중화 홍대점',
     equipmentId: 3,
     equipmentName: 'ESP 집진기 #1 (1F)',
     alertType: 'DUST_REMOVAL',
@@ -122,7 +122,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 7,
     storeId: 1,
-    storeName: '바삭치킨 강남점',
+    storeName: '김밥천국 강남점',
     equipmentId: 1,
     equipmentName: 'ESP 집진기 #1',
     controllerId: 2,
@@ -137,7 +137,7 @@ const mockAlerts: ASAlert[] = [
   {
     alertId: 8,
     storeId: 1,
-    storeName: '바삭치킨 강남점',
+    storeName: '김밥천국 강남점',
     equipmentId: 2,
     equipmentName: 'ESP 집진기 #2',
     controllerId: 3,
@@ -158,7 +158,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9001,
     storeId: 1,
-    storeName: '바삭치킨 강남점',
+    storeName: '김밥천국 강남점',
     equipmentId: 1,
     equipmentName: 'ESP 집진기 #1',
     urgency: 'HIGH',
@@ -174,7 +174,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9002,
     storeId: 1,
-    storeName: '바삭치킨 강남점',
+    storeName: '김밥천국 강남점',
     equipmentId: 2,
     equipmentName: 'ESP 집진기 #2',
     urgency: 'NORMAL',
@@ -190,7 +190,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9003,
     storeId: 2,
-    storeName: '숯불갈비 홍대점',
+    storeName: '맛있는 중화 홍대점',
     equipmentId: 4,
     equipmentName: 'ESP 집진기 #1 (B1)',
     urgency: 'HIGH',
@@ -206,7 +206,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9004,
     storeId: 3,
-    storeName: '로스팅하우스 신촌점',
+    storeName: '빈스카페 신촌점',
     equipmentId: 5,
     equipmentName: 'ESP 집진기 #1',
     urgency: 'NORMAL',
@@ -224,7 +224,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9005,
     storeId: 2,
-    storeName: '숯불갈비 홍대점',
+    storeName: '맛있는 중화 홍대점',
     equipmentId: 3,
     equipmentName: 'ESP 집진기 #1 (1F)',
     urgency: 'NORMAL',
@@ -240,7 +240,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9006,
     storeId: 1,
-    storeName: '바삭치킨 강남점',
+    storeName: '김밥천국 강남점',
     equipmentId: 1,
     equipmentName: 'ESP 집진기 #1',
     urgency: 'NORMAL',
@@ -255,7 +255,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9007,
     storeId: 3,
-    storeName: '로스팅하우스 신촌점',
+    storeName: '빈스카페 신촌점',
     equipmentId: 5,
     equipmentName: 'ESP 집진기 #1',
     urgency: 'HIGH',
@@ -271,7 +271,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9008,
     storeId: 2,
-    storeName: '숯불갈비 홍대점',
+    storeName: '맛있는 중화 홍대점',
     equipmentId: 3,
     equipmentName: 'ESP 집진기 #1 (1F)',
     urgency: 'NORMAL',
@@ -287,7 +287,7 @@ const mockASRequests: ASRequestListItem[] = [
   {
     requestId: 9009,
     storeId: 1,
-    storeName: '바삭치킨 강남점',
+    storeName: '김밥천국 강남점',
     equipmentId: 2,
     equipmentName: 'ESP 집진기 #2',
     urgency: 'NORMAL',
@@ -441,9 +441,11 @@ export async function mockCreateASRequest(
 
   // 내부 목록에도 추가 (목록 즉시 반영)
   const storeNames: Record<number, string> = {
-    1: '바삭치킨 강남점',
-    2: '숯불갈비 홍대점',
-    3: '로스팅하우스 신촌점',
+    1: '김밥천국 강남점',
+    2: '맛있는 중화 홍대점',
+    3: '빈스카페 신촌점',
+    4: '우동천하 종로점',
+    5: '화덕피자 이태원점',
   };
 
   const equipOptions = mockEquipmentOptions[req.storeId] ?? [];
@@ -495,9 +497,11 @@ export interface ASStoreOption {
 }
 
 const mockASStoreOptions: ASStoreOption[] = [
-  { storeId: 1, storeName: '바삭치킨 강남점' },
-  { storeId: 2, storeName: '숯불갈비 홍대점' },
-  { storeId: 3, storeName: '로스팅하우스 신촌점' },
+  { storeId: 1, storeName: '김밥천국 강남점' },
+  { storeId: 2, storeName: '맛있는 중화 홍대점' },
+  { storeId: 3, storeName: '빈스카페 신촌점' },
+  { storeId: 4, storeName: '우동천하 종로점' },
+  { storeId: 5, storeName: '화덕피자 이태원점' },
 ];
 
 export async function mockGetASStoreOptions(
