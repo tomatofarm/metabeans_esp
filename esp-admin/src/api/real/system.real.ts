@@ -475,6 +475,7 @@ export async function fetchThresholdSettings(storeId: number | null = null): Pro
       damperAutoSettings: damperRows.map((r) => ({
         settingId: r.settingId,
         equipmentId: r.equipmentId,
+        storeId: (r as { storeId?: number }).storeId ?? 0,
         equipmentName: r.equipmentName,
         targetFlowCmh: r.targetFlowCmh,
         targetVelocity: r.targetVelocity,

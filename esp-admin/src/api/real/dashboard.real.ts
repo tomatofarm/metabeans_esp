@@ -136,6 +136,8 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
   return {
     totalStores: s.storeCount,
     activeStores: s.storeCount,
+    pendingStores: 0,
+    inactiveStores: 0,
     totalEquipments: s.activeEquipmentCount + s.offlineEquipmentCount,
     normalEquipments: s.activeEquipmentCount,
     pendingAsRequests: s.asRequestPending + s.asRequestInProgress,

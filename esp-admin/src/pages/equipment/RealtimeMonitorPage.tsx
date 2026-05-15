@@ -49,7 +49,7 @@ export default function RealtimeMonitorPage() {
 
   const { data: realtimeData, isLoading, dataUpdatedAt } = useRealtimeSensorData(selectedEquipmentId);
   const { data: historyData } = useSensorHistory(selectedEquipmentId);
-  const { data: thresholdResponse } = useThresholdSettings(role === 'ADMIN');
+  const { data: thresholdResponse } = useThresholdSettings('all');
 
   const monitoringThresholdByName = useMemo(() => {
     const map = new Map<string, { yellowMin?: number; redMin?: number }>();

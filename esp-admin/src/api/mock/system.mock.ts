@@ -541,7 +541,7 @@ function buildDamperAutoSettingsFromStoreTree(): DamperAutoSetting[] {
             settingId: eq.equipmentId,
             equipmentId: eq.equipmentId,
             storeId: store.storeId,
-            equipmentName: eq.equipmentName,
+            equipmentName: eq.equipmentName ?? '',
             targetFlowCmh: DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
             targetVelocity: DAMPER_AUTO_SYSTEM_DEFAULT_VELOCITY_MS,
             updatedAt: new Date().toISOString(),
