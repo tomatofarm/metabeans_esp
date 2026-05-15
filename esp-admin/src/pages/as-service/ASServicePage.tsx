@@ -64,6 +64,8 @@ function ASServiceTabs() {
     [visibleSet],
   );
 
+  // A/S 조회 탭의 서브 뷰 상태
+  const [alertsSubView, setAlertsSubView] = useState<SubView>({ type: 'list' });
   // 처리 현황 탭의 서브 뷰 상태
   const [statusSubView, setStatusSubView] = useState<SubView>({ type: 'list' });
   // 완료 보고서 탭의 서브 뷰 상태
@@ -108,6 +110,7 @@ function ASServiceTabs() {
     const def = TAB_DEF.find((t) => t.key === k);
     if (!def || !visibleSet.has(k)) return;
 
+    if (k === 'alerts') setAlertsSubView({ type: 'list' });
     if (k === 'status') setStatusSubView({ type: 'list' });
     if (k === 'report') setReportSubView({ type: 'list' });
 
@@ -226,7 +229,17 @@ function ASServiceTabs() {
         items={tabItems}
         className="as-tabs"
       />
-      {safeActiveKey === 'alerts' && <ASAlertListPage />}
+      {safeActiveKey === 'alerts' && (
+        alertsSubView.type === 'detail'
+          ? (
+            <ASDetailPage
+              requestId={alertsSubView.requestId}
+              onBack={() => setAlertsSubView({ type: 'list' })}
+              readOnly
+            />
+          )
+          : <ASAlertListPage onRowClick={(id) => setAlertsSubView({ type: 'detail', requestId: id })} />
+      )}
       {safeActiveKey === 'request' && <ASRequestPage />}
       {safeActiveKey === 'status' && renderStatusContent()}
       {safeActiveKey === 'report' && renderReportContent()}

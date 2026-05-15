@@ -166,7 +166,7 @@ function EquipmentAlertsMockView() {
 }
 
 /** 실 API: A/S **접수** 목록 — 대시보드 A/S 위젯과 동일 (`GET /as-service/requests` + 권한 매장 필터). */
-function ASRequestInquiryRealView() {
+function ASRequestInquiryRealView({ onRowClick }: { onRowClick?: (requestId: number) => void }) {
   const { data: storeOptions = [] } = useASStoreOptions();
   const storeSelectOptions = storeOptions.map((s) => ({ value: s.storeId, label: s.storeName }));
   const [storeId, setStoreId] = useState<number | undefined>();
@@ -224,6 +224,22 @@ function ASRequestInquiryRealView() {
       width: 120,
       render: (val: string) => formatDate(val),
     },
+    ...(onRowClick
+      ? [
+          {
+            title: ' ',
+            key: 'actions',
+            width: 80,
+            fixed: 'right' as const,
+            align: 'right' as const,
+            render: (_: unknown, record: ASRequestListItem) => (
+              <Button size="small" onClick={() => onRowClick(record.requestId)}>
+                조회
+              </Button>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -267,15 +283,16 @@ function ASRequestInquiryRealView() {
             showTotal: (total) => `총 ${total}건`,
             showSizeChanger: false,
           }}
+          scroll={{ x: onRowClick ? 900 : undefined }}
         />
       </div>
     </div>
   );
 }
 
-export default function ASAlertListPage() {
+export default function ASAlertListPage({ onRowClick }: { onRowClick?: (requestId: number) => void }) {
   if (useRealApi) {
-    return <ASRequestInquiryRealView />;
+    return <ASRequestInquiryRealView onRowClick={onRowClick} />;
   }
   return <EquipmentAlertsMockView />;
 }

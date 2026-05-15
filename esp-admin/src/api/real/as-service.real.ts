@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { apiRequest } from './apiHelpers';
-import { fetchAllStoreRows } from './customer.real';
+
 import type { ApiResponse } from '../mock/common.mock';
 import type { ASStoreOption } from '../mock/as-service.mock';
 import {
@@ -187,15 +187,13 @@ export async function createASRequest(
 }
 
 export async function fetchASStoreOptions(
-  authorizedStoreIds?: AuthorizedStoresParam,
+  _authorizedStoreIds?: AuthorizedStoresParam,
 ): Promise<ASStoreOption[]> {
-  const rows = await fetchAllStoreRows();
-  const opts: ASStoreOption[] = rows.map((s) => {
-    const hqName = s.hq?.hqProfile?.hqName ?? s.hq?.hqProfile?.brandName ?? undefined;
-    const label = hqName ? `${s.storeName} (${hqName})` : s.storeName;
-    return { storeId: s.storeId, storeName: label };
-  });
-  return filterStoreOptionsByAccess(opts, authorizedStoreIds ?? null);
+  // GET /stores/accessible — JWT 기반 서버 필터링, 전 역할 접근 가능
+  const rows = await apiRequest<Array<{ storeId: number; storeName: string }>>(
+    { method: 'get', url: '/stores/accessible' },
+  );
+  return rows.map((s) => ({ storeId: s.storeId, storeName: s.storeName }));
 }
 
 export async function fetchEquipmentOptionsByStore(

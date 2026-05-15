@@ -154,7 +154,9 @@ export default function SystemApprovalTab() {
                 </div>
                 <div className="approval-info">
                   <div className="approval-info-name">
-                    {item.businessName || item.name}
+                    {item.role === 'HQ' && item.brandName
+                      ? item.brandName
+                      : item.businessName || item.name}
                     {item.businessNumber && (
                       <span style={{ fontWeight: 400, fontSize: '0.85rem', color: 'var(--color-mid)', marginLeft: 8 }}>
                         {item.businessNumber}
@@ -162,6 +164,9 @@ export default function SystemApprovalTab() {
                     )}
                   </div>
                   <div className="approval-info-sub">
+                    {item.role === 'HQ' && item.businessName && (
+                      <span>법인명: {item.businessName} · </span>
+                    )}
                     {item.name} · {item.phone || item.email} · {formatDateTimeShort(item.createdAt)}
                   </div>
                 </div>

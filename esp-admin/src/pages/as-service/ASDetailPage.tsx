@@ -68,6 +68,7 @@ interface ASDetailPageProps {
   onBack: () => void;
   onViewReport?: (requestId: number) => void;
   onWriteReport?: (requestId: number) => void;
+  readOnly?: boolean;
 }
 
 export default function ASDetailPage({
@@ -75,6 +76,7 @@ export default function ASDetailPage({
   onBack,
   onViewReport,
   onWriteReport,
+  readOnly = false,
 }: ASDetailPageProps) {
   const user = useAuthStore((s) => s.user);
   const role = user?.role ?? 'OWNER';
@@ -243,7 +245,7 @@ export default function ASDetailPage({
       </div>
 
       {/* 종결(보고서 있음): 처리 정보 없이 보고서 조회만 (ADMIN/DEALER) */}
-      {(role === 'ADMIN' || role === 'DEALER') && isProcessingLocked && detail.status === 'CLOSED' && detail.report && (
+      {!readOnly && (role === 'ADMIN' || role === 'DEALER') && isProcessingLocked && detail.status === 'CLOSED' && detail.report && (
         <div className="as-detail-card">
           <div className="as-detail-card-title">완료 보고서</div>
           <Button type="primary" icon={<FileTextOutlined />} onClick={() => onViewReport?.(requestId)}>
@@ -253,7 +255,7 @@ export default function ASDetailPage({
       )}
 
       {/* 처리 정보 (진행 중 — ADMIN/DEALER) */}
-      {(role === 'ADMIN' || role === 'DEALER') && !isProcessingLocked && (
+      {!readOnly && (role === 'ADMIN' || role === 'DEALER') && !isProcessingLocked && (
         <div className="as-detail-card">
           <div className="as-detail-card-title">처리 정보</div>
           <div style={{ marginBottom: 16 }}>
@@ -354,7 +356,7 @@ export default function ASDetailPage({
       )}
 
       {/* HQ/OWNER: 읽기 전용 보고서 링크 */}
-      {(role === 'HQ' || role === 'OWNER') && detail.report && (
+      {!readOnly && (role === 'HQ' || role === 'OWNER') && detail.report && (
         <div className="as-detail-card">
           <Button
             type="primary"
@@ -366,7 +368,7 @@ export default function ASDetailPage({
         </div>
       )}
 
-      {detail.memo && (
+      {!readOnly && detail.memo && (
         <div className="as-detail-card">
           <div className="as-detail-card-title">처리 메모</div>
           <Text>{detail.memo}</Text>

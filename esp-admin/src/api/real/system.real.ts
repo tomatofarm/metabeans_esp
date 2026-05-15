@@ -276,6 +276,7 @@ interface ApiPendingUser {
   phone: string;
   createdAt: string | Date;
   businessInfo: { businessName: string; businessNumber: string } | null;
+  brandName?: string | null;  // HQ 전용: hq_profiles.hq_name
 }
 
 export async function fetchPendingApprovals(): Promise<ApiResponse<PendingApproval[]>> {
@@ -287,6 +288,7 @@ export async function fetchPendingApprovals(): Promise<ApiResponse<PendingApprov
     role: u.role as PendingApproval['role'],
     email: u.email ?? '',
     phone: u.phone,
+    brandName: u.brandName ?? undefined,
     businessName: u.businessInfo?.businessName,
     businessNumber: u.businessInfo?.businessNumber,
     createdAt: iso(u.createdAt),

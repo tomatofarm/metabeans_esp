@@ -122,7 +122,8 @@ export interface PendingApproval {
   role: UserRole;
   email: string;
   phone: string;
-  businessName?: string;
+  brandName?: string;      // HQ 전용: 브랜드명 (hq_profiles.hq_name)
+  businessName?: string;   // 법인명(HQ) 또는 사업체명(DEALER/ADMIN)
   businessNumber?: string;
   createdAt: string;
 }

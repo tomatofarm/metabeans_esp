@@ -41,6 +41,9 @@ interface ApiAlarmRow {
 
 interface SummaryApi {
   storeCount: number;
+  activeStoreCount: number;
+  pendingStoreCount: number;
+  inactiveStoreCount: number;
   activeEquipmentCount: number;
   offlineEquipmentCount: number;
   asRequestPending: number;
@@ -135,9 +138,9 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
   const s = await apiRequest<SummaryApi>({ method: 'get', url: '/dashboard/summary' });
   return {
     totalStores: s.storeCount,
-    activeStores: s.storeCount,
-    pendingStores: 0,
-    inactiveStores: 0,
+    activeStores: s.activeStoreCount,
+    pendingStores: s.pendingStoreCount,
+    inactiveStores: s.inactiveStoreCount,
     totalEquipments: s.activeEquipmentCount + s.offlineEquipmentCount,
     normalEquipments: s.activeEquipmentCount,
     pendingAsRequests: s.asRequestPending + s.asRequestInProgress,

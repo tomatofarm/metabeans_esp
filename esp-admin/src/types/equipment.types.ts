@@ -231,7 +231,7 @@ export interface DealerOption {
 export interface StoreTreeNode {
   storeId: number;
   storeName: string;
-  siteId: string;
+  siteId: string | null;
   status: 'ACTIVE' | 'INACTIVE' | 'PENDING';
   floors: FloorTreeNode[];
 }
