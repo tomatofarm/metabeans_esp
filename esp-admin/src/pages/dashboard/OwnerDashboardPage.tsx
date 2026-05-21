@@ -15,7 +15,7 @@ import ASRequestPanel from './components/ASRequestPanel';
 import TotalUserSummaryCard from './components/TotalUserSummaryCard';
 import StatusTag from '../../components/common/StatusTag';
 import StatusBadge from '../../components/common/StatusBadge';
-import { formatRelativeTime } from '../../utils/formatters';
+import { formatRelativeTime, formatDateTime } from '../../utils/formatters';
 import { STORE_ID_MAP } from '../../api/mock/common.mock';
 
 interface OwnerDashboardPageProps {
@@ -119,11 +119,11 @@ const issueColumns = (onEquipmentClick: (equipmentId: number, storeId: number) =
     ellipsis: true,
   },
   {
-    title: '발생시간',
+    title: '발생시각',
     dataIndex: 'occurredAt',
     key: 'occurredAt',
-    width: 100,
-    render: (v: string) => formatRelativeTime(v),
+    width: 140,
+    render: (v: string) => formatDateTime(v),
   },
 ];
 

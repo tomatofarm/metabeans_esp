@@ -9,7 +9,7 @@ import {
 import type { DashboardIssueCategory, DashboardIssueItem, DashboardIssueType } from '../../../types/dashboard.types';
 import StatusTag from '../../../components/common/StatusTag';
 import { STATUS_COLORS } from '../../../utils/constants';
-import { formatRelativeTime } from '../../../utils/formatters';
+import { formatDateTime } from '../../../utils/formatters';
 
 const { Text } = Typography;
 
@@ -68,7 +68,7 @@ function IssueItemCard({
             </span>
           )}
         </div>
-        <div className="issue-time">{formatRelativeTime(item.occurredAt)}</div>
+        <div className="issue-time">{formatDateTime(item.occurredAt)}</div>
       </div>
       <StatusTag level={item.severity} />
     </div>

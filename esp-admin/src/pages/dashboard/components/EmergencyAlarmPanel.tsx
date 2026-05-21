@@ -5,7 +5,7 @@ import { STATUS_COLORS, ALARM_TYPE_LABELS } from '../../../utils/constants';
 import { useEmergencyAlarms } from '../../../api/dashboard.api';
 import { useAlertStore } from '../../../stores/alertStore';
 import type { EmergencyAlarm } from '../../../types/dashboard.types';
-import { formatRelativeTime } from '../../../utils/formatters';
+import { formatDateTime } from '../../../utils/formatters';
 import { useEffect } from 'react';
 
 const { Text } = Typography;
@@ -35,7 +35,7 @@ function AlarmItem({ alarm, onClick }: { alarm: EmergencyAlarm; onClick?: () => 
             <StatusBadge status="danger" label={ALARM_TYPE_LABELS[alarm.alarmType] ?? alarm.alarmType} />
             <div style={{ fontSize: 12 }}>{alarm.message}</div>
             <Text type="secondary" style={{ fontSize: 11 }}>
-              {formatRelativeTime(alarm.occurredAt)}
+              {formatDateTime(alarm.occurredAt)}
             </Text>
           </div>
         }

@@ -7,7 +7,7 @@ import StatusTag from '../../components/common/StatusTag';
 import StatusBadge from '../../components/common/StatusBadge';
 import type { BadgeStatus } from '../../components/common/StatusBadge';
 import type { StoreEquipmentStatus, StoreAsRequest, DashboardIssueItem } from '../../types/dashboard.types';
-import { formatRelativeTime } from '../../utils/formatters';
+import { formatRelativeTime, formatDateTime } from '../../utils/formatters';
 import { AS_STATUS_LABELS } from '../../utils/constants';
 
 /**
@@ -108,11 +108,11 @@ const issueColumns = (onEquipmentClick: (equipmentId: number, storeId: number) =
   },
   { title: '내용', dataIndex: 'message', key: 'message', ellipsis: true },
   {
-    title: '발생시간',
+    title: '발생시각',
     dataIndex: 'occurredAt',
     key: 'occurredAt',
-    width: 100,
-    render: (v: string) => formatRelativeTime(v),
+    width: 140,
+    render: (v: string) => formatDateTime(v),
   },
 ];
 
