@@ -26,6 +26,8 @@ interface ApiUserListRow {
   accountStatus: string;
   lastLoginAt: string | null;
   createdAt: string;
+  affiliatedName?: string | null;
+  affiliatedStatus?: string | null;
 }
 
 function iso(d: string | Date | null | undefined): string {
@@ -44,6 +46,8 @@ function mapListRow(r: ApiUserListRow): SystemUserItem {
     accountStatus: r.accountStatus as AccountStatus,
     lastLoginAt: r.lastLoginAt ? iso(r.lastLoginAt) : undefined,
     createdAt: iso(r.createdAt),
+    affiliatedName: r.affiliatedName ?? undefined,
+    affiliatedStatus: r.affiliatedStatus as SystemUserItem['affiliatedStatus'] ?? undefined,
   };
 }
 
