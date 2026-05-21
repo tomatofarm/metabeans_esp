@@ -34,10 +34,12 @@ const equipmentColumns = (onEquipmentClick: (equipmentId: number, storeId: numbe
   },
   {
     title: '상태',
-    dataIndex: 'status',
     key: 'status',
     width: 80,
-    render: (level: StoreEquipmentStatus['status']) => <StatusTag level={level} />,
+    render: (_: unknown, record: StoreEquipmentStatus) =>
+      record.connectionStatus === 'OFFLINE'
+        ? <StatusBadge status="default" label="알 수 없음" />
+        : <StatusTag level={record.status} />,
   },
   {
     title: '연결',
