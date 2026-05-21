@@ -62,7 +62,7 @@ const CATEGORY_META: Record<
   },
   INLET_TEMP: {
     label: '유입 온도 이상',
-    description: 'Yellow: 70°C 이상 / Red: 100°C 이상',
+    description: 'Yellow: 주의 / Red: 위험',
   },
   FILTER_CHECK: {
     label: '필터 청소 상태 점검',

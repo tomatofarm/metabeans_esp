@@ -15,7 +15,7 @@ import ASRequestPanel from './components/ASRequestPanel';
 import StoreMap from './components/StoreMap';
 
 interface AdminDashboardPageProps {
-  onNavigateToEquipment: (equipmentId: number) => void;
+  onNavigateToEquipment: (equipmentId: number, storeId: number) => void;
 }
 
 export default function AdminDashboardPage({ onNavigateToEquipment }: AdminDashboardPageProps) {

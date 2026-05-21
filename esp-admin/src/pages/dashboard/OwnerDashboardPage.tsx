@@ -19,16 +19,16 @@ import { formatRelativeTime } from '../../utils/formatters';
 import { STORE_ID_MAP } from '../../api/mock/common.mock';
 
 interface OwnerDashboardPageProps {
-  onNavigateToEquipment: (equipmentId: number) => void;
+  onNavigateToEquipment: (equipmentId: number, storeId: number) => void;
 }
 
-const equipmentColumns = (onEquipmentClick: (id: number) => void) => [
+const equipmentColumns = (onEquipmentClick: (equipmentId: number, storeId: number) => void, storeId: number) => [
   {
     title: '장비명',
     dataIndex: 'equipmentName',
     key: 'equipmentName',
     render: (text: string, record: StoreEquipmentStatus) => (
-      <a onClick={() => onEquipmentClick(record.equipmentId)}>
+      <a onClick={() => onEquipmentClick(record.equipmentId, storeId)}>
         <DesktopOutlined style={{ marginRight: 8 }} />
         {text}
       </a>
@@ -69,7 +69,7 @@ const equipmentColumns = (onEquipmentClick: (id: number) => void) => [
   },
 ];
 
-const issueColumns = [
+const issueColumns = (onEquipmentClick: (equipmentId: number, storeId: number) => void) => [
   {
     title: '유형',
     dataIndex: 'issueType',
@@ -90,6 +90,9 @@ const issueColumns = [
     dataIndex: 'equipmentName',
     key: 'equipmentName',
     width: 160,
+    render: (text: string, record: DashboardIssueItem) => (
+      <a onClick={() => onEquipmentClick(record.equipmentId, record.storeId)}>{text}</a>
+    ),
   },
   {
     title: '상태',
@@ -198,7 +201,7 @@ export default function OwnerDashboardPage({ onNavigateToEquipment }: OwnerDashb
                 {storeData && storeData.equipments.length > 0 ? (
                   <Table
                     dataSource={storeData.equipments}
-                    columns={equipmentColumns(onNavigateToEquipment)}
+                    columns={equipmentColumns(onNavigateToEquipment, numericStoreId ?? 0)}
                     rowKey="equipmentId"
                     size="small"
                     pagination={false}
@@ -218,7 +221,7 @@ export default function OwnerDashboardPage({ onNavigateToEquipment }: OwnerDashb
           {allIssueItems.length > 0 ? (
             <Table
               dataSource={allIssueItems}
-              columns={issueColumns}
+              columns={issueColumns(onNavigateToEquipment)}
               rowKey="issueId"
               size="small"
               pagination={false}

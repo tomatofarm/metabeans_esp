@@ -17,16 +17,16 @@ import { AS_STATUS_LABELS } from '../../utils/constants';
  */
 interface SelectedStoreDashboardPageProps {
   storeId: number;
-  onEquipmentClick: (equipmentId: number) => void;
+  onEquipmentClick: (equipmentId: number, storeId: number) => void;
 }
 
-const equipmentColumns = (onEquipmentClick: (id: number) => void) => [
+const equipmentColumns = (onEquipmentClick: (equipmentId: number, storeId: number) => void, storeId: number) => [
   {
     title: '장비명',
     dataIndex: 'equipmentName',
     key: 'equipmentName',
     render: (text: string, record: StoreEquipmentStatus) => (
-      <a onClick={() => onEquipmentClick(record.equipmentId)}>
+      <a onClick={() => onEquipmentClick(record.equipmentId, storeId)}>
         <DesktopOutlined style={{ marginRight: 8 }} />
         {text}
       </a>
@@ -67,7 +67,7 @@ const equipmentColumns = (onEquipmentClick: (id: number) => void) => [
   },
 ];
 
-const issueColumns = [
+const issueColumns = (onEquipmentClick: (equipmentId: number, storeId: number) => void) => [
   { title: '유형', dataIndex: 'issueType', key: 'issueType', width: 120,
     render: (type: string) => {
       const labels: Record<string, string> = {
@@ -79,7 +79,15 @@ const issueColumns = [
       return labels[type] ?? type;
     },
   },
-  { title: '장비', dataIndex: 'equipmentName', key: 'equipmentName', width: 160 },
+  {
+    title: '장비',
+    dataIndex: 'equipmentName',
+    key: 'equipmentName',
+    width: 160,
+    render: (text: string, record: DashboardIssueItem) => (
+      <a onClick={() => onEquipmentClick(record.equipmentId, record.storeId)}>{text}</a>
+    ),
+  },
   {
     title: '상태',
     dataIndex: 'severity',
@@ -159,7 +167,7 @@ export default function SelectedStoreDashboardPage({
               <Card title="장비 현황" size="small" style={{ borderRadius: 16, boxShadow: 'var(--card-shadow)' }}>
                 <Table
                   dataSource={data.equipments}
-                  columns={equipmentColumns(onEquipmentClick)}
+                  columns={equipmentColumns(onEquipmentClick, storeId)}
                   rowKey="equipmentId"
                   size="small"
                   pagination={false}
@@ -176,7 +184,7 @@ export default function SelectedStoreDashboardPage({
           {data.issues.length > 0 ? (
             <Table
               dataSource={data.issues}
-              columns={issueColumns}
+              columns={issueColumns(onEquipmentClick)}
               rowKey="issueId"
               size="small"
               pagination={false}

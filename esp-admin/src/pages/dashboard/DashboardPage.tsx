@@ -20,10 +20,10 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const role = user?.role ?? 'ADMIN';
 
-  // Equipment selected → navigate to monitoring page (not rendered in dashboard)
+  // Equipment selected → navigate to equipment info page
   useEffect(() => {
     if (selectedEquipmentId) {
-      navigate(`/equipment/${selectedEquipmentId}/monitoring`);
+      navigate('/equipment');
     }
   }, [selectedEquipmentId, navigate]);
 
@@ -31,9 +31,10 @@ export default function DashboardPage() {
     selectStore(storeId);
   };
 
-  const handleNavigateToEquipment = (equipmentId: number) => {
+  const handleNavigateToEquipment = (equipmentId: number, storeId?: number) => {
+    if (storeId) selectStore(storeId);
     selectEquipment(equipmentId);
-    navigate(`/equipment/${equipmentId}/monitoring`);
+    navigate('/equipment');
   };
 
   // If equipment is selected, don't render anything (navigating away)

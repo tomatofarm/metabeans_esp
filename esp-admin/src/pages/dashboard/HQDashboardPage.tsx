@@ -22,7 +22,7 @@ import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 
 interface HQDashboardPageProps {
   onNavigateToStore: (storeId: number) => void;
-  onNavigateToEquipment: (equipmentId: number) => void;
+  onNavigateToEquipment: (equipmentId: number, storeId: number) => void;
 }
 
 function HQSummaryCards({

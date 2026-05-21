@@ -16,7 +16,7 @@ const { Text } = Typography;
 interface IssuePanelProps {
   categories?: DashboardIssueCategory[];
   loading?: boolean;
-  onEquipmentClick?: (equipmentId: number) => void;
+  onEquipmentClick?: (equipmentId: number, storeId: number) => void;
 }
 
 const ISSUE_ICONS: Record<DashboardIssueType, ReactNode> = {
@@ -53,7 +53,7 @@ function IssueItemCard({
   onEquipmentClick,
 }: {
   item: DashboardIssueItem;
-  onEquipmentClick?: (equipmentId: number) => void;
+  onEquipmentClick?: (equipmentId: number, storeId: number) => void;
 }) {
   return (
     <div className="issue-item">
@@ -61,7 +61,7 @@ function IssueItemCard({
       <div className="issue-info">
         <div className="issue-store">{item.storeName}</div>
         <div className="issue-equip">
-          <a onClick={() => onEquipmentClick?.(item.equipmentId)}>{item.equipmentName}</a>
+          <a onClick={() => onEquipmentClick?.(item.equipmentId, item.storeId)}>{item.equipmentName}</a>
           {item.currentValue !== undefined && (
             <span style={{ color: 'var(--color-mid)', fontWeight: 400 }}>
               {' '}&middot; {item.currentValue}{item.unit ? ` ${item.unit}` : ''}

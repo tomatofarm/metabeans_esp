@@ -201,7 +201,7 @@ export async function mockGetIssueList(): Promise<DashboardIssueCategory[]> {
     {
       type: 'INLET_TEMP',
       label: '유입 온도 이상',
-      description: 'Yellow: 점검 필요 / Red: 점검 필요',
+      description: 'Yellow: 주의 / Red: 위험',
       items: inletTempIssues,
       yellowCount: inletTempIssues.filter((i) => i.severity === 'yellow').length,
       redCount: inletTempIssues.filter((i) => i.severity === 'red').length,
