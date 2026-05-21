@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { LoginUser, UserRole } from '../types/auth.types';
 import { clearStoredSession, saveSessionAfterLogin } from '../lib/authSessionStorage';
+import { useUiStore } from './uiStore';
 
 interface AuthState {
   /** `runAuthRestore` 완료 전까지 `false` — 라우트는 로그인으로 보내지 말고 대기 */
@@ -37,6 +38,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: () => {
     clearStoredSession();
+    useUiStore.getState().clearSelection();
     set({ isAuthenticated: false, user: null, accessToken: null });
   },
 

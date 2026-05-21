@@ -233,6 +233,7 @@ const mockUsers: SystemUserItem[] = [
     accountStatus: 'ACTIVE',
     lastLoginAt: '2026-02-13T17:00:00Z',
     createdAt: '2025-03-15T00:00:00Z',
+    affiliatedName: '서울환경테크',
   },
   {
     userId: 3,
@@ -244,6 +245,7 @@ const mockUsers: SystemUserItem[] = [
     accountStatus: 'ACTIVE',
     lastLoginAt: '2026-02-12T10:00:00Z',
     createdAt: '2025-05-20T00:00:00Z',
+    affiliatedName: '김밥천국 본사',
   },
   {
     userId: 4,
@@ -255,6 +257,8 @@ const mockUsers: SystemUserItem[] = [
     accountStatus: 'ACTIVE',
     lastLoginAt: '2026-02-14T07:00:00Z',
     createdAt: '2025-06-01T00:00:00Z',
+    affiliatedName: '김밥천국 강남점',
+    affiliatedStatus: 'ACTIVE',
   },
   {
     userId: 5,
@@ -266,6 +270,7 @@ const mockUsers: SystemUserItem[] = [
     accountStatus: 'ACTIVE',
     lastLoginAt: '2026-02-10T14:30:00Z',
     createdAt: '2025-07-10T00:00:00Z',
+    affiliatedName: '경기설비',
   },
   {
     userId: 6,
@@ -277,6 +282,8 @@ const mockUsers: SystemUserItem[] = [
     accountStatus: 'SUSPENDED',
     lastLoginAt: '2026-01-20T09:00:00Z',
     createdAt: '2025-08-01T00:00:00Z',
+    affiliatedName: '화덕피자 이태원점',
+    affiliatedStatus: 'INACTIVE',
   },
   {
     userId: 7,
@@ -288,6 +295,7 @@ const mockUsers: SystemUserItem[] = [
     accountStatus: 'ACTIVE',
     lastLoginAt: '2026-02-11T11:00:00Z',
     createdAt: '2025-09-15T00:00:00Z',
+    affiliatedName: '빈스커피 본사',
   },
   {
     userId: 8,
@@ -299,6 +307,8 @@ const mockUsers: SystemUserItem[] = [
     accountStatus: 'ACTIVE',
     lastLoginAt: '2026-02-13T16:00:00Z',
     createdAt: '2025-10-01T00:00:00Z',
+    affiliatedName: '바비큐빌리지 수원점',
+    affiliatedStatus: 'ACTIVE',
   },
   {
     userId: 9,
@@ -310,6 +320,7 @@ const mockUsers: SystemUserItem[] = [
     accountStatus: 'DELETED',
     lastLoginAt: '2025-12-01T10:00:00Z',
     createdAt: '2025-04-01T00:00:00Z',
+    affiliatedName: '인천환경서비스',
   },
 ];
 

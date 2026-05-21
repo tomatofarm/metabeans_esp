@@ -115,7 +115,7 @@ export default function SystemThresholdTab() {
         ...prev,
         monitoringThresholds: prev.monitoringThresholds.map((t) =>
           t.thresholdId === thresholdId
-            ? { ...t, [field]: value ?? undefined }
+            ? { ...t, [field]: value }
             : t,
         ),
       };
@@ -321,12 +321,12 @@ export default function SystemThresholdTab() {
                 </div>
               </div>
 
-              {t.yellowMin !== undefined && (
+              {'yellowMin' in t && (
                 <div className="threshold-input-group">
                   <div className="threshold-input-label">주의 기준 (Yellow)</div>
                   <div className="threshold-input-wrap">
                     <InputNumber
-                      value={t.yellowMin}
+                      value={t.yellowMin ?? null}
                       onChange={(v) => handleMonitoringChange(t.thresholdId, 'yellowMin', v)}
                       min={0}
                       style={{ width: '100%' }}
@@ -336,12 +336,12 @@ export default function SystemThresholdTab() {
                 </div>
               )}
 
-              {t.redMin !== undefined && (
+              {'redMin' in t && (
                 <div className="threshold-input-group">
                   <div className="threshold-input-label">위험 기준 (Red)</div>
                   <div className="threshold-input-wrap">
                     <InputNumber
-                      value={t.redMin}
+                      value={t.redMin ?? null}
                       onChange={(v) => handleMonitoringChange(t.thresholdId, 'redMin', v)}
                       min={0}
                       style={{ width: '100%' }}

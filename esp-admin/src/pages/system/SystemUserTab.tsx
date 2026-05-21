@@ -37,6 +37,15 @@ const ACCOUNT_STATUS_CONFIG: Record<
   DELETED: { label: '탈퇴', status: 'default' },
 };
 
+const STORE_STATUS_CONFIG: Record<
+  'ACTIVE' | 'INACTIVE' | 'PENDING',
+  { label: string; status: BadgeStatus }
+> = {
+  ACTIVE: { label: '운영중', status: 'success' },
+  INACTIVE: { label: '비활성', status: 'default' },
+  PENDING: { label: '대기', status: 'warning' },
+};
+
 export default function SystemUserTab() {
   const [filters, setFilters] = useState<UserListParams>({});
   const [searchValue, setSearchValue] = useState('');
@@ -148,21 +157,40 @@ export default function SystemUserTab() {
       ),
     },
     {
+      title: '소속',
+      dataIndex: 'affiliatedName',
+      key: 'affiliatedName',
+      width: 160,
+      ellipsis: true,
+      render: (text: string) => text || '—',
+    },
+    {
       title: '이메일',
       dataIndex: 'email',
       key: 'email',
-      width: 200,
+      width: 180,
       ellipsis: true,
       render: (text: string) => text || '-',
     },
     {
-      title: '상태',
+      title: '계정 상태',
       dataIndex: 'accountStatus',
       key: 'accountStatus',
-      width: 80,
+      width: 90,
       render: (status: AccountStatus) => (
         <StatusBadge status={ACCOUNT_STATUS_CONFIG[status]?.status ?? 'default'} label={ACCOUNT_STATUS_CONFIG[status]?.label ?? status} />
       ),
+    },
+    {
+      title: '매장 상태',
+      dataIndex: 'affiliatedStatus',
+      key: 'affiliatedStatus',
+      width: 90,
+      render: (_: unknown, record: SystemUserItem) => {
+        if (record.role !== 'OWNER' || !record.affiliatedStatus) return <span style={{ color: '#bbb' }}>—</span>;
+        const cfg = STORE_STATUS_CONFIG[record.affiliatedStatus];
+        return <StatusBadge status={cfg?.status ?? 'default'} label={cfg?.label ?? record.affiliatedStatus} />;
+      },
     },
     {
       title: '마지막 로그인',
@@ -313,7 +341,7 @@ export default function SystemUserTab() {
           dataSource={users}
           rowKey="userId"
           size="middle"
-          scroll={{ x: 1000 }}
+          scroll={{ x: 1200 }}
           pagination={{
             total: usersResponse?.meta?.totalCount,
             pageSize: 20,
@@ -354,6 +382,19 @@ export default function SystemUserTab() {
               <Descriptions.Item label="아이디">{userDetail.loginId}</Descriptions.Item>
               <Descriptions.Item label="가입일">
                 {formatDate(userDetail.createdAt)}
+              </Descriptions.Item>
+              <Descriptions.Item label="소속">
+                {userDetail.affiliatedName ?? '—'}
+              </Descriptions.Item>
+              <Descriptions.Item label="매장 상태">
+                {userDetail.role === 'OWNER' && userDetail.affiliatedStatus ? (
+                  <StatusBadge
+                    status={STORE_STATUS_CONFIG[userDetail.affiliatedStatus]?.status ?? 'default'}
+                    label={STORE_STATUS_CONFIG[userDetail.affiliatedStatus]?.label ?? userDetail.affiliatedStatus}
+                  />
+                ) : (
+                  <span style={{ color: '#bbb' }}>—</span>
+                )}
               </Descriptions.Item>
               {userDetail.businessName && (
                 <Descriptions.Item label="상호명">

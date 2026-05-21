@@ -4,6 +4,7 @@ import { UserOutlined, LockOutlined, DashboardOutlined, ControlOutlined, AlertOu
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../../api/auth.api';
 import { useAuthStore } from '../../stores/authStore';
+import { useUiStore } from '../../stores/uiStore';
 import type { UserRole } from '../../types/auth.types';
 import ForgotPasswordModal from './ForgotPasswordModal';
 
@@ -21,12 +22,14 @@ export default function LoginPage() {
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
   const navigate = useNavigate();
   const authLogin = useAuthStore((s) => s.login);
+  const clearSelection = useUiStore((s) => s.clearSelection);
 
   const onFinish = async (values: { loginId: string; password: string }) => {
     setLoading(true);
     try {
       const response = await login(values);
       authLogin(response.user, response.accessToken);
+      clearSelection();
       message.success(`${response.user.name}님 환영합니다.`);
       const dashboardPath = ROLE_DASHBOARD_MAP[response.user.role];
       navigate(dashboardPath);

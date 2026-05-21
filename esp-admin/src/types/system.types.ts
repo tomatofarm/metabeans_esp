@@ -164,6 +164,10 @@ export interface SystemUserItem {
   accountStatus: AccountStatus;
   lastLoginAt?: string;
   createdAt: string;
+  /** 소속 엔티티명 — OWNER: 매장명, DEALER: 대리점명, HQ: 본사명, ADMIN: undefined */
+  affiliatedName?: string;
+  /** 소속 매장 상태 — OWNER 전용, 나머지 역할은 undefined */
+  affiliatedStatus?: 'ACTIVE' | 'INACTIVE' | 'PENDING';
 }
 
 // 사용자 상세 (편집용)
@@ -203,8 +207,8 @@ export interface MonitoringThreshold {
   storeId?: number;
   metricName: string;
   unit: string;
-  yellowMin?: number;
-  redMin?: number;
+  yellowMin?: number | null;
+  redMin?: number | null;
   description?: string;
   setBy: number;
   updatedAt: string;

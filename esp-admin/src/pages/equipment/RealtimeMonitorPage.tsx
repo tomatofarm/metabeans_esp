@@ -54,7 +54,10 @@ export default function RealtimeMonitorPage() {
   const monitoringThresholdByName = useMemo(() => {
     const map = new Map<string, { yellowMin?: number; redMin?: number }>();
     for (const t of thresholdResponse?.data.monitoringThresholds ?? []) {
-      map.set(t.metricName, { yellowMin: t.yellowMin, redMin: t.redMin });
+      map.set(t.metricName, {
+        yellowMin: t.yellowMin ?? undefined,
+        redMin: t.redMin ?? undefined,
+      });
     }
     return map;
   }, [thresholdResponse?.data.monitoringThresholds]);

@@ -222,6 +222,8 @@ export async function registerAdmin(body: RegisterAdminRequest): Promise<Registe
       name: body.name,
       email: body.email,
       phone: body.phone,
+      termsAgreed: body.termsAgreed,
+      marketingAgreed: body.marketingAgreed,
     },
   });
   return mapRegisterResponse(data, {
