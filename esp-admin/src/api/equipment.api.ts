@@ -24,6 +24,10 @@ import {
   mockUpdateEquipment,
   mockDeleteEquipment,
   mockGetEquipmentModels,
+  mockGetAllEquipmentModels,
+  mockCreateModel,
+  mockUpdateModel,
+  mockDeleteModel,
   mockGetStoreOptions,
   mockGetFloorOptions,
   mockGetGatewayOptions,
@@ -81,12 +85,63 @@ export function useEquipmentDetail(equipmentId: number | null) {
   });
 }
 
-// 장비 모델 목록
+// 장비 모델 목록 (활성만 — 장비 등록 드롭다운용)
 export function useEquipmentModels() {
   return useQuery({
     queryKey: ['equipmentModels'],
     queryFn: () => (useRealApi ? equipmentReal.fetchEquipmentModels() : mockGetEquipmentModels()),
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+// 장비 모델 전체 목록 (비활성 포함 — 제품 관리 탭용)
+export function useAllEquipmentModels() {
+  return useQuery({
+    queryKey: ['equipmentModels', 'all'],
+    queryFn: () =>
+      useRealApi ? equipmentReal.fetchAllEquipmentModels() : mockGetAllEquipmentModels(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// 모델 생성
+export function useCreateModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { modelName: string; manufacturer?: string }) =>
+      useRealApi ? equipmentReal.createModel(data) : mockCreateModel(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equipmentModels'] });
+    },
+  });
+}
+
+// 모델 수정
+export function useUpdateModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      modelId,
+      data,
+    }: {
+      modelId: number;
+      data: { modelName?: string; manufacturer?: string; isActive?: boolean };
+    }) => (useRealApi ? equipmentReal.updateModel(modelId, data) : mockUpdateModel(modelId, data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equipmentModels'] });
+    },
+  });
+}
+
+// 모델 삭제
+export function useDeleteModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (modelId: number) =>
+      useRealApi ? equipmentReal.deleteModel(modelId) : mockDeleteModel(modelId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equipmentModels'] });
+    },
   });
 }
 

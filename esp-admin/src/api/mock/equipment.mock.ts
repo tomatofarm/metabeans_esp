@@ -373,8 +373,6 @@ export async function mockCreateEquipment(
   const newId = Math.max(...mockEquipmentDetails.map((e) => e.equipmentId)) + 1;
   const model = mockModels.find((m) => m.modelId === req.modelId);
   const store = mockStoreOptions.find((s) => s.storeId === req.storeId);
-  const floors = mockFloorOptions[req.storeId] ?? [];
-  const floor = floors.find((f) => f.floorId === req.floorId);
   const dealer = mockDealerOptions.find((d) => d.dealerId === req.dealerId);
 
   const newEquipment: EquipmentDetail = {
@@ -387,9 +385,9 @@ export async function mockCreateEquipment(
       siteId: store?.siteId ?? '',
     },
     floor: {
-      floorId: req.floorId,
-      floorCode: floor?.floorCode ?? '',
-      floorName: floor?.floorName ?? '',
+      floorId: newId * 10,
+      floorCode: req.floorCode,
+      floorName: req.floorName ?? '',
     },
     equipmentName: req.equipmentName,
     model: {
@@ -406,8 +404,8 @@ export async function mockCreateEquipment(
     connectionStatus: 'OFFLINE',
     lastSeenAt: undefined,
     gateway: {
-      gatewayId: req.controllers[0]?.gatewayId ?? 0,
-      gwDeviceId: '',
+      gatewayId: newId * 10,
+      gwDeviceId: req.controllers[0]?.gwDeviceId ?? '',
       connectionStatus: 'OFFLINE',
       statusFlags: 0,
       controllerCount: req.controllers.length,
@@ -491,10 +489,53 @@ export async function mockDeleteEquipment(
   return mockDelay(wrapResponse({ deleted: true }), 300);
 }
 
-// 장비 모델 목록
+// 장비 모델 목록 (장비 등록 드롭다운용 — 활성만)
 export async function mockGetEquipmentModels(): Promise<ApiResponse<EquipmentModel[]>> {
   const activeModels = mockModels.filter((m) => m.isActive);
   return mockDelay(wrapResponse(activeModels), 200);
+}
+
+// 장비 모델 전체 목록 (제품 관리 탭용 — 비활성 포함)
+export async function mockGetAllEquipmentModels(): Promise<ApiResponse<EquipmentModel[]>> {
+  return mockDelay(wrapResponse([...mockModels]), 200);
+}
+
+// 모델 생성
+export async function mockCreateModel(data: {
+  modelName: string;
+  manufacturer?: string;
+}): Promise<ApiResponse<EquipmentModel>> {
+  const newModel: EquipmentModel = {
+    modelId: Math.max(...mockModels.map((m) => m.modelId)) + 1,
+    modelName: data.modelName,
+    manufacturer: data.manufacturer,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  };
+  mockModels.push(newModel);
+  return mockDelay(wrapResponse(newModel), 300);
+}
+
+// 모델 수정
+export async function mockUpdateModel(
+  modelId: number,
+  data: { modelName?: string; manufacturer?: string; isActive?: boolean },
+): Promise<ApiResponse<EquipmentModel>> {
+  const idx = mockModels.findIndex((m) => m.modelId === modelId);
+  if (idx === -1) throw new Error('RESOURCE_NOT_FOUND');
+  const model = mockModels[idx] as EquipmentModel;
+  if (data.modelName !== undefined) model.modelName = data.modelName;
+  if (data.manufacturer !== undefined) model.manufacturer = data.manufacturer;
+  if (data.isActive !== undefined) model.isActive = data.isActive;
+  return mockDelay(wrapResponse({ ...model }), 300);
+}
+
+// 모델 삭제
+export async function mockDeleteModel(modelId: number): Promise<ApiResponse<{ deleted: boolean }>> {
+  const idx = mockModels.findIndex((m) => m.modelId === modelId);
+  if (idx === -1) throw new Error('RESOURCE_NOT_FOUND');
+  mockModels.splice(idx, 1);
+  return mockDelay(wrapResponse({ deleted: true }), 300);
 }
 
 // 매장 옵션 목록

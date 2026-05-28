@@ -180,7 +180,8 @@ export interface EquipmentCreateRequest {
   equipmentSerial: string;
   mqttEquipmentId: string;
   storeId: number;
-  floorId: number;
+  floorCode: string;
+  floorName?: string;
   equipmentName: string;
   modelId: number;
   cellType?: string;
@@ -188,7 +189,7 @@ export interface EquipmentCreateRequest {
   purchaseDate?: string;
   warrantyEndDate?: string;
   dealerId?: number;
-  controllers: { ctrlDeviceId: string; gatewayId: number }[];
+  controllers: { ctrlDeviceId: string; gwDeviceId: string }[];
 }
 
 // 장비 수정 요청 (PUT /equipment/:id)

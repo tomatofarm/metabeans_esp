@@ -23,14 +23,14 @@ const DEFAULT_CENTER = { lat: 37.5326, lng: 126.9786 };
 const DEFAULT_ZOOM = 11;
 
 const STATUS_CONFIG: Record<StoreStatus, { status: BadgeStatus; label: string }> = {
-  ACTIVE: { status: 'success', label: '정상' },
+  ACTIVE: { status: 'success', label: '활성' },
   INACTIVE: { status: 'default', label: '비활성' },
-  PENDING: { status: 'warning', label: '대기' },
+  PENDING: { status: 'warning', label: '가입 대기' },
 };
 
 const STATUS_FILTER_OPTIONS = [
-  { value: 'ACTIVE', label: '정상' },
-  { value: 'PENDING', label: '대기' },
+  { value: 'ACTIVE', label: '활성' },
+  { value: 'PENDING', label: '가입 대기' },
   { value: 'INACTIVE', label: '비활성' },
 ];
 

@@ -9,6 +9,8 @@ export interface DashboardSummary {
   activeStores: number;
   pendingStores: number;
   inactiveStores: number;
+  suspendedStores: number;
+  deletedStores: number;
   totalEquipments: number;
   normalEquipments: number;
   pendingAsRequests: number;

@@ -5,15 +5,17 @@ import SystemPermissionTab from './SystemPermissionTab';
 import SystemApprovalTab from './SystemApprovalTab';
 import SystemUserTab from './SystemUserTab';
 import SystemThresholdTab from './SystemThresholdTab';
+import SystemModelTab from './SystemModelTab';
 import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 
-type SystemTabKey = 'permission' | 'approval' | 'users' | 'thresholds';
+type SystemTabKey = 'permission' | 'approval' | 'users' | 'thresholds' | 'models';
 
 const TAB_PATH: Record<SystemTabKey, string> = {
   permission: '/system',
   approval: '/system/approval',
   users: '/system/users',
   thresholds: '/system/thresholds',
+  models: '/system/models',
 };
 
 function SystemTabs() {
@@ -26,14 +28,17 @@ function SystemTabs() {
   const { isAllowed: canUser, isLoading: userLoading } = useFeaturePermission('system.user');
   const { isAllowed: canThreshold, isLoading: thresholdLoading } =
     useFeaturePermission('system.threshold');
+  const { isAllowed: canModel, isLoading: modelLoading } =
+    useFeaturePermission('system.model');
 
   const showPermissionTab = permissionLoading || canPermission;
   const showApprovalTab = approvalLoading || canApproval;
   const showUsersTab = userLoading || canUser;
   const showThresholdsTab = thresholdLoading || canThreshold;
+  const showModelsTab = modelLoading || canModel;
 
   const systemPermLoading =
-    permissionLoading || approvalLoading || userLoading || thresholdLoading;
+    permissionLoading || approvalLoading || userLoading || thresholdLoading || modelLoading;
 
   const visibleTabKeys = useMemo(() => {
     const keys: SystemTabKey[] = [];
@@ -41,8 +46,9 @@ function SystemTabs() {
     if (showApprovalTab) keys.push('approval');
     if (showUsersTab) keys.push('users');
     if (showThresholdsTab) keys.push('thresholds');
+    if (showModelsTab) keys.push('models');
     return keys;
-  }, [showPermissionTab, showApprovalTab, showUsersTab, showThresholdsTab]);
+  }, [showPermissionTab, showApprovalTab, showUsersTab, showThresholdsTab, showModelsTab]);
 
   const visibleSet = useMemo(() => new Set(visibleTabKeys), [visibleTabKeys]);
 
@@ -55,6 +61,7 @@ function SystemTabs() {
     if (location.pathname.includes('/system/approval')) return 'approval';
     if (location.pathname.includes('/system/users')) return 'users';
     if (location.pathname.includes('/system/thresholds')) return 'thresholds';
+    if (location.pathname.includes('/system/models')) return 'models';
     return 'permission';
   };
 
@@ -78,6 +85,10 @@ function SystemTabs() {
     }
     if (path.includes('/system/thresholds') && !visibleSet.has('thresholds')) {
       navigate(firstTabPath, { replace: true });
+      return;
+    }
+    if (path.includes('/system/models') && !visibleSet.has('models')) {
+      navigate(firstTabPath, { replace: true });
     }
   }, [systemPermLoading, visibleTabKeys.length, location.pathname, navigate, visibleSet, firstTabPath]);
 
@@ -94,8 +105,9 @@ function SystemTabs() {
         showApprovalTab ? { key: 'approval' as const, label: '가입 승인' } : null,
         showUsersTab ? { key: 'users' as const, label: '사용자 관리' } : null,
         showThresholdsTab ? { key: 'thresholds' as const, label: '기준수치 관리' } : null,
+        showModelsTab ? { key: 'models' as const, label: '제품 관리' } : null,
       ].filter(Boolean) as { key: SystemTabKey; label: string }[],
-    [showPermissionTab, showApprovalTab, showUsersTab, showThresholdsTab],
+    [showPermissionTab, showApprovalTab, showUsersTab, showThresholdsTab, showModelsTab],
   );
 
   if (systemPermLoading) {
@@ -128,6 +140,7 @@ function SystemTabs() {
       {safeKey === 'approval' && <SystemApprovalTab />}
       {safeKey === 'users' && <SystemUserTab />}
       {safeKey === 'thresholds' && <SystemThresholdTab />}
+      {safeKey === 'models' && <SystemModelTab />}
     </div>
   );
 }

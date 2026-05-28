@@ -91,6 +91,8 @@ export async function mockGetDashboardSummary(): Promise<DashboardSummary> {
     activeStores: 3,
     pendingStores: 1,
     inactiveStores: 1,
+    suspendedStores: 0,
+    deletedStores: 0,
     totalEquipments: 7,
     normalEquipments: 3,
     pendingAsRequests: 2,

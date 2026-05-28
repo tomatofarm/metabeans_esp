@@ -59,6 +59,7 @@ const defaultPermissions: Record<FeatureCode, Record<UserRole, boolean>> = {
   'system.approval': nonAdminRow(false),
   'system.user': nonAdminRow(false),
   'system.threshold': nonAdminRow(false),
+  'system.model': nonAdminRow(false),
 };
 
 // 권한 매트릭스를 mutable copy로 관리

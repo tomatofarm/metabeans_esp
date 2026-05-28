@@ -30,7 +30,7 @@ export default function SummaryCards({ data, showTotalStores = true, totalUsers 
             <div className="summary-card-value">{data?.totalStores ?? 0}</div>
             <div className="summary-card-label">전체 매장</div>
             <div className="summary-card-sub">
-              활성 {data?.activeStores ?? 0} · 대기 {data?.pendingStores ?? 0} · 비활성 {data?.inactiveStores ?? 0}
+              활성 {data?.activeStores ?? 0} · 가입대기 {data?.pendingStores ?? 0} · 비활성 {data?.inactiveStores ?? 0} · 정지 {data?.suspendedStores ?? 0} · 탈퇴 {data?.deletedStores ?? 0}
             </div>
           </div>
         </div>

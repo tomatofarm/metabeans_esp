@@ -44,6 +44,8 @@ interface SummaryApi {
   activeStoreCount: number;
   pendingStoreCount: number;
   inactiveStoreCount: number;
+  suspendedStoreCount?: number;
+  deletedStoreCount?: number;
   activeEquipmentCount: number;
   offlineEquipmentCount: number;
   asRequestPending: number;
@@ -141,6 +143,8 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     activeStores: s.activeStoreCount,
     pendingStores: s.pendingStoreCount,
     inactiveStores: s.inactiveStoreCount,
+    suspendedStores: s.suspendedStoreCount ?? 0,
+    deletedStores: s.deletedStoreCount ?? 0,
     totalEquipments: s.activeEquipmentCount + s.offlineEquipmentCount,
     normalEquipments: s.activeEquipmentCount,
     pendingAsRequests: s.asRequestPending + s.asRequestInProgress,

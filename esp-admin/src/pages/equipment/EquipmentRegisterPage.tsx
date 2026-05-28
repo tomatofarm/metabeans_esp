@@ -20,8 +20,6 @@ import {
   useCreateEquipment,
   useEquipmentModels,
   useStoreOptions,
-  useFloorOptions,
-  useGatewayOptions,
   useDealerOptions,
 } from '../../api/equipment.api';
 
@@ -29,39 +27,58 @@ const { Title } = Typography;
 
 const MAX_CONTROLLERS = 4;
 
+const FLOOR_CODE_RULES = [
+  { required: true, message: '층 코드를 입력하세요' },
+  {
+    pattern: /^[!-~]{1,10}$/,
+    message: '영문·숫자·특수문자(1~10자), 한글·공백 불가',
+  },
+  {
+    validator: (_: unknown, value: string) => {
+      if (value && /[/+#]/.test(value)) {
+        return Promise.reject('/ + # 문자는 사용할 수 없습니다');
+      }
+      return Promise.resolve();
+    },
+  },
+];
+
+const GW_DEVICE_ID_RULES = [
+  { required: true, message: '게이트웨이 ID를 입력하세요' },
+  {
+    pattern: /^[!-~]{1,50}$/,
+    message: '영문·숫자·특수문자(1~50자), 한글·공백 불가',
+  },
+  {
+    validator: (_: unknown, value: string) => {
+      if (value && /[/+#]/.test(value)) {
+        return Promise.reject('/ + # 문자는 사용할 수 없습니다');
+      }
+      return Promise.resolve();
+    },
+  },
+];
+
 export default function EquipmentRegisterPage() {
   const navigate = useNavigate();
   const { isAllowed: canCreate, isLoading: createPermLoading } = useFeaturePermission('equipment.create');
   const [form] = Form.useForm();
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
-  const [selectedFloorId, setSelectedFloorId] = useState<number | null>(null);
 
   const createMutation = useCreateEquipment();
   const { data: modelsData } = useEquipmentModels();
   const { data: storeOptions } = useStoreOptions();
-  const { data: floorOptions } = useFloorOptions(selectedStoreId);
-  const { data: gatewayOptions } = useGatewayOptions(selectedFloorId);
   const { data: dealerOptions } = useDealerOptions();
 
   const models = modelsData?.data ?? [];
 
   const handleStoreChange = (storeId: number) => {
     setSelectedStoreId(storeId);
-    setSelectedFloorId(null);
-    form.setFieldsValue({ floorId: undefined, controllers: [{ ctrlDeviceId: '', gatewayId: undefined }] });
-  };
-
-  const handleFloorChange = (floorId: number) => {
-    setSelectedFloorId(floorId);
-    form.setFieldsValue({
-      controllers: (form.getFieldValue('controllers') as { ctrlDeviceId: string; gatewayId?: number }[])?.map(
-        (c) => ({ ...c, gatewayId: undefined }),
-      ),
-    });
+    form.setFieldsValue({ floorCode: '', floorName: '', controllers: [{ ctrlDeviceId: '', gwDeviceId: '' }] });
   };
 
   const handleSubmit = async (values: Record<string, unknown>) => {
-    const controllers = (values.controllers as { ctrlDeviceId: string; gatewayId: number }[]) ?? [];
+    const controllers = (values.controllers as { ctrlDeviceId: string; gwDeviceId: string }[]) ?? [];
 
     if (controllers.length === 0) {
       message.error('최소 1개의 컨트롤러를 등록해야 합니다.');
@@ -72,7 +89,8 @@ export default function EquipmentRegisterPage() {
       equipmentSerial: values.equipmentSerial as string,
       mqttEquipmentId: values.mqttEquipmentId as string,
       storeId: values.storeId as number,
-      floorId: values.floorId as number,
+      floorCode: values.floorCode as string,
+      floorName: (values.floorName as string) || undefined,
       equipmentName: values.equipmentName as string,
       modelId: values.modelId as number,
       cellType: (values.cellType as string) || undefined,
@@ -86,7 +104,7 @@ export default function EquipmentRegisterPage() {
       dealerId: (values.dealerId as number) || undefined,
       controllers: controllers.map((c) => ({
         ctrlDeviceId: c.ctrlDeviceId,
-        gatewayId: c.gatewayId,
+        gwDeviceId: c.gwDeviceId,
       })),
     };
 
@@ -112,10 +130,10 @@ export default function EquipmentRegisterPage() {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ controllers: [{ ctrlDeviceId: '', gatewayId: undefined }] }}
+          initialValues={{ controllers: [{ ctrlDeviceId: '', gwDeviceId: '' }] }}
           style={{ maxWidth: 800 }}
         >
-          {/* 매장/위치 선택 */}
+          {/* 매장/위치 */}
           <Divider orientation="left">설치 위치</Divider>
           <Form.Item
             name="storeId"
@@ -133,18 +151,27 @@ export default function EquipmentRegisterPage() {
           </Form.Item>
 
           <Form.Item
-            name="floorId"
-            label="층"
-            rules={[{ required: true, message: '층을 선택하세요' }]}
+            name="floorCode"
+            label="층 코드"
+            rules={FLOOR_CODE_RULES}
+            extra="게이트웨이 펌웨어 floor_id와 정확히 일치. 예: 1F, B1, Floor2"
           >
-            <Select
-              placeholder="층 선택"
+            <Input
+              placeholder="예: 1F"
               disabled={!selectedStoreId}
-              onChange={handleFloorChange}
-              options={floorOptions?.map((f) => ({
-                value: f.floorId,
-                label: f.floorName ?? f.floorCode,
-              }))}
+              style={{ maxWidth: 200 }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="floorName"
+            label="층 이름 (선택)"
+            extra="화면 표시용. 한글 가능. 예: 1층 주방"
+          >
+            <Input
+              placeholder="예: 1층 주방"
+              disabled={!selectedStoreId}
+              style={{ maxWidth: 300 }}
             />
           </Form.Item>
 
@@ -227,18 +254,10 @@ export default function EquipmentRegisterPage() {
                     </Form.Item>
                     <Form.Item
                       {...restField}
-                      name={[name, 'gatewayId']}
-                      rules={[{ required: true, message: '게이트웨이 선택' }]}
+                      name={[name, 'gwDeviceId']}
+                      rules={GW_DEVICE_ID_RULES}
                     >
-                      <Select
-                        placeholder="게이트웨이"
-                        style={{ width: 200 }}
-                        disabled={!selectedFloorId}
-                        options={gatewayOptions?.map((g) => ({
-                          value: g.gatewayId,
-                          label: g.gwDeviceId,
-                        }))}
-                      />
+                      <Input placeholder="게이트웨이 ID (예: gw-001)" style={{ width: 220 }} />
                     </Form.Item>
                     {fields.length > 1 && (
                       <MinusCircleOutlined
@@ -252,9 +271,9 @@ export default function EquipmentRegisterPage() {
                   <Form.Item>
                     <Button
                       type="dashed"
-                      onClick={() => add({ ctrlDeviceId: '', gatewayId: undefined })}
+                      onClick={() => add({ ctrlDeviceId: '', gwDeviceId: '' })}
                       icon={<PlusOutlined />}
-                      style={{ width: 420 }}
+                      style={{ width: 460 }}
                     >
                       컨트롤러 추가 (최대 {MAX_CONTROLLERS}대)
                     </Button>

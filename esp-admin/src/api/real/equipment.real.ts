@@ -232,26 +232,59 @@ export async function fetchEquipmentDetail(
   return { success: true, data: mapDetailPayload(payload) };
 }
 
-export async function fetchEquipmentModels(): Promise<ApiResponse<EquipmentModel[]>> {
-  const rows = await apiRequest<
-    Array<{
-      modelId: number;
-      modelName: string;
-      manufacturer: string | null;
-      specifications: unknown;
-      isActive: boolean;
-      createdAt: string | Date;
-    }>
-  >({ method: 'get', url: '/equipment/models' });
-  const data: EquipmentModel[] = rows.map((m) => ({
+type ApiModelRow = {
+  modelId: number;
+  modelName: string;
+  manufacturer: string | null;
+  specifications: unknown;
+  isActive: boolean;
+  createdAt: string | Date;
+};
+
+function mapModelRow(m: ApiModelRow): EquipmentModel {
+  return {
     modelId: m.modelId,
     modelName: m.modelName,
     manufacturer: m.manufacturer ?? undefined,
     specifications: (m.specifications as Record<string, unknown>) ?? undefined,
     isActive: m.isActive,
     createdAt: iso(m.createdAt),
-  }));
-  return { success: true, data };
+  };
+}
+
+export async function fetchEquipmentModels(): Promise<ApiResponse<EquipmentModel[]>> {
+  const rows = await apiRequest<ApiModelRow[]>({ method: 'get', url: '/equipment/models' });
+  return { success: true, data: rows.map(mapModelRow) };
+}
+
+export async function fetchAllEquipmentModels(): Promise<ApiResponse<EquipmentModel[]>> {
+  const rows = await apiRequest<ApiModelRow[]>({ method: 'get', url: '/equipment/models?all=true' });
+  return { success: true, data: rows.map(mapModelRow) };
+}
+
+export async function createModel(data: {
+  modelName: string;
+  manufacturer?: string;
+}): Promise<ApiResponse<EquipmentModel>> {
+  const row = await apiRequest<ApiModelRow>({ method: 'post', url: '/equipment/models', data });
+  return { success: true, data: mapModelRow(row) };
+}
+
+export async function updateModel(
+  modelId: number,
+  data: { modelName?: string; manufacturer?: string; isActive?: boolean },
+): Promise<ApiResponse<EquipmentModel>> {
+  const row = await apiRequest<ApiModelRow>({
+    method: 'put',
+    url: `/equipment/models/${modelId}`,
+    data,
+  });
+  return { success: true, data: mapModelRow(row) };
+}
+
+export async function deleteModel(modelId: number): Promise<ApiResponse<{ deleted: boolean }>> {
+  await apiRequest<unknown>({ method: 'delete', url: `/equipment/models/${modelId}` });
+  return { success: true, data: { deleted: true } };
 }
 
 type StoreTreeRow = {
@@ -320,7 +353,8 @@ export async function createEquipment(req: EquipmentCreateRequest): Promise<ApiR
       equipmentSerial: req.equipmentSerial,
       mqttEquipmentId: req.mqttEquipmentId,
       storeId: req.storeId,
-      floorId: req.floorId,
+      floorCode: req.floorCode,
+      floorName: req.floorName,
       equipmentName: req.equipmentName,
       modelId: req.modelId,
       cellType: req.cellType,
