@@ -62,6 +62,11 @@ function IssueItemCard({
         <div className="issue-store">{item.storeName}</div>
         <div className="issue-equip">
           <a onClick={() => onEquipmentClick?.(item.equipmentId, item.storeId)}>{item.equipmentName}</a>
+          {item.controllerName && (
+            <span style={{ color: 'var(--color-mid)', fontWeight: 400 }}>
+              {' '}&middot; {item.controllerName}
+            </span>
+          )}
           {item.currentValue !== undefined && (
             <span style={{ color: 'var(--color-mid)', fontWeight: 400 }}>
               {' '}&middot; {item.currentValue}{item.unit ? ` ${item.unit}` : ''}

@@ -39,6 +39,8 @@ export interface DashboardIssueItem {
   storeName: string;
   equipmentId: number;
   equipmentName: string;
+  controllerId?: number;
+  controllerName?: string;
   issueType: DashboardIssueType;
   severity: StatusLevel;
   currentValue?: number;

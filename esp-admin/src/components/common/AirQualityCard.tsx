@@ -112,13 +112,6 @@ function IAQGrid({ data }: { data: GatewaySensorData }) {
       icon: <ExperimentOutlined />,
       gradient: 'linear-gradient(135deg, #14B8A6, #2DD4BF)',
     },
-    {
-      label: 'NOx',
-      value: data.noxIndex,
-      unit: '',
-      icon: <ExperimentOutlined />,
-      gradient: 'linear-gradient(135deg, #8B5CF6, #A78BFA)',
-    },
   ];
 
   return (

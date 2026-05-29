@@ -237,10 +237,14 @@ export default function Sidebar() {
     return [];
   }, [selectedControllerId, selectedEquipmentId, selectedStoreId]);
 
-  // 대시보드 등 외부에서 장비가 선택될 때 부모 매장 노드 자동 펼치기
+  // 대시보드 등 외부에서 장비/컨트롤러가 선택될 때 부모 노드 자동 펼치기
   useEffect(() => {
     if (selectedEquipmentId == null) return;
     const keysToAdd: React.Key[] = [];
+    // 컨트롤러가 선택된 경우 equipment 노드도 펼쳐야 controller 노드가 트리에 보임
+    if (selectedControllerId != null) {
+      keysToAdd.push(`equipment-${selectedEquipmentId}`);
+    }
     for (const store of roleFilteredStores) {
       for (const fl of store.floors) {
         for (const eq of floorEquipments(fl)) {
@@ -256,7 +260,7 @@ export default function Sidebar() {
       for (const k of keysToAdd) if (!next.includes(k)) next.push(k);
       return next;
     });
-  }, [selectedEquipmentId, roleFilteredStores]);
+  }, [selectedEquipmentId, selectedControllerId, roleFilteredStores]);
 
   const handleSelect = (selectedKeys: React.Key[]) => {
     // 같은 매장/장비/컨트롤러를 다시 눌러 선택 해제된 경우 → 역할별 기본 대시보드로 복귀

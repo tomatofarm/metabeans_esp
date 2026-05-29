@@ -97,6 +97,12 @@ const issueColumns = (onEquipmentClick: (equipmentId: number, storeId: number) =
     ),
   },
   {
+    title: '컨트롤러',
+    key: 'controllerName',
+    width: 120,
+    render: (_: unknown, record: DashboardIssueItem) => record.controllerName ?? '-',
+  },
+  {
     title: '상태',
     dataIndex: 'severity',
     key: 'severity',
