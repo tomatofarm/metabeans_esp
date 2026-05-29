@@ -27,7 +27,9 @@ v3.2에서 `pp_spark` 범위가 **0-99 → 0-9999**로 확대됐습니다 (파�
 
 ### 1. DB 기준값 마이그레이션
 
-`monitoring_thresholds` 테이블의 `metric_name = 'pp_spark'`(또는 '스파크') 행을 아래 값으로 업데이트:
+#### 1-1. 스파크 스케일 수정
+
+`monitoring_thresholds` 테이블의 스파크 행:
 
 | 필드 | 구 값 (0-99 스케일) | 신 값 (0-9999 스케일) |
 |------|---------------------|----------------------|
@@ -40,7 +42,38 @@ SET yellow_min = 3000, red_min = 7000
 WHERE metric_name IN ('스파크', 'pp_spark', 'spark');
 ```
 
-> 실제 컬럼명·테이블명은 백엔드 스키마에 맞게 조정 필요.
+#### 1-2. PM2.5 / PM10 기준값 확인 및 설정
+
+먼지 제거 성능 화면 신규 추가에 따라, PM2.5/PM10 기준값이 아래 범위로 설정되어 있는지 확인 요청드립니다.
+
+**PM2.5 권장 기준값 (WHO 기준 참고):**
+
+| 상태 | 범위 | `yellow_min` / `red_min` 설정 |
+|------|------|-------------------------------|
+| 좋음 (Green) | PM2.5 < 26 µg/m³ | — |
+| 보통 (Yellow) | 26 ≤ PM2.5 < 51 µg/m³ | `yellow_min = 26` |
+| 점검 필요 (Red) | PM2.5 ≥ 51 µg/m³ | `red_min = 51` |
+
+**PM10 권장 기준값:**
+
+| 상태 | 범위 | `yellow_min` / `red_min` 설정 |
+|------|------|-------------------------------|
+| 좋음 (Green) | PM10 < 51 µg/m³ | — |
+| 보통 (Yellow) | 51 ≤ PM10 < 101 µg/m³ | `yellow_min = 51` |
+| 점검 필요 (Red) | PM10 ≥ 101 µg/m³ | `red_min = 101` |
+
+```sql
+UPDATE monitoring_thresholds
+SET yellow_min = 26, red_min = 51
+WHERE metric_name IN ('PM2.5', 'pm2_5');
+
+UPDATE monitoring_thresholds
+SET yellow_min = 51, red_min = 101
+WHERE metric_name IN ('PM10', 'pm10');
+```
+
+> 실제 컬럼명·테이블명은 백엔드 스키마에 맞게 조정 필요.  
+> 위 수치는 권장값이며, 현장 환경에 맞게 조정 가능합니다.
 
 ### 2. 기준수치 관리 UI 입력 범위 안내 수정
 
@@ -80,7 +113,7 @@ API 응답에 `unit` 또는 `hint` 필드로 범위 안내를 추가해 주세�
 | 화재감지 센서 (`FireSensorSection`) | ✅ 정상 반영 |
 | 장비별 대시보드 (`EquipmentDashboardPage`) | ✅ **이번 수정으로 정상 반영** |
 
-PM2.5, PM10은 `EquipmentDashboardPage`에서 색상 판정 없이 수치만 표시하므로 해당 없음.
+PM2.5, PM10은 `DustRemovalSection`(먼지 제거 성능)에서 기준수치 설정값 반영 — 장비 기본 상태 카드에서 분리.
 
 ---
 
@@ -90,4 +123,5 @@ PM2.5, PM10은 `EquipmentDashboardPage`에서 색상 판정 없이 수치만 표
 |------|------|
 | `esp-admin/src/utils/statusHelper.ts` | `getSparkLevel`, `getBoardTempLevel`, `getInletTempLevel` 판정 함수 |
 | `esp-admin/src/pages/dashboard/EquipmentDashboardPage.tsx` | 장비별 대시보드 — 이번 수정 파일 |
-| `esp-admin/src/pages/equipment/components/ControllerBasicStatusSection.tsx` | 실시간 모니터링 상태 표시 |
+| `esp-admin/src/pages/equipment/components/ControllerBasicStatusSection.tsx` | 실시간 모니터링 — 장비 기본 상태 (PM2.5/PM10 제거됨) |
+| `esp-admin/src/pages/equipment/components/DustRemovalSection.tsx` | 먼지 제거 성능 신규 섹션 (PM2.5 + PM10, 기준수치 반영) |

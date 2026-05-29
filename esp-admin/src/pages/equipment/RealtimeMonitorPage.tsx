@@ -10,6 +10,7 @@ import { SENSOR_INTERVAL_MS } from '../../utils/constants';
 import ControllerBasicStatusSection from './components/ControllerBasicStatusSection';
 import FilterCheckSection from './components/FilterCheckSection';
 import FireSensorSection from './components/FireSensorSection';
+import DustRemovalSection from './components/DustRemovalSection';
 import MonitoringEsgSection from './components/MonitoringEsgSection';
 import BoardTempChart from '../../components/charts/BoardTempChart';
 import SparkChart from '../../components/charts/SparkChart';
@@ -28,6 +29,8 @@ export default function RealtimeMonitorPage() {
     useFeaturePermission('monitoring.fire_detection');
   const { isAllowed: canFilterStatus, isLoading: filterLoading } =
     useFeaturePermission('monitoring.filter_status');
+  const { isAllowed: canDustRemoval, isLoading: dustLoading } =
+    useFeaturePermission('monitoring.dust_removal');
   const { isAllowed: canBoardTemp, isLoading: boardTempLoading } =
     useFeaturePermission('monitoring.board_temp');
   const { isAllowed: canSpark, isLoading: sparkLoading } = useFeaturePermission('monitoring.spark');
@@ -36,6 +39,7 @@ export default function RealtimeMonitorPage() {
   const showEsg = esgLoading || canEsg;
   const showFireDetection = fireLoading || canFireDetection;
   const showFilterStatus = filterLoading || canFilterStatus;
+  const showDustRemoval = dustLoading || canDustRemoval;
   const showBoardTemp = boardTempLoading || canBoardTemp;
   const showSpark = sparkLoading || canSpark;
 
@@ -44,6 +48,7 @@ export default function RealtimeMonitorPage() {
     esgLoading ||
     fireLoading ||
     filterLoading ||
+    dustLoading ||
     boardTempLoading ||
     sparkLoading;
 
@@ -87,7 +92,7 @@ export default function RealtimeMonitorPage() {
     return historyData.filter((p) => p.controllerName === selectedCtrl.controllerName);
   }, [historyData, selectedControllerId, realtimeData]);
 
-  const hasTopRow = showEquipmentStatus || showEsg || showFireDetection || showFilterStatus;
+  const hasTopRow = showEquipmentStatus || showEsg || showFireDetection || showFilterStatus || showDustRemoval;
   const hasChartRow = showBoardTemp || showSpark;
 
   const hasAnyPanel = useMemo(() => {
@@ -121,7 +126,7 @@ export default function RealtimeMonitorPage() {
   const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString('ko-KR') : '-';
 
   const hasLeftCol = showEquipmentStatus || showEsg;
-  const hasRightCol = showFireDetection || showFilterStatus;
+  const hasRightCol = showFireDetection || showFilterStatus || showDustRemoval;
 
   return (
     <div>
@@ -145,8 +150,6 @@ export default function RealtimeMonitorPage() {
                     thresholds={{
                       boardTemp: monitoringThresholdByName.get('보드 온도'),
                       spark: monitoringThresholdByName.get('스파크'),
-                      pm25: monitoringThresholdByName.get('PM2.5'),
-                      pm10: monitoringThresholdByName.get('PM10'),
                     }}
                   />
                 )}
@@ -182,6 +185,13 @@ export default function RealtimeMonitorPage() {
                           }
                         : undefined
                     }
+                  />
+                )}
+                {showDustRemoval && (
+                  <DustRemovalSection
+                    controllers={filteredControllers}
+                    pm25Threshold={monitoringThresholdByName.get('PM2.5')}
+                    pm10Threshold={monitoringThresholdByName.get('PM10')}
                   />
                 )}
               </div>

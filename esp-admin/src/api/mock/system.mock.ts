@@ -42,6 +42,7 @@ const defaultPermissions: Record<FeatureCode, Record<UserRole, boolean>> = {
   'monitoring.board_temp': nonAdminRow(true),
   'monitoring.spark': nonAdminRow(true),
   'monitoring.filter_status': nonAdminRow(true),
+  'monitoring.dust_removal': nonAdminRow(true),
   'monitoring.fire_detection': nonAdminRow(true),
   'monitoring.esg': nonAdminRow(true),
   'monitoring.equipment_status': nonAdminRow(true),

@@ -311,34 +311,74 @@ export default function SystemThresholdTab() {
                 </div>
               </div>
 
-              {'yellowMin' in t && (
-                <div className="threshold-input-group">
-                  <div className="threshold-input-label">주의 기준 (Yellow)</div>
-                  <div className="threshold-input-wrap">
-                    <InputNumber
-                      value={t.yellowMin ?? null}
-                      onChange={(v) => handleMonitoringChange(t.thresholdId, 'yellowMin', v)}
-                      min={0}
-                      style={{ width: '100%' }}
-                      addonAfter={t.unit}
-                    />
+              {t.metricName.includes('PM') ? (
+                <>
+                  <div className="threshold-input-group">
+                    <div className="threshold-input-label" style={{ color: '#52c41a' }}>좋음 (Green)</div>
+                    <div className="threshold-input-wrap" style={{ paddingTop: 6, fontSize: 13, color: '#8c8c8c' }}>
+                      {t.yellowMin != null ? `${t.unit} < ${t.yellowMin}` : '—'}
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {'redMin' in t && (
-                <div className="threshold-input-group">
-                  <div className="threshold-input-label">위험 기준 (Red)</div>
-                  <div className="threshold-input-wrap">
-                    <InputNumber
-                      value={t.redMin ?? null}
-                      onChange={(v) => handleMonitoringChange(t.thresholdId, 'redMin', v)}
-                      min={0}
-                      style={{ width: '100%' }}
-                      addonAfter={t.unit}
-                    />
-                  </div>
-                </div>
+                  {'yellowMin' in t && (
+                    <div className="threshold-input-group">
+                      <div className="threshold-input-label" style={{ color: '#faad14' }}>보통 기준 (Yellow)</div>
+                      <div className="threshold-input-wrap">
+                        <InputNumber
+                          value={t.yellowMin ?? null}
+                          onChange={(v) => handleMonitoringChange(t.thresholdId, 'yellowMin', v)}
+                          min={0}
+                          style={{ width: '100%' }}
+                          addonAfter={t.unit}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {'redMin' in t && (
+                    <div className="threshold-input-group">
+                      <div className="threshold-input-label" style={{ color: '#ff4d4f' }}>점검 필요 기준 (Red)</div>
+                      <div className="threshold-input-wrap">
+                        <InputNumber
+                          value={t.redMin ?? null}
+                          onChange={(v) => handleMonitoringChange(t.thresholdId, 'redMin', v)}
+                          min={0}
+                          style={{ width: '100%' }}
+                          addonAfter={t.unit}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {'yellowMin' in t && (
+                    <div className="threshold-input-group">
+                      <div className="threshold-input-label">주의 기준 (Yellow)</div>
+                      <div className="threshold-input-wrap">
+                        <InputNumber
+                          value={t.yellowMin ?? null}
+                          onChange={(v) => handleMonitoringChange(t.thresholdId, 'yellowMin', v)}
+                          min={0}
+                          style={{ width: '100%' }}
+                          addonAfter={t.unit}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {'redMin' in t && (
+                    <div className="threshold-input-group">
+                      <div className="threshold-input-label">위험 기준 (Red)</div>
+                      <div className="threshold-input-wrap">
+                        <InputNumber
+                          value={t.redMin ?? null}
+                          onChange={(v) => handleMonitoringChange(t.thresholdId, 'redMin', v)}
+                          min={0}
+                          style={{ width: '100%' }}
+                          addonAfter={t.unit}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );

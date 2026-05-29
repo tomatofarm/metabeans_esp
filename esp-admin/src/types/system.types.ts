@@ -16,6 +16,7 @@ export type FeatureCode =
   | 'monitoring.board_temp'
   | 'monitoring.spark'
   | 'monitoring.filter_status'
+  | 'monitoring.dust_removal'
   | 'monitoring.fire_detection'
   | 'monitoring.esg'
   | 'monitoring.equipment_status'
@@ -60,6 +61,7 @@ export const FEATURE_CODE_LIST: FeatureCodeInfo[] = [
   { code: 'monitoring.board_temp', label: '보드 온도 추이', category: '장비관리' },
   { code: 'monitoring.spark', label: '스파크 발생 현황', category: '장비관리' },
   { code: 'monitoring.filter_status', label: '필터 점검 상태', category: '장비관리' },
+  { code: 'monitoring.dust_removal', label: '먼지 제거 성능', category: '장비관리' },
   { code: 'monitoring.fire_detection', label: '화재 감지 센서', category: '장비관리' },
   { code: 'monitoring.esg', label: 'ESG 지표 (파워팩별)', category: '장비관리' },
   { code: 'monitoring.equipment_status', label: '장비 기본 상태', category: '장비관리' },

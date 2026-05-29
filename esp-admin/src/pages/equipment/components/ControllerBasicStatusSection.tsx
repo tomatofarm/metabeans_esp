@@ -5,8 +5,6 @@ import {
   getConnectionStatusFromEpoch,
   getBoardTempLevel,
   getSparkLevel,
-  getPM25Level,
-  getPM10Level,
   getPowerStatus,
 } from '../../../utils/statusHelper';
 import { formatEpoch } from '../../../utils/formatters';
@@ -23,12 +21,6 @@ function statusLabel(level: StatusLevel): string {
   if (level === 'green') return '정상';
   if (level === 'yellow') return '주의';
   return '위험';
-}
-
-function dustLabel(level: StatusLevel): string {
-  if (level === 'green') return '좋음';
-  if (level === 'yellow') return '보통';
-  return '점검 필요';
 }
 
 interface MetricCardProps {
@@ -59,8 +51,6 @@ interface Props {
   thresholds?: {
     boardTemp?: { yellowMin?: number; redMin?: number };
     spark?: { yellowMin?: number; redMin?: number };
-    pm25?: { yellowMin?: number; redMin?: number };
-    pm10?: { yellowMin?: number; redMin?: number };
   };
 }
 
@@ -86,16 +76,6 @@ export default function ControllerBasicStatusSection({ controllers, thresholds }
           sd.ppSpark,
           thresholds?.spark?.yellowMin ?? 3000,
           thresholds?.spark?.redMin ?? 7000,
-        );
-        const pm25Level = getPM25Level(
-          sd.pm25,
-          thresholds?.pm25?.yellowMin ?? 35,
-          thresholds?.pm25?.redMin ?? 75,
-        );
-        const pm10Level = getPM10Level(
-          sd.pm10,
-          thresholds?.pm10?.yellowMin ?? 75,
-          thresholds?.pm10?.redMin ?? 100,
         );
 
         return (
@@ -133,20 +113,6 @@ export default function ControllerBasicStatusSection({ controllers, thresholds }
                 value={sd.ppSpark}
                 level={sparkLevel}
                 badge={statusLabel(sparkLevel)}
-              />
-              <MetricCard
-                name="PM2.5"
-                value={sd.pm25.toFixed(1)}
-                unit="µg/m³"
-                level={pm25Level}
-                badge={dustLabel(pm25Level)}
-              />
-              <MetricCard
-                name="PM10"
-                value={sd.pm10.toFixed(1)}
-                unit="µg/m³"
-                level={pm10Level}
-                badge={dustLabel(pm10Level)}
               />
             </div>
           </div>
