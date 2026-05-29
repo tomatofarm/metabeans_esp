@@ -462,134 +462,93 @@ export default function SystemThresholdTab() {
       </div>
 
       {/* 청소/필터 판단 기준 */}
-      <div className="threshold-card">
-        <div className="threshold-card-header">
-          <div className="threshold-icon cleaning">
-            <ClearOutlined />
-          </div>
-          <div>
-            <div className="threshold-card-name">청소/필터 판단 기준</div>
-            <div className="threshold-card-desc">
-              필터 청소 필요 여부를 판단하는 기준값입니다. (기본 장비 전체 적용)
-            </div>
-          </div>
-        </div>
-        {localData.cleaningThresholds.map((ct) => (
-          <div
-            key={`${ct.equipmentId}-${ct.thresholdId}`}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: 16,
-            }}
-          >
-            {ct.equipmentDisplayName ? (
-              <div style={{ gridColumn: '1 / -1', marginBottom: 4 }}>
-                <Text strong>{ct.equipmentDisplayName}</Text>
+      {(() => {
+        const ct = localData.cleaningThresholds[0];
+        if (!ct) return null;
+        const updateAll = (patch: Partial<typeof ct>) => {
+          setLocalData((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              cleaningThresholds: prev.cleaningThresholds.map((t) => ({ ...t, ...patch })),
+            };
+          });
+        };
+        return (
+          <div className="threshold-card">
+            <div className="threshold-card-header">
+              <div className="threshold-icon cleaning">
+                <ClearOutlined />
               </div>
-            ) : null}
-            <div className="threshold-input-group">
-              <div className="threshold-input-label">스파크 임계값 (0-9999, pp_spark 스케일)</div>
-              <div className="threshold-input-wrap">
-                <InputNumber
-                  value={ct.sparkThreshold}
-                  onChange={(v) => {
-                    setLocalData((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        cleaningThresholds: prev.cleaningThresholds.map((t) =>
-                          t.equipmentId === ct.equipmentId
-                            ? { ...t, sparkThreshold: v ?? 700 }
-                            : t,
-                        ),
-                      };
-                    });
-                  }}
-                  min={0}
-                  max={9999}
-                  style={{ width: '100%' }}
-                />
+              <div>
+                <div className="threshold-card-name">청소/필터 판단 기준</div>
+                <div className="threshold-card-desc">
+                  필터 청소 필요 여부를 판단하는 기준값입니다. (기본 장비 전체 적용)
+                </div>
               </div>
             </div>
-            <div className="threshold-input-group">
-              <div className="threshold-input-label">스파크 시간 창 (초)</div>
-              <div className="threshold-input-wrap">
-                <InputNumber
-                  value={ct.sparkTimeWindow}
-                  onChange={(v) => {
-                    setLocalData((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        cleaningThresholds: prev.cleaningThresholds.map((t) =>
-                          t.equipmentId === ct.equipmentId
-                            ? { ...t, sparkTimeWindow: v ?? 600 }
-                            : t,
-                        ),
-                      };
-                    });
-                  }}
-                  min={60}
-                  max={3600}
-                  step={60}
-                  style={{ width: '100%' }}
-                  addonAfter="초"
-                />
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: 16,
+              }}
+            >
+              <div className="threshold-input-group">
+                <div className="threshold-input-label">스파크 임계값 (0-9999, pp_spark 스케일)</div>
+                <div className="threshold-input-wrap">
+                  <InputNumber
+                    value={ct.sparkThreshold}
+                    onChange={(v) => updateAll({ sparkThreshold: v ?? 700 })}
+                    min={0}
+                    max={9999}
+                    style={{ width: '100%' }}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="threshold-input-group">
-              <div className="threshold-input-label">차압 기준 (Pa)</div>
-              <div className="threshold-input-wrap">
-                <InputNumber
-                  value={ct.pressureBase}
-                  onChange={(v) => {
-                    setLocalData((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        cleaningThresholds: prev.cleaningThresholds.map((t) =>
-                          t.equipmentId === ct.equipmentId
-                            ? { ...t, pressureBase: v ?? undefined }
-                            : t,
-                        ),
-                      };
-                    });
-                  }}
-                  min={0}
-                  style={{ width: '100%' }}
-                  addonAfter="Pa"
-                />
+              <div className="threshold-input-group">
+                <div className="threshold-input-label">스파크 시간 창 (초)</div>
+                <div className="threshold-input-wrap">
+                  <InputNumber
+                    value={ct.sparkTimeWindow}
+                    onChange={(v) => updateAll({ sparkTimeWindow: v ?? 600 })}
+                    min={60}
+                    max={3600}
+                    step={60}
+                    style={{ width: '100%' }}
+                    addonAfter="초"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="threshold-input-group">
-              <div className="threshold-input-label">차압 증가율 (%)</div>
-              <div className="threshold-input-wrap">
-                <InputNumber
-                  value={ct.pressureRate}
-                  onChange={(v) => {
-                    setLocalData((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        cleaningThresholds: prev.cleaningThresholds.map((t) =>
-                          t.equipmentId === ct.equipmentId
-                            ? { ...t, pressureRate: v ?? 10 }
-                            : t,
-                        ),
-                      };
-                    });
-                  }}
-                  min={0}
-                  max={100}
-                  style={{ width: '100%' }}
-                  addonAfter="%"
-                />
+              <div className="threshold-input-group">
+                <div className="threshold-input-label">차압 기준 (Pa)</div>
+                <div className="threshold-input-wrap">
+                  <InputNumber
+                    value={ct.pressureBase}
+                    onChange={(v) => updateAll({ pressureBase: v ?? undefined })}
+                    min={0}
+                    style={{ width: '100%' }}
+                    addonAfter="Pa"
+                  />
+                </div>
+              </div>
+              <div className="threshold-input-group">
+                <div className="threshold-input-label">차압 증가율 (%)</div>
+                <div className="threshold-input-wrap">
+                  <InputNumber
+                    value={ct.pressureRate}
+                    onChange={(v) => updateAll({ pressureRate: v ?? 10 })}
+                    min={0}
+                    max={100}
+                    style={{ width: '100%' }}
+                    addonAfter="%"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        );
+      })()}
     </div>
   );
 }
