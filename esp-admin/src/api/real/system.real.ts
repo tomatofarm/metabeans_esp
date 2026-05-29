@@ -437,7 +437,7 @@ function inferMetricUnit(metricName: string): string {
 
 export async function fetchThresholdSettings(storeId: number | null = null): Promise<ApiResponse<ThresholdSettings>> {
   const qs = storeId != null ? `?storeId=${storeId}` : '';
-  const [cleaningRows, monitoringRows, damperRows, sparkBase] = await Promise.all([
+  const [cleaningRows, monitoringRows, damperRows] = await Promise.all([
     apiRequest<ApiCleaningThresholdRow[]>({
       method: 'get',
       url: `/system/thresholds/cleaning${qs}`,
@@ -449,10 +449,6 @@ export async function fetchThresholdSettings(storeId: number | null = null): Pro
     apiRequest<ApiDamperAutoRow[]>({
       method: 'get',
       url: `/system/thresholds/damper-auto${qs}`,
-    }),
-    apiRequest<{ sparkBaseTime: number }>({
-      method: 'get',
-      url: '/system/thresholds/spark-base-time',
     }),
   ]);
   return {
@@ -487,7 +483,6 @@ export async function fetchThresholdSettings(storeId: number | null = null): Pro
         targetVelocity: r.targetVelocity,
         updatedAt: iso(r.updatedAt),
       })),
-      sparkBaseTime: sparkBase.sparkBaseTime,
     },
   };
 }
@@ -498,13 +493,6 @@ export async function updateThresholds(
   const storeId = data.storeId ?? null;
   const qs = storeId != null ? `?storeId=${storeId}` : '';
 
-  if (data.sparkBaseTime !== undefined) {
-    await apiRequest<unknown>({
-      method: 'put',
-      url: '/system/thresholds/spark-base-time',
-      data: { sparkBaseTime: data.sparkBaseTime },
-    });
-  }
   if (data.monitoringThresholds?.length) {
     await apiRequest<unknown>({
       method: 'put',

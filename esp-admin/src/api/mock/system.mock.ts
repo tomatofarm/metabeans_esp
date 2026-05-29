@@ -584,7 +584,6 @@ function getDamperAutoSettingsSnapshot(): DamperAutoSetting[] {
 
 let mockDamperAutoSettings: DamperAutoSetting[] = [];
 
-let mockSparkBaseTime = 600; // 기본 10분 (초)
 
 export async function mockGetThresholds(storeId: number | null = null): Promise<ApiResponse<ThresholdSettings>> {
   const allDamper = getDamperAutoSettingsSnapshot();
@@ -598,7 +597,6 @@ export async function mockGetThresholds(storeId: number | null = null): Promise<
       monitoringThresholds: mockMonitoringThresholds.map((t) => ({ ...t, storeId: storeId ?? undefined })),
       cleaningThresholds: mockCleaningThresholds.map((t) => ({ ...t, storeId: storeId ?? undefined })),
       damperAutoSettings,
-      sparkBaseTime: mockSparkBaseTime,
     }),
     400,
   );
@@ -638,9 +636,6 @@ export async function mockUpdateThresholds(
     } else {
       mockDamperAutoSettings = incoming;
     }
-  }
-  if (data.sparkBaseTime !== undefined) {
-    mockSparkBaseTime = data.sparkBaseTime;
   }
   return mockDelay(wrapResponse({ success: true }), 500);
 }

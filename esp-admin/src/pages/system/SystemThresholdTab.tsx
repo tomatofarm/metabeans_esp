@@ -2,7 +2,6 @@ import { useEffect, useState, type ReactNode } from 'react';
 import {
   InputNumber,
   Button,
-  Slider,
   Table,
   message,
   Spin,
@@ -33,7 +32,6 @@ import {
 } from '../../types/system.types';
 
 const { Text } = Typography;
-const DEFAULT_SPARK_BASE_TIME_SEC = 600;
 const DEFAULT_CLEANING_THRESHOLD = {
   sparkThreshold: 700,
   sparkTimeWindow: 600,
@@ -122,13 +120,6 @@ export default function SystemThresholdTab() {
     });
   };
 
-  const handleSparkBaseTimeChange = (value: number | null) => {
-    setLocalData((prev) => {
-      if (!prev) return prev;
-      return { ...prev, sparkBaseTime: value ?? 600 };
-    });
-  };
-
   const handleDamperAutoChange = (
     settingId: number,
     field: 'targetFlowCmh' | 'targetVelocity',
@@ -194,7 +185,6 @@ export default function SystemThresholdTab() {
           if (!d) return t;
           return { ...t, yellowMin: d.yellowMin, redMin: d.redMin };
         }),
-        sparkBaseTime: DEFAULT_SPARK_BASE_TIME_SEC,
         damperAutoSettings: prev.damperAutoSettings.map((s) => ({
           ...s,
           targetFlowCmh: DAMPER_AUTO_SYSTEM_DEFAULT_FLOW_CMH,
@@ -353,52 +343,6 @@ export default function SystemThresholdTab() {
             </div>
           );
         })}
-      </div>
-
-      {/* 스파크 기준 시간 */}
-      <div className="threshold-card" style={{ marginBottom: 20 }}>
-        <div className="threshold-card-header">
-          <div className="threshold-icon spark">
-            <ThunderboltOutlined />
-          </div>
-          <div>
-            <div className="threshold-card-name">튜닝 변수 — 스파크 기준 시간</div>
-            <div className="threshold-card-desc">
-              스파크가 이 시간(초) 이상 연속 발생 시 알람이 트리거됩니다.
-            </div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Text>기준 시간:</Text>
-          <Slider
-            value={localData.sparkBaseTime}
-            onChange={handleSparkBaseTimeChange}
-            min={60}
-            max={3600}
-            step={60}
-            style={{ flex: 1, maxWidth: 400 }}
-            marks={{
-              60: '1분',
-              300: '5분',
-              600: '10분',
-              1200: '20분',
-              1800: '30분',
-              3600: '60분',
-            }}
-          />
-          <InputNumber
-            value={localData.sparkBaseTime}
-            onChange={handleSparkBaseTimeChange}
-            min={60}
-            max={3600}
-            step={60}
-            style={{ width: 120 }}
-            addonAfter="초"
-          />
-          <Text type="secondary">
-            ({Math.floor(localData.sparkBaseTime / 60)}분)
-          </Text>
-        </div>
       </div>
 
       {/* 댐퍼/팬 자동제어 기본값 */}

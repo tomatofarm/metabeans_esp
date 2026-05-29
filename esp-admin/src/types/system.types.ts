@@ -237,7 +237,6 @@ export interface ThresholdSettings {
   monitoringThresholds: MonitoringThreshold[];
   cleaningThresholds: CleaningThreshold[];
   damperAutoSettings: DamperAutoSetting[];
-  sparkBaseTime: number; // 스파크 기준 시간 (초)
 }
 
 // 알람 심각도
