@@ -107,7 +107,9 @@ const issueColumns = (onEquipmentClick: (equipmentId: number, storeId: number) =
     dataIndex: 'severity',
     key: 'severity',
     width: 80,
-    render: (level: DashboardIssueItem['severity']) => <StatusTag level={level} />,
+    render: (level: DashboardIssueItem['severity'], record: DashboardIssueItem) => (
+      <StatusTag level={level} label={record.issueType === 'COMM_ERROR' ? '끊김' : undefined} />
+    ),
   },
   {
     title: '현재값',

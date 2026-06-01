@@ -75,7 +75,10 @@ function IssueItemCard({
         </div>
         <div className="issue-time">{formatDateTime(item.occurredAt)}</div>
       </div>
-      <StatusTag level={item.severity} />
+      <StatusTag
+        level={item.severity}
+        label={item.issueType === 'COMM_ERROR' ? '끊김' : undefined}
+      />
     </div>
   );
 }

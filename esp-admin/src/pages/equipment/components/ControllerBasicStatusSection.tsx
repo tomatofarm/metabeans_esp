@@ -86,7 +86,7 @@ export default function ControllerBasicStatusSection({ controllers, thresholds }
             </div>
             <div
               className="sensor-grid"
-              style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
+              style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}
             >
               <MetricCard
                 name="연결 상태"
