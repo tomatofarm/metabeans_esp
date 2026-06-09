@@ -20,6 +20,7 @@ const { Text } = Typography;
 export default function RealtimeMonitorPage() {
   const selectedEquipmentId = useUiStore((s) => s.selectedEquipmentId);
   const selectedControllerId = useUiStore((s) => s.selectedControllerId);
+  const selectedStoreId = useUiStore((s) => s.selectedStoreId);
   const role = useAuthStore((s) => s.user?.role);
 
   const { isAllowed: canEquipmentStatus, isLoading: equipmentStatusLoading } =
@@ -54,7 +55,7 @@ export default function RealtimeMonitorPage() {
 
   const { data: realtimeData, isLoading, dataUpdatedAt } = useRealtimeSensorData(selectedEquipmentId);
   const { data: historyData } = useSensorHistory(selectedEquipmentId);
-  const { data: thresholdResponse } = useThresholdSettings('all');
+  const { data: thresholdResponse } = useThresholdSettings(selectedStoreId ?? 'all');
 
   const monitoringThresholdByName = useMemo(() => {
     const map = new Map<string, { yellowMin?: number; redMin?: number }>();

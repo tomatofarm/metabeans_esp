@@ -60,13 +60,13 @@ export default function DustRemovalSection({ controllers, pm25Threshold, pm10Thr
         const sd = ctrl.sensorData;
         const pm25Level = getPM25Level(
           sd.pm25,
-          pm25Threshold?.yellowMin ?? 26,
-          pm25Threshold?.redMin ?? 51,
+          pm25Threshold?.yellowMin ?? 35,
+          pm25Threshold?.redMin ?? 75,
         );
         const pm10Level = getPM10Level(
           sd.pm10,
-          pm10Threshold?.yellowMin ?? 51,
-          pm10Threshold?.redMin ?? 101,
+          pm10Threshold?.yellowMin ?? 75,
+          pm10Threshold?.redMin ?? 100,
         );
 
         return (

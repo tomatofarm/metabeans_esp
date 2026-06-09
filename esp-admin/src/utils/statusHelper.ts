@@ -125,7 +125,7 @@ export function getPowerStatus(ppPower: number): StatusLevel {
 export function getPM25Level(
   pm25: number,
   yellowMax = 35,
-  redMin = 50,
+  redMin = 75,
 ): StatusLevel {
   if (pm25 >= redMin) return 'red';
   if (pm25 >= yellowMax) return 'yellow';
@@ -139,7 +139,7 @@ export function getPM25Level(
 export function getPM10Level(
   pm10: number,
   yellowMax = 75,
-  redMin = 80,
+  redMin = 100,
 ): StatusLevel {
   if (pm10 >= redMin) return 'red';
   if (pm10 >= yellowMax) return 'yellow';

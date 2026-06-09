@@ -3,6 +3,7 @@ import { Typography, Space, Row, Col, Card, Descriptions, Table, Spin, Empty } f
 import ReactECharts from 'echarts-for-react';
 import { useEquipmentDashboard } from '../../api/dashboard.api';
 import { useThresholdSettings } from '../../api/system.api';
+import { useUiStore } from '../../stores/uiStore';
 import StatusTag from '../../components/common/StatusTag';
 import StatusBadge from '../../components/common/StatusBadge';
 import type { ControllerStatus, SensorHistoryPoint } from '../../types/dashboard.types';
@@ -33,7 +34,8 @@ function SensorValue({ label, value, level }: { label: string; value: string; le
 
 export default function EquipmentDashboardPage({ equipmentId }: EquipmentDashboardPageProps) {
   const { data, isLoading } = useEquipmentDashboard(equipmentId);
-  const { data: thresholdResponse } = useThresholdSettings('all');
+  const selectedStoreId = useUiStore((s) => s.selectedStoreId);
+  const { data: thresholdResponse } = useThresholdSettings(selectedStoreId ?? 'all');
 
   const thresholds = useMemo(() => {
     const map = new Map<string, { yellowMin?: number; redMin?: number }>();

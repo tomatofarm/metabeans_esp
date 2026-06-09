@@ -1,10 +1,12 @@
-import type { ReactNode } from 'react';
-import { Card, Badge, Collapse, Space, Typography, Empty } from 'antd';
+import { type ReactNode, useState, useMemo } from 'react';
+import { Card, Badge, Collapse, Space, Typography, Empty, Button } from 'antd';
 import {
   WifiOutlined,
   FireOutlined,
   FilterOutlined,
   CloudOutlined,
+  DownOutlined,
+  UpOutlined,
 } from '@ant-design/icons';
 import type { DashboardIssueCategory, DashboardIssueItem, DashboardIssueType } from '../../../types/dashboard.types';
 import StatusTag from '../../../components/common/StatusTag';
@@ -84,7 +86,36 @@ function IssueItemCard({
 }
 
 export default function IssuePanel({ categories, loading, onEquipmentClick }: IssuePanelProps) {
-  if (!categories || categories.length === 0) {
+  // DUST_REMOVAL은 Red만 표시
+  const filteredCategories = useMemo(() =>
+    categories?.map((cat) =>
+      cat.type === 'DUST_REMOVAL'
+        ? {
+            ...cat,
+            items: cat.items.filter((item) => item.severity === 'red'),
+            yellowCount: 0,
+            redCount: cat.items.filter((item) => item.severity === 'red').length,
+          }
+        : cat,
+    ),
+    [categories],
+  );
+
+  const allKeys = useMemo(
+    () => filteredCategories?.map((c) => c.type) ?? [],
+    [filteredCategories],
+  );
+
+  const defaultOpenKeys = useMemo(
+    () => filteredCategories?.filter((c) => c.items.length > 0).map((c) => c.type) ?? [],
+    [filteredCategories],
+  );
+
+  const [activeKeys, setActiveKeys] = useState<string[]>(defaultOpenKeys);
+
+  const isAllOpen = activeKeys.length === allKeys.length;
+
+  if (!filteredCategories || filteredCategories.length === 0) {
     return (
       <Card title="문제 발생 이슈" loading={loading}>
         <Empty description="이슈 없음" />
@@ -92,9 +123,9 @@ export default function IssuePanel({ categories, loading, onEquipmentClick }: Is
     );
   }
 
-  const totalCount = categories.reduce((sum, cat) => sum + cat.items.length, 0);
+  const totalCount = filteredCategories.reduce((sum, cat) => sum + cat.items.length, 0);
 
-  const items = categories.map((cat) => ({
+  const collapseItems = filteredCategories.map((cat) => ({
     key: cat.type,
     label: <CategoryHeader category={cat} />,
     children:
@@ -122,15 +153,28 @@ export default function IssuePanel({ categories, loading, onEquipmentClick }: Is
     </Space>
   );
 
+  const extra = (
+    <Button
+      size="small"
+      type="text"
+      icon={isAllOpen ? <UpOutlined /> : <DownOutlined />}
+      onClick={() => setActiveKeys(isAllOpen ? [] : allKeys)}
+    >
+      {isAllOpen ? '모두 닫기' : '모두 열기'}
+    </Button>
+  );
+
   return (
     <Card
       title={cardTitle}
+      extra={extra}
       loading={loading}
-      styles={{ body: { padding: '0 0 8px' } }}
+      styles={{ body: { padding: '0 0 8px', maxHeight: 420, overflowY: 'auto' } }}
     >
       <Collapse
-        items={items}
-        defaultActiveKey={categories.filter((c) => c.items.length > 0).map((c) => c.type)}
+        items={collapseItems}
+        activeKey={activeKeys}
+        onChange={(keys) => setActiveKeys(keys as string[])}
         ghost
       />
     </Card>
