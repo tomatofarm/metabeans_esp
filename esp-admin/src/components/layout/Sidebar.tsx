@@ -202,6 +202,7 @@ export default function Sidebar() {
     selectedEquipmentId,
     selectedControllerId,
     selectStore,
+    setCurrentStoreId,
     selectEquipment,
     selectController,
     clearSelection,
@@ -295,7 +296,10 @@ export default function Sidebar() {
         for (const store of roleFilteredStores) {
           for (const fl of store.floors) {
             for (const eq of floorEquipments(fl)) {
-              if (eq.equipmentId === numId) equipKeys.push(`store-${store.storeId}`);
+              if (eq.equipmentId === numId) {
+                equipKeys.push(`store-${store.storeId}`);
+                setCurrentStoreId(store.storeId);
+              }
             }
           }
         }
@@ -316,7 +320,10 @@ export default function Sidebar() {
           for (const store of roleFilteredStores) {
             for (const fl of store.floors) {
               for (const eq of floorEquipments(fl)) {
-                if (eq.equipmentId === parentEquipmentId) ctrlKeys.push(`store-${store.storeId}`);
+                if (eq.equipmentId === parentEquipmentId) {
+                  ctrlKeys.push(`store-${store.storeId}`);
+                  setCurrentStoreId(store.storeId);
+                }
               }
             }
           }

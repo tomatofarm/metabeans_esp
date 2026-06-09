@@ -55,7 +55,7 @@ export default function RealtimeMonitorPage() {
 
   const { data: realtimeData, isLoading, dataUpdatedAt } = useRealtimeSensorData(selectedEquipmentId);
   const { data: historyData } = useSensorHistory(selectedEquipmentId);
-  const { data: thresholdResponse } = useThresholdSettings(selectedStoreId ?? 'all');
+  const { data: thresholdResponse, isLoading: thresholdLoading } = useThresholdSettings(selectedStoreId ?? 'all');
 
   const monitoringThresholdByName = useMemo(() => {
     const map = new Map<string, { yellowMin?: number; redMin?: number }>();
@@ -145,7 +145,7 @@ export default function RealtimeMonitorPage() {
           {hasLeftCol && (
             <Col xs={24} xl={hasRightCol ? 12 : 24}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {showEquipmentStatus && (
+                {showEquipmentStatus && !thresholdLoading && (
                   <ControllerBasicStatusSection
                     controllers={filteredControllers}
                     thresholds={{
@@ -166,7 +166,7 @@ export default function RealtimeMonitorPage() {
           {hasRightCol && (
             <Col xs={24} xl={hasLeftCol ? 12 : 24}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {showFireDetection && (
+                {showFireDetection && !thresholdLoading && (
                   <FireSensorSection
                     controllers={filteredControllers}
                     inletTempThreshold={monitoringThresholdByName.get('유입 온도')}
@@ -188,7 +188,7 @@ export default function RealtimeMonitorPage() {
                     }
                   />
                 )}
-                {showDustRemoval && (
+                {showDustRemoval && !thresholdLoading && (
                   <DustRemovalSection
                     controllers={filteredControllers}
                     pm25Threshold={monitoringThresholdByName.get('PM2.5')}

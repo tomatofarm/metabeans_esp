@@ -12,6 +12,7 @@ interface UiState {
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   selectStore: (storeId: number | null) => void;
+  setCurrentStoreId: (storeId: number | null) => void;
   selectEquipment: (equipmentId: number | null) => void;
   selectController: (controllerId: number | null) => void;
   selectFloor: (floorId: number | null) => void;
@@ -40,6 +41,8 @@ export const useUiStore = create<UiState>()(
           selectedFloorId: null,
           selectedGatewayId: null,
         }),
+
+      setCurrentStoreId: (storeId) => set({ selectedStoreId: storeId }),
 
       selectEquipment: (equipmentId) =>
         set({ selectedEquipmentId: equipmentId, selectedControllerId: null }),
