@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 interface UiState {
   sidebarCollapsed: boolean;
+  sidebarWidth: number;
   selectedStoreId: number | null;
   selectedEquipmentId: number | null;
   selectedControllerId: number | null;
@@ -11,6 +12,7 @@ interface UiState {
 
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  setSidebarWidth: (width: number) => void;
   selectStore: (storeId: number | null) => void;
   setCurrentStoreId: (storeId: number | null) => void;
   selectEquipment: (equipmentId: number | null) => void;
@@ -24,6 +26,7 @@ export const useUiStore = create<UiState>()(
   persist(
     (set) => ({
       sidebarCollapsed: false,
+      sidebarWidth: 240,
       selectedStoreId: null,
       selectedEquipmentId: null,
       selectedControllerId: null,
@@ -32,6 +35,7 @@ export const useUiStore = create<UiState>()(
 
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      setSidebarWidth: (width) => set({ sidebarWidth: Math.min(480, Math.max(180, width)) }),
 
       selectStore: (storeId) =>
         set({
@@ -63,6 +67,7 @@ export const useUiStore = create<UiState>()(
     {
       name: 'esp-ui-selection',
       partialize: (state) => ({
+        sidebarWidth: state.sidebarWidth,
         selectedStoreId: state.selectedStoreId,
         selectedEquipmentId: state.selectedEquipmentId,
         selectedControllerId: state.selectedControllerId,

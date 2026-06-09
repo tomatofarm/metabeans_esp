@@ -79,7 +79,13 @@ function IssueItemCard({
       </div>
       <StatusTag
         level={item.severity}
-        label={item.issueType === 'COMM_ERROR' ? '끊김' : undefined}
+        label={
+          item.issueType === 'COMM_ERROR' ? '끊김'
+          : item.issueType === 'FILTER_CHECK' ? '점검 필요'
+          : item.issueType === 'DUST_REMOVAL'
+            ? (item.severity === 'red' ? '점검 필요' : item.severity === 'yellow' ? '보통' : '좋음')
+            : undefined
+        }
       />
     </div>
   );

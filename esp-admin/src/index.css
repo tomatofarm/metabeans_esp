@@ -97,10 +97,10 @@ body {
 
 /* Main content area */
 .main-content {
-  margin-left: 240px;
   margin-top: 64px;
   padding: 24px;
   min-height: calc(100vh - 64px);
+  transition: margin-left 0.05s;
 }
 
 /* Sidebar tree item styling */

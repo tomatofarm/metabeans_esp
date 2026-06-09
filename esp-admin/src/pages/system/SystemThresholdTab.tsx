@@ -352,7 +352,7 @@ export default function SystemThresholdTab() {
                 <>
                   {'yellowMin' in t && (
                     <div className="threshold-input-group">
-                      <div className="threshold-input-label">주의 기준 (Yellow)</div>
+                      <div className="threshold-input-label" style={{ color: '#faad14' }}>주의 기준 (Yellow)</div>
                       <div className="threshold-input-wrap">
                         <InputNumber
                           value={t.yellowMin ?? null}
@@ -366,7 +366,7 @@ export default function SystemThresholdTab() {
                   )}
                   {'redMin' in t && (
                     <div className="threshold-input-group">
-                      <div className="threshold-input-label">위험 기준 (Red)</div>
+                      <div className="threshold-input-label" style={{ color: '#ff4d4f' }}>위험 기준 (Red)</div>
                       <div className="threshold-input-wrap">
                         <InputNumber
                           value={t.redMin ?? null}

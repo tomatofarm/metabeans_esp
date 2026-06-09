@@ -1,11 +1,11 @@
-import { Tree, Input, Empty } from 'antd';
+import { Tree, Input, Empty, Tooltip } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 import {
   ShopOutlined,
   DesktopOutlined,
   ControlOutlined,
 } from '@ant-design/icons';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUiStore } from '../../stores/uiStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -43,8 +43,10 @@ function StatusDot({ status }: { status: DotStatus }) {
 
 function TreeTitle({ name, status }: { name: string; status?: DotStatus }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', minWidth: 0 }}>
+      <Tooltip title={name} placement="right" mouseEnterDelay={0.5}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>{name}</span>
+      </Tooltip>
       {status && <StatusDot status={status} />}
     </div>
   );
@@ -196,8 +198,11 @@ function resolveEquipmentPathOnTreeSelect(currentPath: string): string {
 export default function Sidebar() {
   const [searchText, setSearchText] = useState('');
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
+  const dragging = useRef(false);
   const {
     sidebarCollapsed,
+    sidebarWidth,
+    setSidebarWidth,
     selectedStoreId,
     selectedEquipmentId,
     selectedControllerId,
@@ -340,12 +345,31 @@ export default function Sidebar() {
     }
   };
 
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragging.current = true;
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+
+    const onMouseMove = (ev: MouseEvent) => {
+      if (!dragging.current) return;
+      setSidebarWidth(startWidth + ev.clientX - startX);
+    };
+    const onMouseUp = () => {
+      dragging.current = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }, [sidebarWidth, setSidebarWidth]);
+
   if (sidebarCollapsed) return null;
 
   return (
     <aside
       style={{
-        width: 240,
+        width: sidebarWidth,
         background: 'var(--color-white)',
         borderRight: '1px solid var(--color-border)',
         position: 'fixed',
@@ -364,6 +388,18 @@ export default function Sidebar() {
           onChange={(e) => setSearchText(e.target.value)}
         />
       </div>
+      <div
+        onMouseDown={handleMouseDown}
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: 4,
+          bottom: 0,
+          cursor: 'col-resize',
+          zIndex: 10,
+        }}
+      />
       {isLoading ? null : treeData.length > 0 ? (
         <Tree
           showIcon

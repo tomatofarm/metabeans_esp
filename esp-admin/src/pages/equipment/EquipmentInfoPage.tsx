@@ -21,6 +21,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useUiStore } from '../../stores/uiStore';
 import { useEquipmentDetail, useDeleteEquipment } from '../../api/equipment.api';
+import { useRealtimeSensorData } from '../../api/monitoring.api';
 import { useFeaturePermission } from '../../hooks/useFeaturePermission';
 import StatusTag from '../../components/common/StatusTag';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -29,27 +30,17 @@ import type { StatusLevel } from '../../utils/constants';
 
 const { Title } = Typography;
 
-// 장비 상태 → StatusLevel 매핑
-function equipmentStatusToLevel(status: string): StatusLevel {
-  switch (status) {
-    case 'NORMAL':
-      return 'green';
-    case 'INSPECTION':
-    case 'CLEANING':
-      return 'yellow';
-    case 'INACTIVE':
-      return 'red';
-    default:
-      return 'green';
-  }
+function propagateEquipmentStatus(
+  equipConnStatus: string,
+  ctrlStatuses: string[],
+): { level: StatusLevel | 'gray'; label: string } {
+  if (ctrlStatuses.length === 0) return { level: 'gray', label: '장치 없음' };
+  if (equipConnStatus === 'OFFLINE') return { level: 'red', label: '연결 끊김' };
+  const offlineCount = ctrlStatuses.filter((s) => s !== 'ONLINE').length;
+  if (offlineCount === 0) return { level: 'green', label: '정상' };
+  if (offlineCount === ctrlStatuses.length) return { level: 'red', label: '연결 끊김' };
+  return { level: 'yellow', label: '일부 연결 끊김' };
 }
-
-const EQUIPMENT_STATUS_LABELS: Record<string, string> = {
-  NORMAL: '정상',
-  INSPECTION: '점검',
-  CLEANING: '청소',
-  INACTIVE: '비활성',
-};
 
 // Gateway status_flags 비트 해석
 const GATEWAY_FLAG_LABELS = [
@@ -101,6 +92,7 @@ export default function EquipmentInfoPage() {
   const showDeleteAction = deletePermLoading || canDeleteEquip;
 
   const { data, isLoading } = useEquipmentDetail(selectedEquipmentId);
+  const { data: monitoringData } = useRealtimeSensorData(selectedEquipmentId);
   const deleteMutation = useDeleteEquipment();
 
   const equipment = data?.data;
@@ -207,10 +199,12 @@ export default function EquipmentInfoPage() {
           <div className="equip-info-item">
             <span className="equip-info-item-label">장비 상태</span>
             <div className="equip-info-item-value">
-              <StatusTag
-                level={equipmentStatusToLevel(equipment.status)}
-                label={EQUIPMENT_STATUS_LABELS[equipment.status]}
-              />
+              {(() => {
+                const ctrlStatuses = monitoringData?.controllers.map((c) => c.connectionStatus) ?? [];
+                const { level, label } = propagateEquipmentStatus(equipment.connectionStatus, ctrlStatuses);
+                if (level === 'gray') return <StatusBadge status="default" label={label} />;
+                return <StatusTag level={level} label={label} />;
+              })()}
             </div>
           </div>
           <div className="equip-info-item">

@@ -102,7 +102,16 @@ const issueColumns = (onEquipmentClick: (equipmentId: number, storeId: number) =
     key: 'severity',
     width: 80,
     render: (level: DashboardIssueItem['severity'], record: DashboardIssueItem) => (
-      <StatusTag level={level} label={record.issueType === 'COMM_ERROR' ? '끊김' : undefined} />
+      <StatusTag
+        level={level}
+        label={
+          record.issueType === 'COMM_ERROR' ? '끊김'
+          : record.issueType === 'FILTER_CHECK' ? '점검 필요'
+          : record.issueType === 'DUST_REMOVAL'
+            ? (level === 'red' ? '점검 필요' : level === 'yellow' ? '보통' : '좋음')
+            : undefined
+        }
+      />
     ),
   },
   {
